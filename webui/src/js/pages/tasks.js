@@ -159,11 +159,20 @@ const Tasks = {
                       <div v-if="isPowerPanelMounted('war')" class="config-grid">
                         <switch-field label="启用优先历战余响" tip="启用后，会优先使用体力完成3次「历战余响」" :value="fieldValue('echo_of_war_enable')" :disabled="isGroupDisabled(group)" @change="setField('echo_of_war_enable', $event)" />
                         <select-field label="开始日" :value="numberField('echo_of_war_start_day_of_week', 1)" :options="weekDayOptions" :disabled="isGroupDisabled(group)" @change="setField('echo_of_war_start_day_of_week', $event)" />
+                        <select-field label="历战余响选择" :value="instanceNameValue('历战余响')" :options="instanceNameOptions('历战余响', false)" :disabled="isGroupDisabled(group)" @change="setInstanceName('历战余响', $event)" />
                       </div>
                     </el-collapse-item>
 
                     <!-- 体力计划 -->
-                    <el-collapse-item name="plan" title="体力计划">
+                    <el-collapse-item name="plan">
+                      <template #title>
+                        <div class="flex items-center">
+                          <span>体力计划</span>
+                          <el-tooltip content="执行后将根据进度自动扣减次数或移除，并将变动自动保存回配置文件" placement="top">
+                            <el-icon class="ml-1 text-slate-400 cursor-help"><InfoFilled /></el-icon>
+                          </el-tooltip>
+                        </div>
+                      </template>
                       <div v-if="isPowerPanelMounted('plan')" class="config-list">
                         <div v-for="(plan, index) in powerPlans" :key="'plan-' + index" class="config-list-row">
                           <el-select :model-value="plan[0]" @update:model-value="setPowerPlanType(index, $event)" :disabled="isGroupDisabled(group)" filterable class="min-w-[150px]">
@@ -226,20 +235,6 @@ const Tasks = {
                   <div class="config-grid">
                     <switch-field label="自动切换队伍" :value="fieldValue('instance_team_enable')" :disabled="isGroupDisabled(group)" @change="setField('instance_team_enable', $event)" />
                     <number-field label="默认队伍编号" :value="numberField('instance_team_number', 6)" :min="1" :max="12" :disabled="isGroupDisabled(group)" @change="setField('instance_team_number', String($event))" />
-                  </div>
-                  <div class="config-list mt-4">
-                    <div v-for="(rule, index) in instanceTeams" :key="'team-rule-' + index" class="config-list-row">
-                      <el-select :model-value="rule.instance_name" @update:model-value="setInstanceTeamName(index, $event)" :disabled="isGroupDisabled(group)" filterable class="flex-1 min-w-[260px]">
-                        <el-option v-for="item in flatInstanceOptions" :key="item.name" :label="item.label" :value="item.name" />
-                      </el-select>
-                      <el-input-number :model-value="Number(rule.team_number || 6)" @update:model-value="setInstanceTeamNumber(index, $event)" :min="1" :max="12" :disabled="isGroupDisabled(group)" />
-                      <el-button :disabled="isGroupDisabled(group)" @click="removeInstanceTeam(index)" type="danger" plain>
-                        <el-icon><Delete /></el-icon><span>删除</span>
-                      </el-button>
-                    </div>
-                    <el-button :disabled="isGroupDisabled(group)" @click="addInstanceTeam" type="primary" plain>
-                      <el-icon><Plus /></el-icon><span>添加规则</span>
-                    </el-button>
                   </div>
                 </template>
 
@@ -462,9 +457,6 @@ const Tasks = {
     },
     powerPlans() {
       return this.ensureArrayField('power_plan');
-    },
-    instanceTeams() {
-      return this.ensureArrayField('instance_teams');
     },
     calyxOptions() {
       return [
@@ -878,36 +870,6 @@ const Tasks = {
       const friends = this.normalizeBorrowFriends();
       friends[index][1] = value || '';
       await this.updateBorrowFriends(friends);
-    },
-    normalizeInstanceTeams() {
-      return this.clone(this.instanceTeams).map(item => ({
-        instance_name: item.instance_name || this.flatInstanceOptions[0]?.name || '',
-        team_number: Number(item.team_number || this.fieldValue('instance_team_number') || 6)
-      }));
-    },
-    async updateInstanceTeams(teams) {
-      this.configObject.instance_teams = teams;
-      await this.renderYaml({ instance_teams: teams });
-    },
-    async addInstanceTeam() {
-      const teams = this.normalizeInstanceTeams();
-      teams.push({ instance_name: this.flatInstanceOptions[0]?.name || '', team_number: Number(this.fieldValue('instance_team_number') || 6) });
-      await this.updateInstanceTeams(teams);
-    },
-    async removeInstanceTeam(index) {
-      const teams = this.normalizeInstanceTeams();
-      teams.splice(index, 1);
-      await this.updateInstanceTeams(teams);
-    },
-    async setInstanceTeamName(index, value) {
-      const teams = this.normalizeInstanceTeams();
-      teams[index].instance_name = value;
-      await this.updateInstanceTeams(teams);
-    },
-    async setInstanceTeamNumber(index, value) {
-      const teams = this.normalizeInstanceTeams();
-      teams[index].team_number = value || 1;
-      await this.updateInstanceTeams(teams);
     },
     isGroupOverrideEnabled(group) {
       if (group.name === 'notify') return true;
