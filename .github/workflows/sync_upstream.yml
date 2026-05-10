@@ -91,5 +91,5 @@ jobs:
             echo "已存在 PR #$PR_EXISTS，已自动追加最新上游更改。"
           fi
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
 
