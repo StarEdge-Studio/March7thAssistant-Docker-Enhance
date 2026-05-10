@@ -17,6 +17,7 @@ from tasks.daily.himekotry import HimekoTry
 from tasks.weekly.echoofwar import Echoofwar
 from tasks.daily.buildtarget import BuildTarget
 from tasks.daily.redemption import Redemption
+from tasks.daily.ember_exchange import EmberExchange
 from utils.color import red, green, yellow
 import datetime
 
@@ -108,6 +109,17 @@ class Daily:
     @staticmethod
     def start():
         Daily.prepare_daily()
+
+        if cfg.asset_manager_enable:
+            if cfg.asset_self_molding_resin_enable:
+                if Date.is_next_month_x_am(cfg.asset_self_molding_resin_timestamp, cfg.refresh_hour):
+                    Synthesis.self_molding_resin()
+                else:
+                    log.info("自塑尘脂自动合成尚未刷新")
+            else:
+                log.info("自塑尘脂自动合成未开启")
+
+            EmberExchange.start()
 
         if cfg.currencywars_enable:
             if Date.is_next_mon_x_am(cfg.currencywars_timestamp, cfg.refresh_hour):
@@ -223,7 +235,7 @@ class Daily:
         if len(cfg.daily_tasks) > 0:
             task_functions = {
                 "登录游戏": (lambda: True, 100),
-                "派遣委托或收取1次委托奖励": (lambda: False, 100),  # 没有实现但有可能已完成,只检测是否完成
+                "派遣委托或收取1次委托奖励": (lambda: reward.start_specific("dispatch"), 100),
                 "累计消耗120点开拓力": (lambda: False, 200),  # 没有实现但有可能已完成,只检测是否完成
                 "使用支援角色并获得战斗胜利1次": (lambda: False, 200),  # 没有实现但有可能已完成,只检测是否完成
                 "完成1次「拟造花萼（金）」": (lambda: False, 100),

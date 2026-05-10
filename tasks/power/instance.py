@@ -168,6 +168,14 @@ class Instance:
                 if auto.find_element(instance_name.replace("2", ""), "text", max_retries=1, include=True, crop=(1172.0 / 1920, 5.0 / 1080, 742.0 / 1920, 636.0 / 1080)):
                     success = True
                     break
+
+                if "历战余响" in instance_type:
+                    if auto.find_element("不再弹出", "text", max_retries=1, include=True):
+                        log.info("检测到历战余响剧情提示，尝试勾选不再提示")
+                        auto.click_element("不再弹出", "text", include=True)
+                        time.sleep(0.5)
+                        auto.click_element("确认", "text", include=True)
+
                 time.sleep(2)
         if not success:
             Base.send_notification_with_screenshot(cfg.notify_template['InstanceNotCompleted'].format(error="传送可能失败"), NotificationLevel.ERROR)
@@ -347,7 +355,7 @@ class Instance:
 
     @staticmethod
     def start_instance_again(instance_type):
-        auto.click_element("./assets/images/zh_CN/fight/fight_again.png", "image", 0.9, max_retries=10)
+        auto.click_element("./assets/images/zh_CN/fight/fight_again.png", "image", 0.88, max_retries=10)
         if instance_type == "历战余响":
             time.sleep(1)
             auto.click_element("./assets/images/zh_CN/base/confirm.png", "image", 0.9)
@@ -375,7 +383,7 @@ class Instance:
 
         start_time = time.monotonic()
         while time.monotonic() - start_time < timeout:
-            if auto.find_element("./assets/images/zh_CN/fight/fight_again.png", "image", 0.9):
+            if auto.find_element("./assets/images/zh_CN/fight/fight_again.png", "image", 0.88):
                 log.info("战斗完成")
                 log.info(f"第{num}次副本完成")
                 return True

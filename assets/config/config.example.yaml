@@ -185,6 +185,14 @@ activity_journey_highlights_notification_enable: false # 是否启用活动热�
 
 # 资产设置
 asset_manager_enable: false # 是否启用资产管理功能。true 开启，false 关闭。
+asset_self_molding_resin_enable: false # 是否启用每月自动合成自塑尘脂。true 开启，false 关闭。
+asset_self_molding_resin_timestamp: 0 # 上次成功合成自塑尘脂的时间戳。用于记录时间并在每月1号刷新。
+asset_ember_special_pass_enable: false # 是否启用每月自动购买余烬兑换中的「星轨专票」。true 开启，false 关闭。
+asset_ember_special_pass_timestamp: 0 # 上次成功购买「星轨专票」的时间戳。用于记录时间并在每月1号刷新。
+asset_ember_regular_pass_enable: false # 是否启用每月自动购买余烬兑换中的「星轨通票」。true 开启，false 关闭。
+asset_ember_regular_pass_timestamp: 0 # 上次成功购买「星轨通票」的时间戳。用于记录时间并在每月1号刷新。
+asset_ember_tracks_of_destiny_enable: false # 是否启用每月自动购买余烬兑换中的「命运的足迹」。true 开启，false 关闭。
+asset_ember_tracks_of_destiny_timestamp: 0 # 上次成功购买「命运的足迹」的时间戳。用于记录时间并在每月1号刷新。
 asset_lc3_star_superimpose_enable: false # 是否启用「三星光锥自动叠加」功能。true 开启，false 关闭。
 
 # 货币战争配置
