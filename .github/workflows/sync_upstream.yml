@@ -83,6 +83,7 @@ jobs:
           if [ -z "$PR_EXISTS" ]; then
             echo "创建新的同步 PR..."
             gh pr create \
+              --repo ${{ github.repository }} \
               --title "⚠️ [自动同步] 发现上游更新，需要手动解决冲突" \
               --body "自动同步上游仓库失败，存在文件冲突。\n\n**处理建议：**\n1. 在本地执行 \`git fetch origin && git checkout $BRANCH_NAME\`\n2. 解决冲突后提交并推送到此分支。\n3. 合并此 PR 到 main 分支。\n\n*此 PR 会在上游有新更新时自动追加提交，无需重复创建。*" \
               --base main \
