@@ -2436,9 +2436,9 @@ class CurrencyWars:
         aglaea_black2_tags = ["雷之熄火", "一鼓作气", "应激反应", "灼热轰炸", "忽快忽慢", "成长的烦恼", "极速制冷", "坠入陷阱"]
 
         # 希儿策略：直接重开的词条
-        seele_black_tags = ["极速制冷", "量子熄火", "免死金牌", "忽快忽慢", "坠入陷阱"]
+        seele_black_tags = ["极速制冷", "量子熄火", "免死金牌", "忽快忽慢", "坠入陷阱", "沉重脚步", "忍无可忍", "同步行动", "正当防卫", "榜样激励", "永久创伤", "变宝为废", "额外打击"]
         # 希儿策略：超过1个才重开的词条
-        seele_black2_tags = ["一鼓作气", "忍无可忍", "应激反应"]
+        seele_black2_tags = ["一鼓作气", "应激反应", "决战在即", "战个痛快"]
 
         if cfg.currencywars_strategy == "seele":
             black_tags = seele_black_tags
@@ -2581,7 +2581,7 @@ class CurrencyWars:
             elif cfg.currencywars_strategy == "seele":
                 # 希儿策略投资环境优先级（从高到低）
                 seele_white_list = ('量子同频契约', '人才储备', '量子同频邀请', '贝洛伯格概念股', '长线利好', '增发货币', '经济过热', '经济严重过热',
-                                    '钢铁美学', '量子力学', '好运来', '枪在手')
+                                    '钢铁美学', '量子力学', '枪在手')
                 for index, texts in enumerate(option_texts):
                     matched_text = self._find_text_in_texts(texts, seele_white_list, include=True)
                     if matched_text:
@@ -2609,8 +2609,9 @@ class CurrencyWars:
             # 全都要：本局游戏中，补给阶段的可选项减少2个。补给阶段选择后，额外获得所有未选择的角色及装备。
             # 广聚天下英才：获得所有2费角色各一个
             # 阿哈大悦：【目前 Wiki 都还没更新这个】
+            # 好运来：合成与获得进阶装备时，改为获得一个【好运令牌】。获得2件随机简易装备。
 
-            black_list = ('深井角斗场', '佩佩客串', '钻石商人', '现金为王', '降本增效', '大裁员', '人力重组', '全员晋升', '节省工位', '奋斗协议', '专家研讨会', '快请专家', '英雄登场', '命运礼物', '独家代言', '全都要', '广聚天下英才', '阿哈大悦')
+            black_list = ('深井角斗场', '佩佩客串', '钻石商人', '现金为王', '降本增效', '大裁员', '人力重组', '全员晋升', '节省工位', '奋斗协议', '专家研讨会', '快请专家', '英雄登场', '命运礼物', '独家代言', '全都要', '广聚天下英才', '阿哈大悦', '好运来')
             if not has_choose:
                 for index, texts in enumerate(option_texts):
                     matched_black_text = self._find_text_in_texts(texts, black_list, include=True)
