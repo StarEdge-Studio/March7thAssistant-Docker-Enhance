@@ -2091,7 +2091,7 @@ class CurrencyWars:
         检查当前货币数量
         """
         money_crop = (1559.0 / 1920, 880.0 / 1080, 127.0 / 1920, 82.0 / 1080)
-        money = auto.get_single_line_text(crop=money_crop, blacklist=['V'])
+        money = auto.get_single_line_text(crop=money_crop, blacklist=['V', '?'])
         if money:
             try:
                 money_int = int(money)

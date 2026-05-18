@@ -36,8 +36,7 @@ jobs:
       # 安装依赖
       - name: Install dependencies
         run: |
-          uv sync
-          uv pip install pyinstaller==6.17.0
+          uv sync --group build
           uv run python build.py --task ocr
 
       # 并行生成程序

@@ -52,8 +52,7 @@ jobs:
       - name: Install dependencies
         if: steps.check_version.outputs.should_build == 'true'
         run: |
-          uv sync
-          uv pip install pyinstaller==6.17.0
+          uv sync --group build
           uv run python build.py --task ocr
 
       # 并行生成程序
