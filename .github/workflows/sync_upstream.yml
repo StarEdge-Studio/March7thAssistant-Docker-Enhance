@@ -1,0 +1,80 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    # 每天凌晨 2 点执行一次 (UTC 时间 18:00)
+    - cron: '0 18 * * *'
+  workflow_dispatch: # 允许在 GitHub Actions 页面手动点击运行
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 需要完整的历史记录来进行合并
+          token: ${{ secrets.PAT }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add Upstream Remote
+        run: |
+          # 替换为原作者的真实仓库地址及主分支名
+          UPSTREAM_URL="https://github.com/moesnow/March7thAssistant.git"
+          UPSTREAM_BRANCH="main"
+          
+          git remote add upstream $UPSTREAM_URL
+          git fetch upstream $UPSTREAM_BRANCH
+
+      - name: Sync Upstream (Try Merge or Branch)
+        id: sync
+        run: |
+          BRANCH_NAME="upstream-sync-branch"
+          
+          echo "正在尝试自动合并上游代码..."
+          # 尝试在 main 分支直接合并上游
+          if git merge upstream/main --no-edit; then
+            echo "✅ 自动合并成功，没有任何冲突！"
+            echo "正在推送到远程 main 分支..."
+            git push origin main
+            echo "merged=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ 发现冲突！"
+            # 1. 放弃本地 main 分支的合并（保持 main 纯净）
+            git merge --abort
+            
+            # 2. 强制同步纯净的上游代码到独立的缓冲分支
+            echo "正在强制推送最新上游代码至缓冲分支：$BRANCH_NAME"
+            git push -f origin upstream/main:refs/heads/$BRANCH_NAME
+            echo "merged=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR on Conflict
+        if: steps.sync.outputs.merged == 'false'
+        run: |
+          BRANCH_NAME="upstream-sync-branch"
+          
+          PR_EXISTS=$(gh pr list --repo ${{ github.repository }} --head $BRANCH_NAME --state open --json number --jq '.[0].number')
+          
+          if [ -z "$PR_EXISTS" ]; then
+            echo "创建新的冲突待办 PR..."
+            gh pr create \
+              --repo ${{ github.repository }} \
+              --title "⚠️ 发现上游更新，存在代码冲突" \
+              --base main \
+              --head $BRANCH_NAME \
+              --body "### 🔄 自动同步报告
+                      检测到上游仓库有新代码，但与你本地的修改存在冲突，无法自动合并。"
+            else
+            echo "已存在待办 PR #$PR_EXISTS，跳过创建新 PR。"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}

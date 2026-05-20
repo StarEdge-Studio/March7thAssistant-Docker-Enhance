@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full w-full">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>March7th Assistant WebUI</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body
+  class="h-full w-full m-0 p-0 bg-slate-50 dark:bg-bg-deep text-slate-900 dark:text-slate-100 font-sans overflow-hidden transition-colors duration-300 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/40 via-slate-50 to-white dark:from-indigo-900/40 dark:via-slate-900 dark:to-slate-950">
+  <div id="app" class="h-full w-full"></div>
+
+  <!-- Application Logic -->
+  <script type="module" src="/src/js/vendor.js"></script>
+  <script type="module" src="/src/js/api.js"></script>
+  <script type="module" src="/src/js/pages/dashboard.js"></script>
+  <script type="module" src="/src/js/pages/accounts.js"></script>
+  <script type="module" src="/src/js/pages/tasks.js"></script>
+  <script type="module" src="/src/js/pages/settings.js"></script>
+  <script type="module" src="/src/js/app.js"></script>
+</body>
+
+</html>
