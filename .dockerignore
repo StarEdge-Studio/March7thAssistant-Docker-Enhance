@@ -35,3 +35,14 @@ temp/
 logs/
 *.zip.aria2
 __pycache__/
+
+# Frontend
+webui/node_modules/
+webui/src/
+webui/.env
+webui/.env.*
+webui/package.json
+webui/pnpm-lock.yaml
+webui/vite.config.mjs
+webui/tailwind.config.js
+webui/postcss.config.js

@@ -14,6 +14,7 @@ from fastapi import FastAPI, Depends, HTTPException, Header, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
  
@@ -48,6 +49,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 TOKEN = os.environ.get("WEBUI_TOKEN", "12345678")
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))

@@ -27,7 +27,16 @@ export default defineConfig(({ command }) => ({
   plugins: [precompileInlineVueTemplates()],
   build: {
     outDir: 'static',
-    emptyOutDir: true
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'monaco-vendor': ['monaco-editor'],
+          'element-vendor': ['element-plus', '@element-plus/icons-vue'],
+          'vue-vendor': ['vue', 'vue-router']
+        }
+      }
+    }
   },
   server: {
     port: 5173,
