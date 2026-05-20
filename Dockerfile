@@ -1,4 +1,4 @@
-FROM python:3.13.13-slim-bookworm
+FROM python:3.14.5-slim-bookworm
 
 # ======================
 # Build args (architecture)
@@ -87,7 +87,7 @@ RUN \
 # ======================
 # Python deps
 # ======================
-COPY --from=ghcr.io/astral-sh/uv:0.11.7 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.15 /uv /uvx /bin/
 RUN uv sync --only-group docker
     # 如果需要使用国内源，可以取消下面一行的注释
     # RUN uv sync --only-group docker --index-url https://mirrors.cloud.tencent.com/pypi/simple/

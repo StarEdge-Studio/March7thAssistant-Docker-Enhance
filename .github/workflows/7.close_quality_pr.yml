@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-    if: "${{ startsWith(github.event.pull_request.title, '✨ Quality: ') }}"
+    if: "${{ startsWith(github.event.pull_request.title, '✨ Quality: ') || startsWith(github.event.pull_request.title, 'Security: ') }}"
     steps:
       - name: Close pull request
         uses: actions/github-script@v9

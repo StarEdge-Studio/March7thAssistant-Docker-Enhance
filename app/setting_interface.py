@@ -23,6 +23,7 @@ from tasks.base.tasks import start_task
 from .tools.check_update import checkUpdate
 import os
 import sys
+import platform
 
 
 class _PivotScrollFilter(QObject):
@@ -1140,6 +1141,7 @@ class SettingInterface(ScrollArea):
                     "userid": {"title": tr("用户/群组 ID"), "description": tr("接收通知的用户 ID 或群组 ID（以 - 开头）")},
                     "api_url": {"title": tr("自定义 API 地址"), "description": tr("可选参数，自定义 Telegram API 地址，例如 api.telegram.org")},
                     "proxies": {"title": tr("代理配置"), "description": tr("可选参数，例如 127.0.0.1:10808 或 socks5://127.0.0.1:1080，不填则使用系统 PAC 代理")},
+                    "thread_id": {"title": tr("话题 ID"), "description": tr("可选参数，开启 Topics 功能的群组需要填写对应的话题 ID")},
                 }
             },
             "matrix": {
@@ -1185,7 +1187,8 @@ class SettingInterface(ScrollArea):
                     "icon": {"title": tr("图标地址"), "description": tr("可选参数，通知图标的 URL")},
                     "isarchive": {"title": tr("归档"), "description": tr("可选参数：1 归档，0 不归档")},
                     "sound": {"title": tr("提示音"), "description": tr("可选参数，自定义提示音名称")},
-                    "url": {"title": tr("服务地址"), "description": tr("可选参数，自定义 Bark 服务的 URL")},
+                    "url": {"title": tr("跳转链接"), "description": tr("可选参数，通知点击后跳转的 URL")},
+                    "base_url": {"title": tr("服务地址"), "description": tr("可选参数，自定义 Bark 服务的 URL")},
                     "copy": {"title": tr("复制内容"), "description": tr("可选参数，通知点击后复制内容")},
                     "autocopy": {"title": tr("自动复制"), "description": tr("可选参数，是否自动复制")},
                     "cipherkey": {"title": tr("加密密钥"), "description": tr("可选参数，推送加密密钥，需在 Bark APP 中配置相同的密钥")},
@@ -1491,7 +1494,7 @@ class SettingInterface(ScrollArea):
             tr('检查更新'),
             FIF.INFO,
             tr('关于'),
-            tr('当前版本：') + " " + cfg.version
+            tr('当前版本：') + " " + cfg.version + " | Python " + sys.version.split()[0] + " | " + platform.system() + " " + platform.machine()
         )
         self.updateSourceCard = ExpandableComboBoxSettingCardUpdateSource(
             "update_source",
