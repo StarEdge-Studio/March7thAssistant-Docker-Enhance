@@ -359,10 +359,11 @@ nano config.yaml
 
 ## 常见问题
 
-### Q: 网络连接失败怎么办？
+### Q: 卡在"等待时间较长"弹窗怎么办？
 
-- 确保设备网络正常，尝试切换 WiFi 或移动数据
-- 如果是 GitHub 相关下载失败，可能需要配置代理
+部分 Termux 用户在云游戏启动后会遇到弹窗 "等待时间较长，您可以选择继续等待，或退出后重新进入游戏。"，同时出现 "正在努力重连中1/3"。
+
+这是已知问题（[#1070](https://github.com/moesnow/March7thAssistant/issues/1070)），目前仅在安卓 Termux 部署中出现，疑似与安卓版本、内核版本或手机系统有关，新款手机更容易出现此类兼容性问题。如果遇到此问题，可以尝试更换设备或重新运行程序。
 
 ### Q: 运行时出现 onnxruntime 警告怎么办？
 
@@ -374,3 +375,34 @@ nano config.yaml
 ```
 
 这些是 onnxruntime 在 proot 环境下的已知警告，**不影响正常运行**，可以忽略。
+
+### Q: OCR 初始化失败报错 OpenVINO 怎么办？
+
+运行时可能出现类似以下错误：
+
+```
+使用引擎 OpenVINO 初始化 OCR 失败：Exception from src/inference/src/cpp/core.cpp:118:
+Exception from src/inference/src/dev/plugin.cpp:54:
+could not create a primitive descriptor for the matmul primitive.
+```
+
+这个错误来自 OpenVINO 的底层计算库 oneDNN，表示**无法为矩阵乘法操作创建计算描述符**——即找不到能在当前 CPU 上执行的矩阵运算实现。
+
+**原因**：OpenVINO 的 OCR 初始化阶段本身不会报错，但在首次推理时才会真正触发 oneDNN 的算子编译，此时才暴露问题。proot 是用户空间的 chroot 模拟，它会拦截系统调用，导致 ARM CPU 的 NEON SIMD 指令集信息可能不准确或不完整，oneDNN 无法找到合适的矩阵乘法实现。
+
+程序已有兜底处理：当 OpenVINO 引擎初始化失败时，会自动回退到 ONNXRuntime，**不影响正常运行**，可以忽略。
+
+### Q: 运行中出现 free(): invalid next size 导致程序崩溃怎么办？
+
+运行时可能出现类似以下错误，随后程序直接终止：
+
+```
+free(): invalid next size (fast)
+proot info: vpid 1: terminated with signal 6
+```
+
+这是 glibc 的堆内存损坏检测触发的错误，signal 6（SIGABRT）表示进程被系统主动中止。
+
+**原因**：proot 是用户空间的 chroot 模拟，无法使用 swap，Android 设备可用内存有限。当内存压力较大时，内存分配可能异常，导致堆元数据被破坏。此外 onnxruntime 的线程亲和性设置在 proot 下会失败（即上面提到的 `pthread_setaffinity_np failed` 警告），多线程并发时可能出现竞态条件引发堆损坏。
+
+**建议**：关闭后台应用释放内存，或尝试重新运行程序。

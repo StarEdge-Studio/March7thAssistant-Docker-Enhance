@@ -10,7 +10,7 @@ import time
 import io
 import ctypes
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException, SessionNotCreatedException
+from selenium.common.exceptions import TimeoutException, SessionNotCreatedException, StaleElementReferenceException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.edge.options import Options as EdgeOptions
@@ -481,6 +481,9 @@ class CloudGameController(GameControllerBase):
             paid = int(paid_els[0].text.strip()) if paid_els else None
             free = int(free_els[0].text.strip()) if free_els else None
             return paid, free
+        except StaleElementReferenceException:
+            self.log_debug("获取剩余时长失败: 页面元素已更新，将重试")
+            return None, None
         except Exception as e:
             self.log_debug(f"获取剩余时长失败: {e}")
             return None, None
@@ -537,6 +540,24 @@ class CloudGameController(GameControllerBase):
             self.log_error(f"点击进入游戏按钮游戏异常: {e}")
             raise e
 
+    def _wait_game_canvas_ready(self, timeout=30) -> bool:
+        """等待游戏画面 canvas/video 元素出现且尺寸就绪"""
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                lambda d: d.execute_script("""
+                    var el = document.querySelector('.game-player__video');
+                    if (!el) return false;
+                    var w = el.width || el.videoWidth || el.clientWidth;
+                    var h = el.height || el.videoHeight || el.clientHeight;
+                    return w > 0 && h > 0;
+                """)
+            )
+            self.log_info("游戏画面已加载")
+            return True
+        except TimeoutException:
+            self.log_warning("等待游戏画面加载超时，继续尝试")
+            return False
+
     def _wait_in_queue(self, timeout=600) -> bool:
         """排队等待进入"""
         in_queue_selector = "[class*='waiting-in-queue']"
@@ -560,7 +581,7 @@ class CloudGameController(GameControllerBase):
                 if select_retries >= 5:
                     self.log_error("选择排队队列超时")
                     return False
-                
+
                 if self.cfg.cloud_game_use_paid_time and getattr(self, '_paid_time', 0) > 0:
                     self.log_info("检测到选择排队队列界面，配置开启了使用付费时间，选择快速队列")
                     self.driver.execute_script("""
@@ -589,7 +610,8 @@ class CloudGameController(GameControllerBase):
                 )
 
             if status == "game_running":
-                self.log_info("游戏已启动，无需排队")
+                self.log_info("游戏已启动，无需排队，等待游戏画面加载...")
+                self._wait_game_canvas_ready()
                 return True
             elif status == "in_queue":
                 self.log_info("正在排队...")
@@ -599,7 +621,8 @@ class CloudGameController(GameControllerBase):
                 while time.monotonic() - start_time < timeout:
                     # 检查是否已退出排队
                     if not self.driver.find_elements(By.CSS_SELECTOR, in_queue_selector):
-                        self.log_info("排队成功，正在进入游戏")
+                        self.log_info("排队成功，等待游戏画面加载...")
+                        self._wait_game_canvas_ready()
                         return True
                     # 检测预计等待时间
                     wait_time = self.driver.execute_script("""
@@ -655,7 +678,7 @@ class CloudGameController(GameControllerBase):
             return
         self._last_interruption_check_time = now
 
-        if self._check_time_insufficient_dialog() or True:
+        if self._check_time_insufficient_dialog():
             self.log_error("检测到付费时长耗尽弹窗，正在中断运行")
             from module.notification import notif
             from module.notification.notification import NotificationLevel
@@ -1125,7 +1148,7 @@ class CloudGameController(GameControllerBase):
                 if paid is not None or free is not None:
                     break
                 time.sleep(1)
-            
+
             remaining = (paid or 0) + (free or 0)
             self._paid_time = paid or 0
 
@@ -1527,6 +1550,7 @@ class CloudGameController(GameControllerBase):
             self.log_debug(f"设置战斗二倍速为 {'开启' if status else '关闭'}")
         else:
             self.log_debug("未检测到 UID，跳过设置战斗二倍速")
+            self.log_info("首次启动未检测到 UID，战斗二倍速将在下次启动时自动配置")
 
         save["IntDicts"] = int_dicts
         cloud["value"]["RPGCloudSave"] = json.dumps(save)
