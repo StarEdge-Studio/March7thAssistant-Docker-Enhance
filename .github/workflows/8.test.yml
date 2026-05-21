@@ -1,6 +1,7 @@
 name: Tests
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -21,18 +22,44 @@ on:
 
 jobs:
   test:
-    name: Test
-    runs-on: windows-latest
+    name: Test (${{ matrix.os }}, ${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows
+            arch: x86
+            runner: windows-latest
+            python-version: "3.14.5"
+          - os: macos
+            arch: arm64
+            runner: macos-latest
+            python-version: "3.14.5"
+          - os: linux
+            arch: x86
+            runner: ubuntu-latest
+            python-version: "3.14.5"
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            python-version: "3.13.13"
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Install Qt dependencies (Linux)
+        if: matrix.os == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libdbus-1-3
+
       - name: Set up uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
           version: "0.11.15"
-          python-version: "3.14.5"
+          python-version: ${{ matrix.python-version }}
           enable-cache: true
           cache-python: true
           prune-cache: false
