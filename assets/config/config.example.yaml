@@ -651,3 +651,8 @@ notify_custom_data: "" #onebot 请参考{user_id: 114514, message_type: private,
 # MeoW 配置
 notify_meow_enable: false
 notify_meow_nickname: ""
+
+# 遥测配置
+telemetry_enable: true # 是否启用匿名使用数据收集，帮助改进程序。true 开启，false 关闭。
+telemetry_id: "" # 自动生成的匿名标识符，无需手动修改。
+telemetry_secret: "" # 自动生成的签名密钥，无需手动修改。

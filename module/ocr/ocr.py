@@ -522,6 +522,13 @@ class OCR:
                 openvino_warning_emitted = True
             return EngineType.ONNXRUNTIME
 
+        def resolve_mode_for_engine(engine_type, use_dml_flag=False):
+            if use_dml_flag:
+                return OCR_MODE_ONNX_DML
+            if engine_type == EngineType.OPENVINO:
+                return OCR_MODE_OPENVINO_CPU
+            return OCR_MODE_ONNX_CPU
+
         effective_mode = selected_mode
         if force_cpu:
             effective_mode = OCR_MODE_CPU
@@ -568,7 +575,7 @@ class OCR:
             else:
                 prefer_engine = choose_cpu_fallback_engine()
 
-        return prefer_engine, use_dml, effective_mode
+        return prefer_engine, use_dml, resolve_mode_for_engine(prefer_engine, use_dml_flag=use_dml)
 
     def instance_ocr(self, log_level: str = "error", force_cpu: bool = False, force_onnx: bool = False):
         """实例化OCR，若ocr实例未创建，则创建之"""

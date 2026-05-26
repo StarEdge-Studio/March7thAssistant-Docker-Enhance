@@ -82,6 +82,7 @@ args = parse_args()
 
 import atexit
 import base64
+import time
 
 if sys.platform == 'win32':
     # 当从 WebUI 或 Docker 启动时，跳过 UAC 提权以防止环境丢失和后台挂起
@@ -98,6 +99,7 @@ if sys.platform == 'win32':
 from module.config import cfg
 from module.logger import log
 from module.notification import notif
+from module.telemetry import telemetry
 from module.notification.notification import NotificationLevel
 from module.ocr import ocr
 from module.workflow import WorkflowRunner, load_workflow_execution_payload
@@ -122,6 +124,13 @@ from tasks.base.genshin_starRail_fps_unlocker import Genshin_StarRail_fps_unlock
 
 from utils.console import pause_on_error, pause_on_success, pause_always, is_docker_started
 
+telemetry.init(
+    enabled=cfg.get_value("telemetry_enable", True),
+    telemetry_id=cfg.get_value("telemetry_id", ""),
+    telemetry_secret=cfg.get_value("telemetry_secret", ""),
+    version=cfg.version,
+)
+
 
 def first_run():
     if not is_docker_started() and not cfg.get_value(base64.b64decode("YXV0b191cGRhdGU=").decode("utf-8")):
@@ -139,11 +148,18 @@ def run_main_actions(no_run_immediately=False):
             continue
         if cfg.notify_merge:
             notif.start_batch()
-        version.start()
-        game.start()
-        Daily.start()
-        reward.start()
-        game.stop(True)
+        telemetry.track_task_start("main")
+        main_start_time = time.time()
+        try:
+            version.start()
+            game.start()
+            Daily.start()
+            reward.start()
+            game.stop(True)
+            telemetry.track_task_complete("main", True, time.time() - main_start_time)
+        except Exception:
+            telemetry.track_task_complete("main", False, time.time() - main_start_time)
+            raise
 
 
 def run_sub_task(action):
@@ -194,7 +210,14 @@ def run_sub_task(action):
     }
     task = sub_tasks.get(action)
     if task:
-        task()
+        telemetry.track_task_start(action)
+        task_start_time = time.time()
+        try:
+            task()
+            telemetry.track_task_complete(action, True, time.time() - task_start_time)
+        except Exception:
+            telemetry.track_task_complete(action, False, time.time() - task_start_time)
+            raise
     game.stop(False)
 
 
@@ -239,6 +262,7 @@ def run_workflow_action(workflow_name: str, workflow_step_path=None):
 
 def main(action=None, no_run_immediately=False, workflow_name=None, workflow_step_path=None):
     first_run()
+    telemetry.track_startup()
 
     if workflow_name:
         return run_workflow_action(workflow_name, workflow_step_path)
@@ -283,6 +307,7 @@ def main(action=None, no_run_immediately=False, workflow_name=None, workflow_ste
 # 程序结束时的处理器
 def exit_handler():
     """注册程序退出时的处理函数，用于清理OCR和调试资源."""
+    telemetry.shutdown()
     ocr.exit_ocr()
     # 清理调试叠加层
     try:
@@ -312,6 +337,7 @@ if __name__ == "__main__":
         pause_on_error()
         sys.exit(1)
     except Exception as e:
+        telemetry.track_error(type(e).__name__, str(e))
         log.error(cfg.notify_template['ErrorOccurred'].format(error=e))
         # 保存错误截图
         screenshot_path = save_error_screenshot(log)

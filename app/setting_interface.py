@@ -8,7 +8,7 @@ from .common.style_sheet import StyleSheet
 from .components.pivot import SettingPivot
 from .card.comboboxsettingcard1 import ComboBoxSettingCard1
 from .card.comboboxsettingcard2 import ComboBoxSettingCard2, ComboBoxSettingCardUpdateSource, ComboBoxSettingCardLog, ComboBoxSettingCardLanguage
-from .card.switchsettingcard1 import SwitchSettingCard1, TimestampSwitchSettingCard, StartMarch7thAssistantSwitchSettingCard, SwitchSettingCardTeam, SwitchSettingCardImmersifier, SwitchSettingCardGardenofplenty, SwitchSettingCardEchoofwar, SwitchSettingCardHotkey, SwitchSettingCardCloudGameStatus
+from .card.switchsettingcard1 import SwitchSettingCard1, SwitchSettingCardWithAction, TimestampSwitchSettingCard, StartMarch7thAssistantSwitchSettingCard, SwitchSettingCardTeam, SwitchSettingCardImmersifier, SwitchSettingCardGardenofplenty, SwitchSettingCardEchoofwar, SwitchSettingCardHotkey, SwitchSettingCardCloudGameStatus
 from .card.rangesettingcard1 import RangeSettingCard1
 from .card.pushsettingcard1 import CustomPushSettingCard, DualPushSettingCard, PushSettingCardAction, PushSettingCardInstance, PushSettingCardInstanceChallengeCount, PushSettingCardNotifyTemplate, PushSettingCardMirrorchyan, PushSettingCardStr, PushSettingCardEval, PushSettingCardDate, PushSettingCardKey, PushSettingCardTeam, PushSettingCardFriends, PushSettingCardTeamWithSwap, PushSettingCardPowerPlan, InstanceTeamSettingCard
 from .card.timepickersettingcard1 import TimePickerSettingCard1
@@ -1539,6 +1539,13 @@ class SettingInterface(ScrollArea):
             '切换后即时生效 / 切換後即時生效 / 切り替え後すぐ適用 / 변경 즉시 적용 / Takes effect immediately',
             texts={'自动': 'auto', '简体中文': 'zh_CN', '繁體中文': 'zh_TW', '日本語': 'ja_JP', '한국어': 'ko_KR', 'English': 'en_US'}
         )
+        self.telemetryCard = SwitchSettingCardWithAction(
+            tr("查看说明"),
+            FIF.FEEDBACK,
+            tr("匿名使用数据收集"),
+            tr("帮助开发者了解程序使用情况，改进功能"),
+            "telemetry_enable"
+        )
 
     def __initLayout(self):
         self.settingLabel.move(36, 30)
@@ -1781,6 +1788,7 @@ class SettingInterface(ScrollArea):
         ])
         self.AboutGroup.addSettingCard(self.mirrorchyanCdkCard)
         self.AboutGroup.addSettingCard(self.languageCard)
+        self.AboutGroup.addSettingCard(self.telemetryCard)
 
         if sys.platform != 'win32':
             self.gamePathCard.setHidden(True)
@@ -1863,6 +1871,7 @@ class SettingInterface(ScrollArea):
         self.bilibiliCard.clicked.connect(self.__openUrl("https://space.bilibili.com/3706960664857075"))
 
         self.aboutCard.clicked.connect(lambda: checkUpdate(self.parent))
+        self.telemetryCard.actionClicked.connect(self.__showTelemetryInfo)
 
         # 连接可展开卡片的展开状态改变信号，在动画前调整 stackedWidget 高度
         connect_expand_state(self.borrowEnableCard)
@@ -1942,6 +1951,16 @@ class SettingInterface(ScrollArea):
             tr("今日已完成 {} 次").format(daily_count),
             tr("本周已完成 {} 次").format(weekly_count),
         ])
+
+    def __showTelemetryInfo(self):
+        message = MessageBox(
+            tr("匿名使用数据收集说明"),
+            tr("我们只收集用于改进稳定性、兼容性和功能体验的匿名统计信息，不用于识别你的真实身份，也不会用于广告、画像或与第三方共享。\n\n不会上传账号、密码、截图、游戏画面、文件内容或原始错误文本。错误相关信息会在本地处理后，仅以上报错误类型或匿名指纹的形式发送。\n\n当前可能收集的内容包括：程序版本、系统类型、界面语言、OCR 模式、部分功能开关与通知偏好配置快照、任务执行结果，以及匿名化后的错误信息。\n\n这些数据仅用于分析功能使用情况、发现兼容性问题、评估版本稳定性和排查共性故障。"),
+            self.window()
+        )
+        message.cancelButton.hide()
+        message.yesButton.setText(tr("确认"))
+        message.exec()
 
     def __resetDivergentUniverseRunCount(self):
         DivergentUniverse.reset_recorded_run_count()

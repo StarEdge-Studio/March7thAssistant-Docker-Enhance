@@ -99,6 +99,20 @@ class SwitchSettingCard1(SettingCard):
         self.switchButton.setText(tr('开') if isChecked else tr('关'))
 
 
+class SwitchSettingCardWithAction(SwitchSettingCard1):
+    actionClicked = Signal()
+
+    def __init__(self, button_text: str, icon: Union[str, QIcon, FluentIconBase], title, content=None, configname: str = None, parent=None):
+        super().__init__(icon, title, content, configname, parent)
+
+        self.actionButton = PushButton(button_text, self)
+        insert_index = max(self.hBoxLayout.count() - 2, 0)
+        self.hBoxLayout.insertWidget(insert_index, self.actionButton, 0, Qt.AlignmentFlag.AlignRight)
+        self.hBoxLayout.insertSpacing(insert_index + 1, 10)
+
+        self.actionButton.clicked.connect(self.actionClicked.emit)
+
+
 class TimestampSwitchSettingCard(SwitchSettingCard1):
     def __init__(self, icon: Union[str, QIcon, FluentIconBase], title, content=None,
                  configname: str = None, timestamp_configname: str = None,

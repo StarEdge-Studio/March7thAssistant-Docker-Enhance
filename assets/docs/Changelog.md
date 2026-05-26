@@ -1,5 +1,17 @@
 # 更新日志
 
+## v2026.5.26
+- 支持开拓者·欢愉 [#1085](https://github.com/moesnow/March7thAssistant/pull/1085) @shing-yu
+- 支持位面饰品提取自动切换队伍 [#938](https://github.com/moesnow/March7thAssistant/pull/938) @alex3236
+- 云游戏支持使用付费时长以及战斗超时处理 [#1051](https://github.com/moesnow/March7thAssistant/pull/1051) [#1059](https://github.com/moesnow/March7thAssistant/pull/1059) @shing-yu
+- Telegram 推送支持 Topics 群组
+- Bark 推送新增 base_url 参数支持自定义服务器地址
+- 企业微信应用通知新增自定义 URL 支持 [#1072](https://github.com/moesnow/March7thAssistant/pull/1072) @shing-yu
+- 新增对自动切换视角弹窗的支持 [#1084](https://github.com/moesnow/March7thAssistant/pull/1084) @shing-yu
+- 修复模拟宇宙快速启动实际执行类型和描述不一致
+- 优化性能和稳定性并修复若干已知问题
+- [欢迎关注我们的B站账号，获取最新动态和教程](https://space.bilibili.com/3706960664857075)
+
 ## v2026.5.12
 - 货币战争新增 “希儿” 策略（测试版）
 - 新增每月自动合成自塑尘脂、兑换专票通票等超值商品
@@ -9,7 +21,6 @@
 - 修复历战余响提前解锁提示框影响识别 [#1047](https://github.com/moesnow/March7thAssistant/issues/1047) @shing-yu
 - Linux/macOS 浏览器关闭逻辑优化 [#1033](https://github.com/moesnow/March7thAssistant/issues/1033) @shing-yu @stelahaveno
 - 优化性能和稳定性并修复若干已知问题
-- [欢迎关注我们的B站账号，获取最新动态和教程](https://space.bilibili.com/3706960664857075)
 
 ## v2026.5.6
 - 新增 “日常” 任务（合并每日实训和体力）以及 “清体力” 总开关
