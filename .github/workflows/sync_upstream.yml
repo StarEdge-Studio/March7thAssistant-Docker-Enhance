@@ -2,8 +2,8 @@ name: Sync Upstream
 
 on:
   schedule:
-    # 每天凌晨 2 点执行一次 (UTC 时间 18:00)
-    - cron: '0 18 * * *'
+    # 每天凌晨 2 点执行一次 (UTC 时间 18:17)
+    - cron: '17 18 * * *'
   workflow_dispatch: # 允许在 GitHub Actions 页面手动点击运行
 
 jobs:
