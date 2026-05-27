@@ -1,6 +1,6 @@
 # 更新日志
 
-## v2026.5.26
+## v2026.5.27
 - 支持开拓者·欢愉 [#1085](https://github.com/moesnow/March7thAssistant/pull/1085) @shing-yu
 - 支持位面饰品提取自动切换队伍 [#938](https://github.com/moesnow/March7thAssistant/pull/938) @alex3236
 - 云游戏支持使用付费时长以及战斗超时处理 [#1051](https://github.com/moesnow/March7thAssistant/pull/1051) [#1059](https://github.com/moesnow/March7thAssistant/pull/1059) @shing-yu

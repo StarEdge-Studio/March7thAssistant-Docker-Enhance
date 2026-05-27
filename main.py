@@ -155,8 +155,8 @@ def run_main_actions(no_run_immediately=False):
             game.start()
             Daily.start()
             reward.start()
-            game.stop(True)
             telemetry.track_task_complete("main", True, time.time() - main_start_time)
+            game.stop(True)
         except Exception:
             telemetry.track_task_complete("main", False, time.time() - main_start_time)
             raise
