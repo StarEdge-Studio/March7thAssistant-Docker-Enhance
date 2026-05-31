@@ -1,6 +1,4 @@
-# 使用 3.13 而非 3.14，因为 openvino 尚未提供 3.14 的 wheels
-# 等待 https://github.com/openvinotoolkit/openvino/issues/34802 解决后再升级
-FROM python:3.13.13-slim-bookworm
+FROM python:3.14.5-slim-bookworm
 
 # ======================
 # Build args (architecture)

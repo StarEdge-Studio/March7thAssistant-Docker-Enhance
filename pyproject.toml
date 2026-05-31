@@ -46,7 +46,7 @@ dependencies = [
     "rapidocr==3.8.1",
     "onnxruntime-directml==1.24.4; sys_platform == 'win32'",
     "onnxruntime==1.26.0; sys_platform == 'darwin' or sys_platform == 'linux'",
-    "openvino==2026.1.0",
+    "openvino==2026.2.0",
     "py7zr==1.1.0",
 ]
 
@@ -78,7 +78,7 @@ docker = [
     "selenium==4.44.0",
     "rapidocr==3.8.1",
     "onnxruntime==1.26.0",
-    "openvino==2026.1.0",
+    "openvino==2026.2.0",
 ]
 
 build = [
