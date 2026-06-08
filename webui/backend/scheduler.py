@@ -268,11 +268,25 @@ class Scheduler:
                 try:
                     with open(temp_config_path, 'r', encoding='utf-8') as f:
                         final_config = yaml.load(f) or {}
+
+                    default_config_path = os.path.join(os.getcwd(), 'assets', 'config', 'config.example.yaml')
+                    if os.path.exists(default_config_path):
+                        with open(default_config_path, 'r', encoding='utf-8') as f:
+                            default_config = yaml.load(f) or {}
+                    else:
+                        default_config = {}
                     
                     # 定义需要持久化回写的项
                     keys_to_check = [
                         'last_run_timestamp', 
                         'echo_of_war_timestamp', 
+                        'currencywars_timestamp',
+                        'weekly_divergent_timestamp',
+                        'universe_timestamp',
+                        'divergent_universe_daily_completed_count',
+                        'divergent_universe_daily_completed_timestamp',
+                        'divergent_universe_weekly_completed_count',
+                        'divergent_universe_weekly_completed_timestamp',
                         'already_used_codes',
                         'power_plan'
                     ]
@@ -286,16 +300,26 @@ class Scheduler:
                     
                     changed_keys = []
                     for key in keys_to_check:
-                        if key in final_config:
-                            if current_override.get(key) != final_config[key]:
-                                current_override[key] = final_config[key]
-                                changed_keys.append(key)
+                        if key not in final_config:
+                            continue
+
+                        final_value = final_config[key]
+                        if key in default_config and final_value == default_config[key]:
+                            continue
+
+                        if current_override.get(key) != final_value:
+                            current_override[key] = final_value
+                            changed_keys.append(key)
                     
                     if changed_keys:
                         from io import StringIO
-                        stream = StringIO()
-                        yaml.dump(current_override, stream)
-                        account_manager.update_account(account['id'], {'config_override': stream.getvalue()})
+                        if current_override:
+                            stream = StringIO()
+                            yaml.dump(current_override, stream)
+                            config_override = stream.getvalue()
+                        else:
+                            config_override = ''
+                        account_manager.update_account(account['id'], {'config_override': config_override})
                         
                         # 记录到运行日志中
                         with open(log_path, 'a', encoding='utf-8') as log_file:

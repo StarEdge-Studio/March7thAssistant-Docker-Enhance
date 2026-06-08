@@ -17,6 +17,11 @@ const TASK_FORM_GROUPS = [
     ]
   },
   {
+    name: 'weeklyPoints',
+    title: '周积分线奖励（Beta）',
+    keys: ['currencywars_enable', 'currencywars_bonus_enable']
+  },
+  {
     name: 'team',
     title: '队伍配置',
     keys: ['instance_team_enable', 'instance_team_number', 'instance_teams']
@@ -229,6 +234,14 @@ const Tasks = {
                       </div>
                     </el-collapse-item>
                   </el-collapse>
+                </template>
+
+                <template v-else-if="group.name === 'weeklyPoints'">
+                  <div class="config-grid">
+                    <switch-field label="启用周积分线奖励" tip="使用货币战争完成本周积分奖励，如需修改完成方式或详细策略请使用高级模式" :value="fieldValue('currencywars_enable')" :disabled="isGroupDisabled(group)" @change="setField('currencywars_enable', $event)" />
+                    <switch-field label="自动消耗深度沉浸器" tip="领取积分奖励后自动执行位面饰品快速提取" :value="fieldValue('currencywars_bonus_enable')" :disabled="isGroupDisabled(group)" @change="setField('currencywars_bonus_enable', $event)" />
+                    <select-field label="深度沉浸器提取副本" tip="对应 instance_names.饰品提取，与上方体力与副本中的饰品提取副本是同一个配置；修改这里也会影响清体力选择饰品提取时使用的副本。若启用培养目标，运行时仍会优先使用培养目标识别到的饰品提取副本。" :value="instanceNameValue('饰品提取')" :options="instanceNameOptions('饰品提取', false)" :disabled="isGroupDisabled(group)" @change="setInstanceName('饰品提取', $event)" />
+                  </div>
                 </template>
 
                 <template v-else-if="group.name === 'team'">
