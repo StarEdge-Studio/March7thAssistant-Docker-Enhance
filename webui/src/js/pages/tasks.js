@@ -46,6 +46,16 @@ const TASK_FORM_GROUPS = [
     keys: ['daily_enable', 'daily_material_enable', 'daily_himeko_try_enable']
   },
   {
+    name: 'asset',
+    title: '资产管理',
+    keys: [
+      'asset_manager_enable',
+      'asset_ember_special_pass_enable', 'asset_ember_special_pass_timestamp',
+      'asset_ember_regular_pass_enable', 'asset_ember_regular_pass_timestamp',
+      'asset_ember_tracks_of_destiny_enable', 'asset_ember_tracks_of_destiny_timestamp'
+    ]
+  },
+  {
     name: 'activity',
     title: '活动',
     keys: ['activity_enable']
@@ -280,6 +290,15 @@ const Tasks = {
                     <switch-field label="启用日常任务" :value="fieldValue('daily_enable')" :disabled="isGroupDisabled(group)" @change="setField('daily_enable', $event)" />
                     <switch-field label="通过合成材料完成任务" :value="fieldValue('daily_material_enable')" :disabled="isGroupDisabled(group)" @change="setField('daily_material_enable', $event)" />
                     <switch-field label="通过姬子试用完成任务" :value="fieldValue('daily_himeko_try_enable')" :disabled="isGroupDisabled(group)" @change="setField('daily_himeko_try_enable', $event)" />
+                  </div>
+                </template>
+
+                <template v-else-if="group.name === 'asset'">
+                  <div class="config-grid">
+                    <switch-field label="启用资产管理" :value="fieldValue('asset_manager_enable')" :disabled="isGroupDisabled(group)" @change="setField('asset_manager_enable', $event)" />
+                    <switch-field label="每月自动购买星轨专票" tip="在余烬兑换中自动购买「星轨专票」，成功后记录时间并在每月 1 号刷新" :value="fieldValue('asset_ember_special_pass_enable')" :disabled="isGroupDisabled(group)" @change="setField('asset_ember_special_pass_enable', $event)" />
+                    <switch-field label="每月自动购买星轨通票" tip="在余烬兑换中自动购买「星轨通票」，成功后记录时间并在每月 1 号刷新" :value="fieldValue('asset_ember_regular_pass_enable')" :disabled="isGroupDisabled(group)" @change="setField('asset_ember_regular_pass_enable', $event)" />
+                    <switch-field label="每月自动购买命运的足迹" tip="在余烬兑换中自动购买「命运的足迹」，成功后记录时间并在每月 1 号刷新" :value="fieldValue('asset_ember_tracks_of_destiny_enable')" :disabled="isGroupDisabled(group)" @change="setField('asset_ember_tracks_of_destiny_enable', $event)" />
                   </div>
                 </template>
 

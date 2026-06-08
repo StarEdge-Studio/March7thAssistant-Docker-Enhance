@@ -280,6 +280,10 @@ class Scheduler:
                     keys_to_check = [
                         'last_run_timestamp', 
                         'echo_of_war_timestamp', 
+                        'asset_self_molding_resin_timestamp',
+                        'asset_ember_special_pass_timestamp',
+                        'asset_ember_regular_pass_timestamp',
+                        'asset_ember_tracks_of_destiny_timestamp',
                         'currencywars_timestamp',
                         'weekly_divergent_timestamp',
                         'universe_timestamp',
