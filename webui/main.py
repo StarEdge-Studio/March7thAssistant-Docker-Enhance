@@ -340,12 +340,63 @@ def stop_run(user: UserInfo = Depends(require_admin)):
 qr_login_processes = {}
 
 
+def _qr_login_qr_path(account_id: str) -> str:
+    return os.path.join(DATA_DIR, f"qr_{account_id}.png")
+
+
+def _qr_login_cancel_path(account_id: str) -> str:
+    return os.path.join(DATA_DIR, f"qr_cancel_{account_id}.flag")
+
+
+def _remove_file_if_exists(path: str) -> None:
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except OSError:
+        pass
+
+
+def _cleanup_qr_login_files(account_id: str) -> None:
+    _remove_file_if_exists(_qr_login_qr_path(account_id))
+    _remove_file_if_exists(_qr_login_cancel_path(account_id))
+
+
+def _terminate_process_tree(proc: subprocess.Popen) -> None:
+    try:
+        import psutil
+
+        parent = psutil.Process(proc.pid)
+        processes = parent.children(recursive=True) + [parent]
+        for process in processes:
+            try:
+                process.terminate()
+            except psutil.Error:
+                pass
+        _, alive = psutil.wait_procs(processes, timeout=5)
+        for process in alive:
+            try:
+                process.kill()
+            except psutil.Error:
+                pass
+    except Exception:
+        try:
+            proc.terminate()
+            proc.wait(timeout=5)
+        except Exception:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+
+
 @app.post("/api/qr_login/start/{account_id}")
 def start_qr_login(account_id: str, user: UserInfo = Depends(get_current_user)):
     check_account_write(account_id, user)
 
     if account_id in qr_login_processes and qr_login_processes[account_id].poll() is None:
         return {"success": False, "message": "扫码登录流程已在进行中"}
+
+    _cleanup_qr_login_files(account_id)
 
     account_profile_dir = os.path.join(DATA_DIR, "profiles", account_id)
     os.makedirs(account_profile_dir, exist_ok=True)
@@ -365,11 +416,34 @@ def start_qr_login(account_id: str, user: UserInfo = Depends(get_current_user)):
     return {"success": True, "message": "扫码登录已启动"}
 
 
+@app.post("/api/qr_login/cancel/{account_id}")
+def cancel_qr_login(account_id: str, user: UserInfo = Depends(get_current_user)):
+    check_account_write(account_id, user)
+
+    proc = qr_login_processes.pop(account_id, None)
+    if not proc:
+        _cleanup_qr_login_files(account_id)
+        return {"success": True, "message": "扫码登录流程已取消"}
+
+    if proc.poll() is None:
+        try:
+            with open(_qr_login_cancel_path(account_id), "w", encoding="utf-8") as f:
+                f.write(str(time.time()))
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            _terminate_process_tree(proc)
+        except Exception:
+            _terminate_process_tree(proc)
+
+    _cleanup_qr_login_files(account_id)
+    return {"success": True, "message": "扫码登录流程已取消"}
+
+
 @app.get("/api/qr_login/status/{account_id}")
 def check_qr_login_status(account_id: str, user: UserInfo = Depends(get_current_user)):
     check_account_write(account_id, user)
 
-    qr_path = os.path.join(DATA_DIR, f"qr_{account_id}.png")
+    qr_path = _qr_login_qr_path(account_id)
     qr_ready = os.path.exists(qr_path)
 
     proc = qr_login_processes.get(account_id)
@@ -392,7 +466,7 @@ def check_qr_login_status(account_id: str, user: UserInfo = Depends(get_current_
 
 @app.get("/api/qr_login/image/{account_id}")
 def get_qr_image(account_id: str):
-    qr_path = os.path.join(DATA_DIR, f"qr_{account_id}.png")
+    qr_path = _qr_login_qr_path(account_id)
     if os.path.exists(qr_path):
         return FileResponse(qr_path, media_type="image/png")
     raise HTTPException(status_code=404, detail="QR image not found")

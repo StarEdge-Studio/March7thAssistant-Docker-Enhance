@@ -108,7 +108,7 @@ const Accounts = {
       </el-dialog>
 
       <!-- QR Login Dialog -->
-      <el-dialog v-model="showQrDialog" title="扫码登录" width="400px" @close="stopQrPolling" class="custom-dialog">
+      <el-dialog v-model="showQrDialog" title="扫码登录" width="400px" :close-on-click-modal="false" :close-on-press-escape="false" :before-close="handleQrDialogBeforeClose" @close="stopQrPolling" class="custom-dialog">
         <div class="text-center p-6">
           <div v-if="qrStatus === 'idle' || (qrStatus === 'running' && !qrUrl)" class="py-8 flex flex-col items-center">
             <div class="w-16 h-16 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mb-6"></div>
@@ -152,7 +152,8 @@ const Accounts = {
       qrStatus: 'idle',
       qrUrl: null,
       qrPollingInterval: null,
-      currentQrAccountId: null
+      currentQrAccountId: null,
+      qrCancelling: false
     }
   },
   mounted() {
@@ -306,7 +307,21 @@ const Accounts = {
 
       try {
         const res = await api.post(`/qr_login/start/${account.id}`);
+        if (!this.showQrDialog || this.currentQrAccountId !== account.id) {
+          if (res.success || res.message === '扫码登录流程已在进行中') {
+            try {
+              await api.post(`/qr_login/cancel/${account.id}`);
+            } catch (e) {
+              console.error('QR cancel after dialog close failed', e);
+            }
+          }
+          return;
+        }
         if (res.success) {
+          this.qrStatus = 'running';
+          this.startQrPolling();
+        } else if (res.message === '扫码登录流程已在进行中') {
+          ElementPlus.ElMessage.info(res.message);
           this.qrStatus = 'running';
           this.startQrPolling();
         } else {
@@ -346,6 +361,28 @@ const Accounts = {
         clearInterval(this.qrPollingInterval);
         this.qrPollingInterval = null;
       }
+    },
+    async handleQrDialogBeforeClose(done) {
+      if (this.qrCancelling) return;
+
+      const shouldCancel = ['idle', 'running'].includes(this.qrStatus) && this.currentQrAccountId;
+      if (shouldCancel) {
+        this.qrCancelling = true;
+        try {
+          await api.post(`/qr_login/cancel/${this.currentQrAccountId}`);
+          ElementPlus.ElMessage.success('已取消扫码登录');
+        } catch (e) {
+          ElementPlus.ElMessage.error('取消扫码登录失败');
+          this.qrCancelling = false;
+          return;
+        }
+        this.qrCancelling = false;
+      }
+
+      this.stopQrPolling();
+      this.qrUrl = null;
+      this.currentQrAccountId = null;
+      done();
     }
   }
 };
