@@ -105,7 +105,7 @@ const Dashboard = {
         
         <!-- Right Column (Logs) -->
         <div class="lg:col-span-2">
-          <div class="card-glass h-[600px] flex flex-col overflow-hidden">
+          <div class="card-glass h-[680px] flex flex-col overflow-hidden">
             <div class="flex justify-between items-center px-6 py-4 header-glass">
               <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-200 m-0 flex items-center">
                 <el-icon class="mr-2 text-violet-500 dark:text-violet-400"><Document /></el-icon>
@@ -144,8 +144,7 @@ const Dashboard = {
       currentLog: '',
       logLoading: false,
       pollInterval: null,
-      isAutoScroll: true,
-      resumeScrollTimeout: null
+      isAutoScroll: true
     }
   },
   computed: {
@@ -181,7 +180,6 @@ const Dashboard = {
   },
   unmounted() {
     clearInterval(this.pollInterval);
-    if (this.resumeScrollTimeout) clearTimeout(this.resumeScrollTimeout);
   },
   methods: {
     async fetchData() {
@@ -232,7 +230,6 @@ const Dashboard = {
     },
     viewLog(filename, isHistory = false) {
       this.currentLogFile = filename;
-      if (this.resumeScrollTimeout) clearTimeout(this.resumeScrollTimeout);
       this.isAutoScroll = !isHistory;
       this.refreshLog(isHistory);
     },
@@ -289,29 +286,8 @@ const Dashboard = {
 
       if (isAtBottom) {
         this.isAutoScroll = true;
-        if (this.resumeScrollTimeout) {
-          clearTimeout(this.resumeScrollTimeout);
-          this.resumeScrollTimeout = null;
-        }
       } else {
-        // 用户向上滚动，暂停自动滚动
         this.isAutoScroll = false;
-
-        // 设置 5 秒后恢复自动滚动
-        if (this.resumeScrollTimeout) clearTimeout(this.resumeScrollTimeout);
-        this.resumeScrollTimeout = setTimeout(() => {
-          this.isAutoScroll = true;
-          this.scrollToBottom();
-        }, 5000);
-      }
-    },
-    scrollToBottom() {
-      const el = this.$refs.logConsole;
-      if (el) {
-        el.scrollTo({
-          top: el.scrollHeight,
-          behavior: 'smooth'
-        });
       }
     },
     formatDuration(start, end) {
