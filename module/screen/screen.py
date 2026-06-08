@@ -117,8 +117,11 @@ class Screen(metaclass=SingletonMeta):
         处理自动重试逻辑，包括按ESC键和处理特定的异常情况。
         """
         self._warn_overlay_monitor_text_if_needed()
-        self.logger.warning("未识别出任何界面，请确保游戏画面干净，按ESC后重试")
-        auto.press_key("esc")
+        if auto.click_element("稍后再看", "text", take_screenshot=False):
+            self.logger.info("检测到开拓任务前情提要弹窗，已点击稍后再看")
+        else:
+            auto.press_key("esc")
+            self.logger.warning("未识别出任何界面，请确保游戏画面干净，按ESC后重试")
         time.sleep(2)  # 等待屏幕变化
 
         auto.take_screenshot()
@@ -335,7 +338,7 @@ class Screen(metaclass=SingletonMeta):
         # self.logger.error("如果是云·星穹铁道：")
         else:
             self.logger.error("使用云·星穹铁道请确保网络正常，浏览器能正常加载游戏画面")
-        raise Exception(error_message)
+        raise RuntimeError(error_message)
 
     def ensure_current_screen_is_clean(self):
         """

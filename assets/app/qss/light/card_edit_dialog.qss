@@ -1,0 +1,10 @@
+QScrollArea {
+    background-color: transparent;
+    border: none;
+}
+
+QFrame[frameShape="5"] {
+    background-color: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
+}

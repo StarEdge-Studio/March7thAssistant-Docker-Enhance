@@ -85,7 +85,7 @@ class StarRailController(LocalGameController):
         for attempt in range(1, max_checks + 1):
             resolution = self.get_resolution()
             if not resolution:
-                raise Exception("游戏分辨率获取失败")
+                raise RuntimeError("游戏分辨率获取失败")
             window_width, window_height = resolution
 
             if window_width == target_width and window_height == target_height:
@@ -102,7 +102,7 @@ class StarRailController(LocalGameController):
                 self.log_error(f"将在 {check_interval} 秒后重新检查分辨率（第 {attempt}/{max_checks} 次）")
                 time.sleep(check_interval)
 
-        raise Exception("游戏分辨率不正确")
+        raise ValueError("游戏分辨率不正确")
 
     def check_resolution_ratio(self, target_width: int, target_height: int) -> None:
         """
@@ -117,7 +117,7 @@ class StarRailController(LocalGameController):
         """
         resolution = self.get_resolution()
         if not resolution:
-            raise Exception("游戏分辨率获取失败")
+            raise RuntimeError("游戏分辨率获取失败")
         window_width, window_height = resolution
 
         screen_width, screen_height = self.screen_resolution
@@ -126,10 +126,10 @@ class StarRailController(LocalGameController):
             self.log_error(f"游戏分辨率: {window_width}x{window_height} 请在游戏设置内切换为 {target_width}x{target_height} 窗口或全屏运行")
             if screen_width < 1920 or screen_height < 1080:
                 self.log_error(f"桌面分辨率: {screen_width}x{screen_height} 你可能需要更大的显示器或使用 HDMI/VGA 显卡欺骗器")
-            raise Exception("游戏分辨率过低")
+            raise ValueError("游戏分辨率过低")
         elif abs(window_width / window_height - (target_width / target_height)) > 0.01:
             self.log_error(f"游戏分辨率: {window_width}x{window_height} 请在游戏设置内切换为 {target_width}:{target_height} 比例")
-            raise Exception("游戏分辨率比例不正确")
+            raise ValueError("游戏分辨率比例不正确")
         else:
             if window_width != target_width or window_height != target_height:
                 self.log_error(f"游戏分辨率: {window_width}x{window_height} ≠ {target_width}x{target_height} 可能出现未预期的错误")

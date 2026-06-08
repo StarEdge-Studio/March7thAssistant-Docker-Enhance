@@ -243,7 +243,7 @@ def read_registry_value(key, sub_key, value_name):
         The content of the specified value in the registry.
     """
     if sub_key is None:
-        raise Exception("Registry key path not found. Please ensure the game is installed.")
+        raise OSError("Registry key path not found. Please ensure the game is installed.")
     try:
         # Open the specified registry key
         registry_key = winreg.OpenKey(key, sub_key)
@@ -256,7 +256,7 @@ def read_registry_value(key, sub_key, value_name):
         # raise FileNotFoundError(f"Specified registry key or value not found: {sub_key}\\{value_name}")
         return None
     except Exception as e:
-        raise Exception(f"Error reading registry value: {e}")
+        raise OSError(f"Error reading registry value: {e}")
 
 
 def write_registry_value(key, sub_key, value_name, data, mode) -> None:
@@ -271,7 +271,7 @@ def write_registry_value(key, sub_key, value_name, data, mode) -> None:
     - mode: The type of data.
     """
     if sub_key is None:
-        raise Exception("Registry key path not found. Please ensure the game is installed.")
+        raise OSError("Registry key path not found. Please ensure the game is installed.")
     try:
         # Open or create the specified registry key
         registry_key = winreg.CreateKey(key, sub_key)
@@ -280,4 +280,4 @@ def write_registry_value(key, sub_key, value_name, data, mode) -> None:
         # Close the registry key
         winreg.CloseKey(registry_key)
     except Exception as e:
-        raise Exception(f"Error writing registry value: {e}")
+        raise OSError(f"Error writing registry value: {e}")

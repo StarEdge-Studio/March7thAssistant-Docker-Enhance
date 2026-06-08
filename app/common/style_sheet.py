@@ -24,6 +24,7 @@ class StyleSheet(StyleSheetBase, Enum):
     SETTING_INTERFACE = "setting_interface"
     GALLERY_INTERFACE = "gallery_interface"
     NAVIGATION_VIEW_INTERFACE = "navigation_view_interface"
+    CARD_EDIT_DIALOG = "card_edit_dialog"
 
     Tutorial_INTERFACE = "tutorial_interface"
     HELP_INTERFACE = "help_interface"

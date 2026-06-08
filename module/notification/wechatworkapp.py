@@ -20,7 +20,7 @@ class WeChatworkappNotifier(Notifier):
         if response['errcode'] == 0:
             return response['access_token']
         else:
-            raise Exception(response['errmsg'])
+            raise RuntimeError(response['errmsg'])
 
     def _upload_file(self, upload_file, type="file") -> str:
         """
@@ -38,7 +38,7 @@ class WeChatworkappNotifier(Notifier):
         if response['errcode'] == 0:
             return response['media_id']
         else:
-            raise Exception(response['errmsg'])
+            raise RuntimeError(response['errmsg'])
 
     def send_image(self, image):
         """
@@ -60,7 +60,7 @@ class WeChatworkappNotifier(Notifier):
         response.raise_for_status()
         response = response.json()
         if response['errcode'] != 0:
-            raise Exception(response['errmsg'])
+            raise RuntimeError(response['errmsg'])
 
     def send_text(self, text: str):
         """
@@ -81,7 +81,7 @@ class WeChatworkappNotifier(Notifier):
         response.raise_for_status()
         response = response.json()
         if response['errcode'] != 0:
-            raise Exception(response['errmsg'])
+            raise RuntimeError(response['errmsg'])
 
     def send(self, title: str, content: str, image_io=None):
         """

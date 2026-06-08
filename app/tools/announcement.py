@@ -13,7 +13,7 @@ def download_image(image_url):
     if response.status_code == 200:
         return QImage.fromData(response.content)
     else:
-        raise Exception("Failed to download image.")
+        raise IOError("Failed to download image.")
 
 
 def generate_qr_code(url):

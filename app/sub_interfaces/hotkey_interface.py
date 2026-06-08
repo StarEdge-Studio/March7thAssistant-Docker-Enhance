@@ -18,7 +18,8 @@ class HotkeyInterface(MessageBox):
             tr("地图"): "hotkey_map",
             tr("跃迁"): "hotkey_warp",
             tr("自动战斗"): "hotkey_auto_battle",
-            tr("停止任务（全局热键，支持后台）"): "hotkey_stop_task"
+            tr("停止任务（全局热键，支持后台）"): "hotkey_stop_task",
+            tr("自动对话（全局热键，支持后台）"): "hotkey_toggle_autoplot"
         }
 
         super().__init__(tr("按键设置"), "", parent)
@@ -50,6 +51,8 @@ class HotkeyInterface(MessageBox):
                 icon = FIF.LEAF
             elif config == "hotkey_auto_battle":
                 icon = FIF.GAME
+            elif config == "hotkey_toggle_autoplot":
+                icon = FIF.DEVELOPER_TOOLS
             else:
                 icon = FIF.SETTING
 

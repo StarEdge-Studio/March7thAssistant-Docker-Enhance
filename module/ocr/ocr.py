@@ -660,7 +660,7 @@ class OCR:
                 atexit.register(self.exit_ocr)
             except Exception as e:
                 self.logger.error(f"初始化OCR失败：{e}")
-                raise Exception("初始化OCR失败")
+                raise RuntimeError("初始化OCR失败")
 
     def exit_ocr(self):
         """退出OCR实例，清理资源"""

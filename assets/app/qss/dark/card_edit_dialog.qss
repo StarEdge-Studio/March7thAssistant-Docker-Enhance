@@ -1,0 +1,18 @@
+QDialog {
+    background-color: #2b2b2b;
+}
+
+QLabel {
+    color: rgba(255, 255, 255, 0.87);
+}
+
+QScrollArea {
+    background-color: transparent;
+    border: none;
+}
+
+QFrame[frameShape="5"] {
+    background-color: rgba(39, 39, 39, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+}

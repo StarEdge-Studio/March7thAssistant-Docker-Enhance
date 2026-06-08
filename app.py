@@ -5,7 +5,11 @@ os.chdir(os.path.dirname(sys.executable) if getattr(sys, 'frozen', False)else os
 
 import ctypes
 import argparse
+from utils.dpi import configure_dpi_awareness
 from utils.tasks import AVAILABLE_TASKS
+
+
+configure_dpi_awareness()
 
 
 def hide_console():

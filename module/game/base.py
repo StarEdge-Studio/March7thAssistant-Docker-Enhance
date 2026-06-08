@@ -5,22 +5,12 @@ import subprocess
 import ctypes
 from typing import Literal, Tuple, Optional
 from utils.logger.logger import Logger
+from utils.dpi import configure_dpi_awareness
 
 
-# Set process as DPI-aware to get actual pixel dimensions instead of scaled values
-# This needs to be called once before any window operations
-# PROCESS_PER_MONITOR_DPI_AWARE = 1 (Windows 8.1+)
-PROCESS_PER_MONITOR_DPI_AWARE = 1
-try:
-    # Try to set DPI awareness (Windows 8.1+)
-    ctypes.windll.shcore.SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE)
-except (OSError, AttributeError):
-    try:
-        # Fallback for older Windows versions
-        ctypes.windll.user32.SetProcessDPIAware()
-    except (OSError, AttributeError):
-        # If both fail, continue without DPI awareness (likely not on Windows)
-        pass
+# Keep a module-level fallback for non-standard entry points that import game control
+# classes directly without going through app.py or main.py.
+configure_dpi_awareness()
 
 
 class GameControllerBase:
@@ -218,9 +208,9 @@ class GameControllerBase:
 
         # 基本检查
         if not hwnd:
-            raise Exception("Invalid window handle: 0")
+            raise RuntimeError("Invalid window handle: 0")
         if user32.IsWindow(hwnd) == 0:
-            raise Exception(f"Invalid window handle: {hwnd}")
+            raise RuntimeError(f"Invalid window handle: {hwnd}")
 
         # 如果被图标化，先还原（常见场景）
         if user32.IsIconic(hwnd):
@@ -266,4 +256,4 @@ class GameControllerBase:
                 pass
 
         # 如果都失败，抛出异常以便调用方记录或处理
-        raise Exception("Failed to set window foreground after multiple attempts")
+        raise RuntimeError("Failed to set window foreground after multiple attempts")

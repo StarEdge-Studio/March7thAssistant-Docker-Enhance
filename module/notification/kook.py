@@ -45,17 +45,17 @@ class KOOKNotifier(Notifier):
 
             # 检查API响应
             if response_data.get("code") != 0:
-                raise Exception(f"KOOK图片上传失败: {response_data.get('message', '未知错误')}")
+                raise RuntimeError(f"KOOK图片上传失败: {response_data.get('message', '未知错误')}")
 
             # 返回图片URL，确保URL有效
             image_url = response_data.get("data", {}).get("url", "")
             if not image_url:
-                raise Exception("KOOK图片上传成功但未返回图片URL")
+                raise RuntimeError("KOOK图片上传成功但未返回图片URL")
             
             return image_url
 
         except requests.RequestException as e:
-            raise Exception(f"KOOK图片上传失败: {str(e)}")
+            raise RuntimeError(f"KOOK图片上传失败: {str(e)}")
 
     def send(self, title: str, content: str, image_io: Optional[io.BytesIO] = None):
         """
@@ -116,7 +116,7 @@ class KOOKNotifier(Notifier):
 
             # 检查API响应
             if response_data.get("code") != 0:
-                raise Exception(f"KOOK消息发送失败: {response_data.get('message', '未知错误')}")
+                raise RuntimeError(f"KOOK消息发送失败: {response_data.get('message', '未知错误')}")
 
             # 如果有图片，上传并发送图片消息
             if image_io:
@@ -145,5 +145,5 @@ class KOOKNotifier(Notifier):
                         self.logger.warning(f"KOOK图片处理失败: {str(e)}")
 
         except requests.RequestException as e:
-            raise Exception(f"KOOK通知发送失败: {str(e)}")
+            raise RuntimeError(f"KOOK通知发送失败: {str(e)}")
 

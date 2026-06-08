@@ -419,7 +419,7 @@ class DivergentUniverse:
                             else:
                                 if not auto.find_element("./assets/images/screen/divergent_universe/stage.png", "image", 0.9, crop=(33 / 1920, 52 / 1080, 68 / 1920, 60 / 1080)):
                                     log.error("多次尝试关闭冒险教学弹窗失败")
-                                    raise Exception("多次尝试关闭冒险教学弹窗失败")
+                                    raise RuntimeError("多次尝试关闭冒险教学弹窗失败")
                     self.process_leave()
 
             elif self.stage_finish:
@@ -886,10 +886,10 @@ class DivergentUniverse:
                 screen.change_to("divergent_mode_select")
                 if auto.click_element("继续进度", "text", crop=(39 / 1920, 215 / 1080, 748 / 1920, 597 / 1080)):
                     if not auto.find_element("./assets/images/screen/divergent_universe/stage.png", "image", 0.9, max_retries=120, crop=(33 / 1920, 52 / 1080, 68 / 1920, 60 / 1080)):
-                        raise Exception("重新进入关卡失败")
+                        raise RuntimeError("重新进入关卡失败")
                     return
                 else:
-                    raise Exception("未找到继续进度按钮")
+                    raise RuntimeError("未找到继续进度按钮")
         log.error("多次尝试重新进入关卡失败")
 
     def detect_random_door(self):

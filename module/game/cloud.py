@@ -32,6 +32,10 @@ from module.logger import Logger
 from utils.console import is_docker_started
 
 
+class CloudGameLoginTimeoutError(RuntimeError):
+    """云游戏登录等待超时，不应按启动失败重试。"""
+
+
 class CloudGameController(GameControllerBase):
     COOKIE_PATH = "settings/cookies.enc"          # Cookies 保存地址（仅用于调试）
     GAME_URL = "https://sr.mihoyo.com/cloud"            # 游戏地址
@@ -147,7 +151,7 @@ class CloudGameController(GameControllerBase):
             except TimeoutException:
                 pass
 
-        raise Exception("页面加载失败，多次刷新无效。")
+        raise ConnectionError("页面加载失败，多次刷新无效。")
 
     def _confirm_viewport_resolution(self) -> None:
         """
@@ -200,7 +204,7 @@ class CloudGameController(GameControllerBase):
                     self.log_info("正在下载浏览器和驱动...")
                     SeleniumManager().binary_paths(args)
                 except WebDriverException as e:
-                    raise Exception(f"浏览器和驱动下载失败：{e}")
+                    raise RuntimeError(f"浏览器和驱动下载失败：{e}")
         else:
             # 尝试在本地查找浏览器
             args = ["--browser", browser_type,
@@ -219,7 +223,7 @@ class CloudGameController(GameControllerBase):
             try:
                 result = SeleniumManager().binary_paths(args)
             except WebDriverException as e:
-                raise Exception(f"查找 {browser_type} 浏览器出错：{e}")
+                raise RuntimeError(f"查找 {browser_type} 浏览器出错：{e}")
             browser_path = result["browser_path"]
             driver_path = result["driver_path"]
         self.log_debug(f"browser_path = {browser_path}")
@@ -368,10 +372,10 @@ class CloudGameController(GameControllerBase):
                         self.log_warning(f"删除残留文件失败: {file_path}, 错误: {e}")
             self.log_error("如果设置了浏览器启动参数，请去掉所有浏览器启动参数后重试")
             self.log_error("如果仍然存在问题，请更换浏览器重试")
-            raise Exception("浏览器启动失败")
+            raise RuntimeError("浏览器启动失败")
         except Exception as e:
             self.log_error(f"浏览器启动失败: {e}")
-            raise Exception("浏览器启动失败")
+            raise RuntimeError("浏览器启动失败")
 
         if not self.cfg.cloud_game_fullscreen_enable:
             self.driver.set_window_size(1920, 1120)
@@ -478,8 +482,10 @@ class CloudGameController(GameControllerBase):
             free_selector = "#app > div.home-wrapper > div.welcome > div.welcome-wrapper > div > div.wel-card__content > div.wel-card__content--wallet > div.wallet-item.ft > div.left > span > span:nth-child(2)"
             paid_els = self.driver.find_elements(By.CSS_SELECTOR, paid_selector)
             free_els = self.driver.find_elements(By.CSS_SELECTOR, free_selector)
-            paid = int(paid_els[0].text.strip()) if paid_els else None
-            free = int(free_els[0].text.strip()) if free_els else None
+            paid_text = paid_els[0].text.strip() if paid_els else None
+            free_text = free_els[0].text.strip() if free_els else None
+            paid = int(paid_text) if paid_text and paid_text.isdigit() else None
+            free = int(free_text) if free_text and free_text.isdigit() else None
             return paid, free
         except StaleElementReferenceException:
             self.log_debug("获取剩余时长失败: 页面元素已更新，将重试")
@@ -513,6 +519,24 @@ class CloudGameController(GameControllerBase):
         except TimeoutException:
             self.log_warning("检测登录状态超时：未出现登录或未登录标志元素")
             return None
+
+    def _get_login_timeout_seconds(self) -> int:
+        try:
+            timeout_minutes = int(self.cfg.get_value("cloud_game_login_timeout", 10))
+        except (TypeError, ValueError):
+            timeout_minutes = 10
+        return max(1, timeout_minutes) * 60
+
+    def _abort_login_timeout(self, timeout_seconds: int) -> None:
+        timeout_minutes = timeout_seconds // 60
+        message = f"等待云游戏登录超时（{timeout_minutes} 分钟），停止运行"
+        self.log_error(message)
+        self.stop_game()
+        raise CloudGameLoginTimeoutError(message)
+
+    def _check_login_timeout(self, deadline: float, timeout_seconds: int) -> None:
+        if time.monotonic() >= deadline:
+            self._abort_login_timeout(timeout_seconds)
 
     def _click_enter_game(self, timeout=5) -> None:
         """
@@ -1004,10 +1028,13 @@ class CloudGameController(GameControllerBase):
         except Exception as e:
             self.log_warning(f"解析二维码内容失败: {e}")
 
-    def _wait_scan_success_with_refresh(self, qr_filename: str) -> None:
+    def _wait_scan_success_with_refresh(self, qr_filename: str, login_deadline: float = None, timeout_seconds: int = None) -> None:
         import os
         check_interval = 2
         while True:
+            if login_deadline is not None and timeout_seconds is not None:
+                self._check_login_timeout(login_deadline, timeout_seconds)
+
             # 成功
             if self.driver.find_elements(By.XPATH, "//*[contains(text(), '扫码成功')]"):
                 try:
@@ -1050,7 +1077,7 @@ class CloudGameController(GameControllerBase):
 
             time.sleep(check_interval)
 
-    def _run_qr_login_flow(self) -> None:
+    def _run_qr_login_flow(self, login_deadline: float = None, timeout_seconds: int = None) -> None:
         self.log_info("正在切换到二维码登录...")
 
         # 每次进入二维码登录流程时重置通知限流状态
@@ -1072,7 +1099,7 @@ class CloudGameController(GameControllerBase):
             self._decode_qr_from_element(qr_img, qr_filename)
             self.log_info("=" * 60)
             self.log_info("等待扫码（二维码过期将自动刷新）...")
-            self._wait_scan_success_with_refresh(qr_filename)
+            self._wait_scan_success_with_refresh(qr_filename, login_deadline, timeout_seconds)
         except TimeoutException:
             self.log_warning("等待二维码加载超时")
         except Exception as e:
@@ -1111,6 +1138,8 @@ class CloudGameController(GameControllerBase):
         try:
             # 检测登录状态
             while not self._check_login():
+                login_timeout_seconds = self._get_login_timeout_seconds()
+                login_deadline = time.monotonic() + login_timeout_seconds
                 self.log_info("未登录")
 
                 # 如果是 headless 且配置了自动重启，则以非 headless 模式重启启动让用户登录
@@ -1120,12 +1149,15 @@ class CloudGameController(GameControllerBase):
 
                 # 如果是 headless 且配置了不重启，则尝试二维码登录
                 if self.cfg.browser_headless_enable and (not self.cfg.browser_headless_restart_on_not_logged_in):
-                    self._run_qr_login_flow()
+                    self._run_qr_login_flow(login_deadline, login_timeout_seconds)
 
-                self.log_info("请在浏览器中完成登录操作")
+                self.log_info(f"请在浏览器中完成登录操作，超时时间：{login_timeout_seconds // 60} 分钟")
 
                 # 循环检测用户是否登录
-                while not self._check_login():
+                while True:
+                    self._check_login_timeout(login_deadline, login_timeout_seconds)
+                    if self._check_login():
+                        break
                     time.sleep(2)
 
                 self.log_info("检测到登录成功")
@@ -1171,13 +1203,15 @@ class CloudGameController(GameControllerBase):
                 self._confirm_viewport_resolution()  # 将浏览器内部分辨率设置为 1920x1080
                 self.log_info("进入云游戏成功")
                 return True
+        except CloudGameLoginTimeoutError:
+            raise
         except Exception as e:
             self.try_dump_page()
             self.log_error(f"进入云游戏失败: {e}")
             return False
 
         if remaining == 0:
-            raise Exception("云游戏剩余时长为 0，停止运行")
+            raise RuntimeError("云游戏剩余时长为 0，停止运行")
         return False
 
     def _take_video_screenshot(self, crop=(0, 0, 1, 1)) -> tuple[bytes, tuple[int, int]] | None:

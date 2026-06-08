@@ -177,6 +177,8 @@ class StepEditDialog(QDialog):
         self.resize(640, 420)
         self.setMinimumWidth(560)
 
+        StyleSheet.WORKFLOW_INTERFACE.apply(self)
+
         self.original_step = normalize_step(step or {"type": "click_text"})
         self.workflow = workflow
         self.step_type_labels = [tr(STEP_TYPE_LABELS[key]) for key in self.STEP_TYPES]
@@ -572,14 +574,11 @@ class WorkflowInterface(ScrollArea):
         action_row = QHBoxLayout()
         action_row.setSpacing(8)
         self.runButton = PrimaryPushButton(FIF.PLAY, tr("运行流程"), self.summaryCard)
-        self.stopButton = PushButton(FIF.CLOSE, tr("停止流程"), self.summaryCard)
-        self.stopButton.setEnabled(True)
         self.captureTemplateButton = PushButton(FIF.CAMERA, tr("采集图像模板"), self.summaryCard)
         self.openTemplateDirButton = PushButton(FIF.FOLDER, tr("打开模板目录"), self.summaryCard)
         self.importWorkflowButton = PushButton(FIF.DOWNLOAD, tr("导入流程"), self.summaryCard)
         self.exportWorkflowButton = PushButton(FIF.SAVE_AS, tr("导出流程"), self.summaryCard)
         action_row.addWidget(self.runButton)
-        action_row.addWidget(self.stopButton)
         action_row.addStretch(1)
         action_row.addWidget(self.captureTemplateButton)
         action_row.addWidget(self.openTemplateDirButton)
@@ -656,7 +655,6 @@ class WorkflowInterface(ScrollArea):
         self.importWorkflowButton.clicked.connect(self._import_workflow)
         self.exportWorkflowButton.clicked.connect(self._export_workflow)
         self.runButton.clicked.connect(self._run_current_workflow)
-        self.stopButton.clicked.connect(self._stop_current_workflow)
         self.captureTemplateButton.clicked.connect(lambda: self._start_capture("template"))
         self.openTemplateDirButton.clicked.connect(lambda: self._open_directory(get_asset_directory("template", self._current_workflow())))
         self.addStepButton.clicked.connect(self._add_step)
@@ -1239,11 +1237,6 @@ class WorkflowInterface(ScrollArea):
         if selected_path is None:
             return
         self._start_workflow_execution(selected_path)
-
-    def _stop_current_workflow(self):
-        log_interface = self._get_log_interface()
-        if log_interface is not None:
-            log_interface.stopTask()
 
     def _start_capture(self, kind: str):
         if self._current_workflow_is_read_only():

@@ -4,7 +4,11 @@ import argparse
 # 将当前工作目录设置为程序所在的目录，确保无论从哪里执行，其工作目录都正确设置为程序本身的位置，避免路径错误。
 os.chdir(os.path.dirname(sys.executable) if getattr(sys, 'frozen', False)else os.path.dirname(os.path.abspath(__file__)))
 
+from utils.dpi import configure_dpi_awareness
 from utils.tasks import AVAILABLE_TASKS
+
+
+configure_dpi_awareness()
 
 
 def parse_args():
@@ -120,6 +124,7 @@ from tasks.daily.redemption import Redemption
 from tasks.weekly.currency_wars import CurrencyWars
 from tasks.weekly.divergent_universe import DivergentUniverse
 from tasks.base.genshin_starRail_fps_unlocker import Genshin_StarRail_fps_unlocker
+from tasks.base import screen_test
 
 
 from utils.console import pause_on_error, pause_on_success, pause_always, is_docker_started
@@ -163,19 +168,29 @@ def run_main_actions(no_run_immediately=False):
 
 
 def run_sub_task(action):
-    if action != "currencywarstemp" and action != "divergenttemp":
+    if action not in ("currencywarstemp", "divergenttemp"):
         game.start()
     else:
         if cfg.cloud_game_enable:
             if not cloud_game.start_game_process():
-                raise Exception("启动或连接浏览器失败")
+                raise ConnectionError("启动或连接浏览器失败")
         game.switch_to_game()
+
+    def _run_loop_task_with_telemetry(task_id, task_fn):
+        while True:
+            telemetry.track_task_start(task_id)
+            task_start_time = time.time()
+            try:
+                success = bool(task_fn())
+                telemetry.track_task_complete(task_id, success, time.time() - task_start_time)
+            except Exception:
+                telemetry.track_task_complete(task_id, False, time.time() - task_start_time)
+                raise
 
     def currencywars(mode=None):
         war = CurrencyWars()
         if mode == "loop":
-            while True:
-                war.start()
+            _run_loop_task_with_telemetry("currencywarsloop", war.start)
         elif mode == "temp":
             war.loop()
         else:
@@ -184,8 +199,7 @@ def run_sub_task(action):
     def divergent(mode=None):
         universe = DivergentUniverse()
         if mode == "loop":
-            while True:
-                universe.start()
+            _run_loop_task_with_telemetry("divergentloop", universe.start)
         elif mode == "temp":
             universe.loop()
         else:
@@ -202,6 +216,7 @@ def run_sub_task(action):
         "divergentloop": lambda: divergent("loop"),
         "divergenttemp": lambda: divergent("temp"),
         "fight": Fight.start,
+        "screen_test": screen_test.run,
         "universe": lambda: Universe.start(category="universe"),
         "forgottenhall": lambda: challenge.start("memoryofchaos"),
         "purefiction": lambda: challenge.start("purefiction"),
@@ -210,15 +225,19 @@ def run_sub_task(action):
     }
     task = sub_tasks.get(action)
     if task:
-        telemetry.track_task_start(action)
-        task_start_time = time.time()
-        try:
+        if action in {"currencywarsloop", "divergentloop"}:
             task()
-            telemetry.track_task_complete(action, True, time.time() - task_start_time)
-        except Exception:
-            telemetry.track_task_complete(action, False, time.time() - task_start_time)
-            raise
-    game.stop(False)
+        else:
+            telemetry.track_task_start(action)
+            task_start_time = time.time()
+            try:
+                task()
+                telemetry.track_task_complete(action, True, time.time() - task_start_time)
+            except Exception:
+                telemetry.track_task_complete(action, False, time.time() - task_start_time)
+                raise
+    if action != "screen_test":
+        game.stop(False)
 
 
 def run_sub_task_gui(action):
@@ -272,7 +291,7 @@ def main(action=None, no_run_immediately=False, workflow_name=None, workflow_ste
         run_main_actions(no_run_immediately)
 
     # 子任务
-    elif action in ["routine", "daily", "power", "currencywars", "currencywarsloop", "currencywarstemp", "divergent", "divergentloop", "divergenttemp", "fight", "universe", "forgottenhall", "purefiction", "apocalyptic", "redemption"]:
+    elif action in ["routine", "daily", "power", "currencywars", "currencywarsloop", "currencywarstemp", "divergent", "divergentloop", "divergenttemp", "fight", "universe", "forgottenhall", "purefiction", "apocalyptic", "redemption", "screen_test"]:
         run_sub_task(action)
 
     # 子任务 原生图形界面

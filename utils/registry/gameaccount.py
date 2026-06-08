@@ -68,4 +68,4 @@ def gamereg_delete_all() -> None:
     subcommand = f"reg delete \"{full_reg_path}\" /f"
     result = os.system(subcommand)
     if result != 0:
-        raise Exception(f"Failed to delete registry key: {full_reg_path}. Error code: {result}")
+        raise OSError(f"Failed to delete registry key: {full_reg_path}. Error code: {result}")

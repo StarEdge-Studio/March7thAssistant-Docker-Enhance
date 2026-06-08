@@ -20,7 +20,7 @@ class WeChatWorkBotNotifier(Notifier):
             # 如果直接提供了完整的webhook_url，则使用它
             return self.params["webhook_url"]
         else:
-            raise Exception("企业微信机器人配置缺少必要参数: key 或 webhook_url")
+            raise RuntimeError("企业微信机器人配置缺少必要参数: key 或 webhook_url")
     
     def send_image(self, image_io):
         """
@@ -52,7 +52,7 @@ class WeChatWorkBotNotifier(Notifier):
         
         # 检查发送结果
         if response_data.get('errcode') != 0:
-            raise Exception(f"企业微信机器人发送图片失败: {response_data.get('errmsg')}")
+            raise RuntimeError(f"企业微信机器人发送图片失败: {response_data.get('errmsg')}")
     
     def send_text(self, text: str):
         """
@@ -78,7 +78,7 @@ class WeChatWorkBotNotifier(Notifier):
         
         # 检查发送结果
         if response_data.get('errcode') != 0:
-            raise Exception(f"企业微信机器人发送文本失败: {response_data.get('errmsg')}")
+            raise RuntimeError(f"企业微信机器人发送文本失败: {response_data.get('errmsg')}")
     
     def send(self, title: str, content: str, image_io=None):
         """

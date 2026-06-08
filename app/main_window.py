@@ -257,6 +257,8 @@ class MainWindow(MSFluentWindow):
         signalBus.uiLanguageChanged.connect(self._on_ui_language_changed)
         # 连接任务完成信号
         self.logInterface.taskFinished.connect(self._onTaskFinished)
+        # 连接自动对话切换信号
+        self.logInterface.autoplotToggleRequested.connect(self._onAutoplotToggleRequested)
 
     def initNavigation(self):
         self.addSubInterface(self.homeInterface, FIF.HOME, tr('主页'))
@@ -430,6 +432,13 @@ class MainWindow(MSFluentWindow):
         """处理热键配置改变信号"""
         if hasattr(self, 'logInterface'):
             self.logInterface.updateHotkey()
+        if hasattr(self, 'toolsInterface'):
+            self.toolsInterface.automaticPlotCard.updateHotkeyHint()
+
+    def _onAutoplotToggleRequested(self):
+        """处理自动对话切换请求（全局热键触发）"""
+        if hasattr(self, 'toolsInterface'):
+            self.toolsInterface.toggleAutoPlot()
 
     def _on_ui_language_changed(self, lang_code: str):
         """热重载 UI 语言，无需重启。

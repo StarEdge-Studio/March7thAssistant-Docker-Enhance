@@ -1,5 +1,19 @@
 # 更新日志
 
+## v2026.6.8
+- 支持 4.3 新副本和角色 [#1109](https://github.com/moesnow/March7thAssistant/pull/1109) @shing-yu
+- 新增自动对话全局快捷键切换功能
+- 支持处理稍后再看界面
+- 为推送方式添加配置教程按钮并优化排序
+- 修复云游戏登录超时处理 [#1115](https://github.com/moesnow/March7thAssistant/pull/1115) @shing-yu
+- 修复新开拓任务弹窗识别 [#1106](https://github.com/moesnow/March7thAssistant/pull/1106) @loader3229
+- 修复编辑主页卡片和流程编排弹窗的深色模式适配
+- 修复混合 DPI 双屏下获取逻辑分辨率而非物理分辨率的问题
+- 修复背包界面添加超时时的确认按钮点击处理
+- 修复存在红点时无法正常切换到材料合成
+- 优化性能和稳定性并修复若干已知问题
+- [欢迎关注我们的B站账号，获取最新动态和教程](https://space.bilibili.com/3706960664857075)
+
 ## v2026.5.27
 - 支持开拓者·欢愉 [#1085](https://github.com/moesnow/March7thAssistant/pull/1085) @shing-yu
 - 支持位面饰品提取自动切换队伍 [#938](https://github.com/moesnow/March7thAssistant/pull/938) @alex3236
@@ -8,9 +22,11 @@
 - Bark 推送新增 base_url 参数支持自定义服务器地址
 - 企业微信应用通知新增自定义 URL 支持 [#1072](https://github.com/moesnow/March7thAssistant/pull/1072) @shing-yu
 - 新增对自动切换视角弹窗的支持 [#1084](https://github.com/moesnow/March7thAssistant/pull/1084) @shing-yu
+- 更新副本掉落配置，修复部分新副本无法识别的问题 [#1081](https://github.com/moesnow/March7thAssistant/pull/1081) @g60cBQ
+- 优化货币战争装备识别逻辑，阿格莱雅和希儿策略下支持识别进阶装备 [#1054](https://github.com/moesnow/March7thAssistant/pull/1054) @loader3229
 - 修复模拟宇宙快速启动实际执行类型和描述不一致
+- 修复 CI 构建配置兼容性问题 [#1065](https://github.com/moesnow/March7thAssistant/pull/1065) @sparklelcm333
 - 优化性能和稳定性并修复若干已知问题
-- [欢迎关注我们的B站账号，获取最新动态和教程](https://space.bilibili.com/3706960664857075)
 
 ## v2026.5.12
 - 货币战争新增 “希儿” 策略（测试版）

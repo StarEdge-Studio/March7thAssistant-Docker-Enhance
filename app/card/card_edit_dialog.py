@@ -9,10 +9,11 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
 from PySide6.QtGui import QPixmap
 
 from qfluentwidgets import (PushButton, PrimaryPushButton, LineEdit, ComboBox,
-                            FluentIcon, InfoBar, InfoBarPosition)
+                            FluentIcon, InfoBar, InfoBarPosition, isDarkTheme)
 
 from utils.tasks import AVAILABLE_TASKS
 from module.localization import tr
+from app.common.style_sheet import StyleSheet
 
 # 仅主页可用的特殊操作（不在 AVAILABLE_TASKS 中）
 HOME_EXTRA_TASKS = {
@@ -273,7 +274,8 @@ class CardEditorWidget(QFrame):
         else:
             self.icon_label.setText("?")
             self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.icon_label.setStyleSheet("border: 1px dashed gray; font-size: 24px;")
+            border_color = "rgba(255, 255, 255, 0.4)" if isDarkTheme() else "gray"
+            self.icon_label.setStyleSheet(f"border: 1px dashed {border_color}; font-size: 24px;")
 
     def _choose_icon(self):
         file_path, _ = QFileDialog.getOpenFileName(
@@ -326,6 +328,8 @@ class CardEditDialog(QDialog):
         self.setMinimumSize(700, 500)
         self.resize(750, 600)
         self.result_cards = None
+
+        StyleSheet.CARD_EDIT_DIALOG.apply(self)
 
         main_layout = QVBoxLayout(self)
 

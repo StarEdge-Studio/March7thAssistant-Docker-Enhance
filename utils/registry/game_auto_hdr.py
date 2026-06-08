@@ -34,7 +34,7 @@ def get_game_auto_hdr(game_path: str) -> Literal["enable", "disable", "unset"]:
     except FileNotFoundError:
         return "unset"
     except Exception as e:
-        raise Exception(f"Error getting Auto HDR status for '{game_path}': {e}")
+        raise OSError(f"Error getting Auto HDR status for '{game_path}': {e}")
 
 
 def set_game_auto_hdr(game_path: str, status: Literal["enable", "disable", "unset"] = "unset"):
@@ -82,4 +82,4 @@ def set_game_auto_hdr(game_path: str, status: Literal["enable", "disable", "unse
                 updated_value = ";".join([f"{k}={v}" for k, v in settings.items()]) + ";"
                 winreg.SetValueEx(key, reg_key, 0, winreg.REG_SZ, updated_value)
     except Exception as e:
-        raise Exception(f"Error setting Auto HDR for '{game_path}' with status '{status}': {e}")
+        raise OSError(f"Error setting Auto HDR for '{game_path}' with status '{status}': {e}")

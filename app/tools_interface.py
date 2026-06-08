@@ -58,6 +58,12 @@ class ToolsInterface(ScrollArea):
             tr("触屏模式"),
             tr("以云游戏移动端 UI 的方式启动游戏，可搭配 UU远程 平板触控模式，启动后会将命令复制到剪贴板内")
         )
+        self.screenTestCard = PushSettingCard(
+            tr('测试'),
+            FIF.CHECKBOX,
+            tr("界面可切换性测试"),
+            tr("以最短路径遍历所有可达界面，验证界面切换是否正常")
+        )
 
         self.__initWidget()
 
@@ -91,6 +97,7 @@ class ToolsInterface(ScrollArea):
         self.ToolsGroup.addSettingCard(self.unlockfpsCard)
         self.ToolsGroup.addSettingCard(self.redemptionCodeCard)
         self.ToolsGroup.addSettingCard(self.cloudTouchCard)
+        self.ToolsGroup.addSettingCard(self.screenTestCard)
 
         if sys.platform != 'win32':
             self.automaticPlotCard.setDisabled(True)
@@ -275,6 +282,10 @@ class ToolsInterface(ScrollArea):
         self.automaticPlotCard.optionsChanged.connect(self.__onAutoPlotOptionsChanged)
         self.unlockfpsCard.clicked.connect(self.__onUnlockfpsCardClicked)
         self.cloudTouchCard.clicked.connect(self.__onCloudTouchCardClicked)
+        self.screenTestCard.clicked.connect(self.__onScreenTestCardClicked)
+
+    def __onScreenTestCardClicked(self):
+        start_task("screen_test")
 
     def __onAutoPlotSwitchChanged(self, isChecked: bool):
         """Handle auto plot switch state change"""
@@ -311,3 +322,9 @@ class ToolsInterface(ScrollArea):
         # Update options if auto plot is running
         if self.automaticPlotCard.getSwitchState():
             tool.update_plot_options(options)
+
+    def toggleAutoPlot(self):
+        """切换自动对话状态（供全局热键调用）"""
+        current_state = self.automaticPlotCard.getSwitchState()
+        new_state = not current_state
+        self.automaticPlotCard.setValue(new_state)
