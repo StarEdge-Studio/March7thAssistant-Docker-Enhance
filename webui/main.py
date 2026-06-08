@@ -135,6 +135,48 @@ def _dump_yaml_text(data) -> str:
     return stream.getvalue()
 
 
+def _load_yaml_file(path: str):
+    with open(path, 'r', encoding='utf-8') as f:
+        loaded = yaml_parser.load(f) or {}
+    if not isinstance(loaded, dict):
+        raise ValueError(f"YAML root must be a mapping: {path}")
+    return loaded
+
+
+def _merge_config_values(template, current):
+    for key, value in current.items():
+        if (
+            key in template
+            and isinstance(template[key], dict)
+            and isinstance(value, dict)
+        ):
+            _merge_config_values(template[key], value)
+        else:
+            template[key] = value
+    return template
+
+
+def sync_global_config_with_example() -> None:
+    example_path = os.path.join(ASSETS_CONFIG_DIR, 'config.example.yaml')
+    config_path = os.path.join(DATA_DIR, 'config.yaml')
+
+    if not os.path.exists(example_path):
+        return
+
+    try:
+        merged_config = _load_yaml_file(example_path)
+        if os.path.exists(config_path):
+            current_config = _load_yaml_file(config_path)
+            _merge_config_values(merged_config, current_config)
+        with open(config_path, 'w', encoding='utf-8') as f:
+            yaml_parser.dump(merged_config, f)
+    except Exception as exc:
+        print(f"[WebUI] 同步全局配置失败: {exc}")
+
+
+app.on_event("startup")(sync_global_config_with_example)
+
+
 def _read_json_config(filename: str):
     path = os.path.join(ASSETS_CONFIG_DIR, filename)
     try:
