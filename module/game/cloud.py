@@ -1565,7 +1565,54 @@ class CloudGameController(GameControllerBase):
         """, text)
 
     def change_auto_battle(self, status: bool) -> None:
-        """从 local storage 中读取并修改 auto battle"""
+        """
+        从 local storage 中读取并修改 auto battle
+
+        云·星穹铁道 兼容模式技术分析：
+        - 配置存储位置: localStorage, 键名: clgm_web_app_settings_hkrpg_cn
+        - 配置字段: compatibleModeSwitch (boolean)
+        - 核心作用: 强制使用 H264 编码，禁用 HEVC/H265
+
+        视频编码模式对比：
+        | 模式           | enableHevc | enableWrappedHevc | compatibleMode | 渲染元素   |
+        |---------------|------------|-------------------|----------------|-----------|
+        | DefaultH264   | ❌         | ❌                 | ❌              | <video>   |
+        | ForceH264     | ❌         | ❌                 | ✅              | <video>   |
+        | WrappedH265   | ❌         | ✅                 | ❌              | <canvas>  |
+        | NativeH265    | ✅         | ❌                 | ❌              | <video>   |
+
+        编码选择优先级:
+        1. compatibleModeSwitch=true → ForceH264 (强制H264)
+        2. hevcCodecSwitch=true → NativeH265 (浏览器原生HEVC解码)
+        3. wrappedHevcSwitch=true → WrappedH265 (自定义HEVC Pipeline, 需要 hasHevcHardwareDecoder + hasInsertableStreams)
+        4. 默认 → DefaultH264
+
+        NativeH265 vs WrappedH265 区别:
+        - NativeH265: 浏览器原生 HEVC 解码，性能好但兼容性差 (Safari/部分Edge/Chrome支持)
+        - WrappedH265: 通过修改 SDP packetization mode 将 H264 RTP 包装为 HEVC 格式，使用自定义 Pipeline 解码，兼容性更好
+
+        硬件解码与编码方式关系:
+        - H264 (Default/Force): 不强制依赖硬件解码，软件解码也能工作 (但性能较差)
+        - H265/HEVC (Native/Wrapped): 必须有硬件解码支持，否则会失败并触发回落
+        - 硬件检测: hasHevcHardwareDecoder (HEVC硬件解码器) + hasInsertableStreams (Insertable Streams API)
+        - WrappedH265 支持条件: isWrappedHevcPipelineSupported = hasHevcHardwareDecoder && hasInsertableStreams
+
+        Docker/无GPU环境编码情况:
+        - 通常没有 GPU 直通，hasHevcHardwareDecoder = false
+        - WrappedH265 和 NativeH265 都不可用
+        - 只能使用 H264 (DefaultH264 或 ForceH264)
+        - 例外: forceSupportH265 配置可强制启用 H265 (预览模式/测试用)
+        - hevcCodecSwitch 默认值来自服务器 compatConfig.enableHevc 配置
+
+        H264 Profile 区别:
+        - 兼容模式 (ForceH264): 只用 Baseline profile (最广泛兼容，性能最低)
+        - 非兼容模式 (DefaultH264): 可用 High/Main/Baseline profile (性能更好)
+
+        HEVC 失败回落流程:
+        - 触发条件: RtcSDKHEVCDecodingFailureDetected (-1036), RtcSDKOnPlayTimeout (-1037), RtcSDKWrappedHEVCPipelineFailed (-1038)
+        - 如果已开启兼容模式: 直接重连
+        - 如果未开启兼容模式: 弹窗提示用户选择 (退出游戏 / 开启兼容模式 / 下载客户端)
+        """
         ls = json.loads(self.driver.execute_script("return JSON.stringify(localStorage)"))
         cloud = json.loads(ls.get("cg_hkrpg_cn_cloudData", "{}"))
         cloud.setdefault("value", {})
@@ -1589,6 +1636,12 @@ class CloudGameController(GameControllerBase):
         save["IntDicts"] = int_dicts
         cloud["value"]["RPGCloudSave"] = json.dumps(save)
         ls["cg_hkrpg_cn_cloudData"] = json.dumps(cloud)
+
+        # # 开启兼容模式
+        # app_settings = json.loads(ls.get("clgm_web_app_settings_hkrpg_cn", "{}"))
+        # app_settings["compatibleModeSwitch"] = True
+        # ls["clgm_web_app_settings_hkrpg_cn"] = json.dumps(app_settings)
+        # self.log_debug("设置兼容模式为开启")
 
         for k, v in ls.items():
             self.driver.execute_script(f"localStorage.setItem('{k}', arguments[0]);", v)
