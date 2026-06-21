@@ -3,7 +3,9 @@ import time
 import json
 import subprocess
 import threading
-from datetime import datetime
+import urllib.error
+import urllib.request
+from datetime import datetime, timedelta
 import ruamel.yaml
 from module.game.cloud import CloudGameController
 
@@ -12,6 +14,11 @@ from .account_manager import account_manager, DATA_DIR, PROFILES_DIR
 SETTINGS_FILE = os.path.join(DATA_DIR, 'settings.json')
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
 LOGS_DIR = os.path.join(DATA_DIR, 'run_logs')
+INTERNET_CHECK_URL = 'https://www.mihoyo.com/'
+INTERNET_CHECK_TIMEOUT_SECONDS = 10
+INTERNET_RETRY_DELAY_SECONDS = 2 * 60 * 60
+INTERNET_MAX_RETRIES = 3
+INTERNET_CHECK_ACCOUNT_ID = '__webui_internet_check__'
 os.makedirs(LOGS_DIR, exist_ok=True)
 
 class Scheduler:
@@ -20,6 +27,9 @@ class Scheduler:
         self.current_process = None
         self.current_account_id = None
         self.current_account_name = None
+        self.waiting_for_retry = False
+        self.internet_retry_count = 0
+        self.next_retry_time = None
         self.run_history = []
         self._load_settings()
         self._load_history()
@@ -47,6 +57,17 @@ class Scheduler:
 
     def get_settings(self):
         return self.settings
+
+    def get_status(self):
+        return {
+            "running": self.running,
+            "current_account_id": self.current_account_id,
+            "current_account_name": self.current_account_name,
+            "waiting_for_retry": self.waiting_for_retry,
+            "internet_retry_count": self.internet_retry_count,
+            "internet_max_retries": INTERNET_MAX_RETRIES,
+            "next_retry_time": self.next_retry_time.isoformat() if self.next_retry_time else None
+        }
 
     def _load_history(self):
         if os.path.exists(HISTORY_FILE):
@@ -83,31 +104,140 @@ class Scheduler:
     def start_run(self):
         if self.running:
             return False
-        
+
+        self.running = True
         threading.Thread(target=self._execute_all_accounts, daemon=True).start()
         return True
 
     def stop_run(self):
-        if self.running and self.current_process:
+        if not self.running:
+            return False
+
+        self.running = False
+        self.waiting_for_retry = False
+        self.next_retry_time = None
+
+        if self.current_process:
             self.current_process.terminate()
             try:
                 self.current_process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 self.current_process.kill()
-            self.running = False
-            
-            # 清理可能残留的由小助手启动的浏览器进程
-            try:
-                controller = CloudGameController.__new__(CloudGameController)
-                controller.close_all_m7a_browser()
-            except Exception as e:
-                print(f"清理残留浏览器进程失败: {e}")
-                
-            return True
-        return False
+
+        # 清理可能残留的由小助手启动的浏览器进程
+        try:
+            controller = CloudGameController.__new__(CloudGameController)
+            controller.close_all_m7a_browser()
+        except Exception as e:
+            print(f"清理残留浏览器进程失败: {e}")
+
+        return True
+
+    def _reset_internet_retry_state(self):
+        self.waiting_for_retry = False
+        self.internet_retry_count = 0
+        self.next_retry_time = None
+
+    def _check_internet_connection(self):
+        request = urllib.request.Request(
+            INTERNET_CHECK_URL,
+            headers={
+                'User-Agent': 'March7thAssistant-WebUI/1.0'
+            }
+        )
+
+        try:
+            with urllib.request.urlopen(request, timeout=INTERNET_CHECK_TIMEOUT_SECONDS) as response:
+                status_code = getattr(response, 'status', 200)
+                response.read(1)
+            if status_code < 500:
+                return True, f"HTTP {status_code}"
+            return False, f"HTTP {status_code}"
+        except urllib.error.HTTPError as e:
+            if e.code < 500:
+                return True, f"HTTP {e.code}"
+            return False, f"HTTP {e.code}: {e.reason}"
+        except Exception as e:
+            return False, str(e)
+
+    def _write_webui_log(self, log_file, message):
+        log_path = os.path.join(LOGS_DIR, log_file)
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | {message}\n")
+
+    def _create_internet_check_result(self, history_entry, run_id):
+        result = {
+            'account_id': INTERNET_CHECK_ACCOUNT_ID,
+            'account_name': '互联网连接检查',
+            'success': False,
+            'log_file': f"log_{run_id}_internet_check.txt",
+            'start_time': datetime.now().isoformat(),
+            'end_time': None
+        }
+        history_entry['accounts'].append(result)
+        self.current_account_id = INTERNET_CHECK_ACCOUNT_ID
+        self.current_account_name = '互联网连接检查'
+        return result
+
+    def _wait_for_retry_or_stop(self):
+        retry_until = time.monotonic() + INTERNET_RETRY_DELAY_SECONDS
+        while self.running and time.monotonic() < retry_until:
+            time.sleep(min(10, max(0, retry_until - time.monotonic())))
+        return self.running
+
+    def _ensure_internet_available(self, history_entry, run_id):
+        check_result = None
+
+        for attempt in range(INTERNET_MAX_RETRIES + 1):
+            if not self.running:
+                return False
+
+            if attempt > 0:
+                self.current_account_id = INTERNET_CHECK_ACCOUNT_ID
+                self.current_account_name = f"互联网连接检查（第 {attempt}/{INTERNET_MAX_RETRIES} 次重试）"
+                self._save_history()
+
+            success, detail = self._check_internet_connection()
+            if success:
+                self._reset_internet_retry_state()
+                if check_result:
+                    self._write_webui_log(check_result['log_file'], f"[WebUI] 互联网连接检查通过：{INTERNET_CHECK_URL} ({detail})")
+                    check_result['success'] = True
+                    check_result['end_time'] = datetime.now().isoformat()
+                    self._save_history()
+                return True
+
+            if check_result is None:
+                check_result = self._create_internet_check_result(history_entry, run_id)
+
+            self._write_webui_log(check_result['log_file'], f"[WebUI] 互联网连接检查失败：{INTERNET_CHECK_URL} ({detail})")
+
+            if attempt >= INTERNET_MAX_RETRIES:
+                self._write_webui_log(check_result['log_file'], f"[WebUI] 已重试 {INTERNET_MAX_RETRIES} 次，互联网连接仍不可用，本次 WebUI 执行退出")
+                check_result['success'] = False
+                check_result['end_time'] = datetime.now().isoformat()
+                self._save_history()
+                return False
+
+            self.internet_retry_count = attempt + 1
+            self.waiting_for_retry = True
+            self.next_retry_time = datetime.now() + timedelta(seconds=INTERNET_RETRY_DELAY_SECONDS)
+            self.current_account_id = INTERNET_CHECK_ACCOUNT_ID
+            self.current_account_name = f"网络不可用，等待第 {self.internet_retry_count}/{INTERNET_MAX_RETRIES} 次重试"
+            self._write_webui_log(check_result['log_file'], f"[WebUI] 将延迟 2 小时后重试，预计重试时间：{self.next_retry_time.isoformat(timespec='seconds')}")
+            self._save_history()
+
+            if not self._wait_for_retry_or_stop():
+                self._write_webui_log(check_result['log_file'], "[WebUI] 等待重试期间收到停止信号，本次 WebUI 执行退出")
+                check_result['success'] = False
+                check_result['end_time'] = datetime.now().isoformat()
+                self._save_history()
+                return False
+
+            self.waiting_for_retry = False
+            self.next_retry_time = None
 
     def _execute_all_accounts(self):
-        self.running = True
         accounts = [a for a in account_manager.get_accounts() if a.get('enabled')]
         
         run_id = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -122,27 +252,32 @@ class Scheduler:
             self.run_history.pop()
         self._save_history()  # 启动时保存一次
 
-        for account in accounts:
-            if not self.running:
-                break
-            
-            acc_result = {
-                'account_id': account['id'],
-                'account_name': account['name'],
-                'success': False,
-                'log_file': f"log_{run_id}_{account['id']}.txt",
-                'start_time': None,
-                'end_time': None
-            }
-            history_entry['accounts'].append(acc_result)
-            self._run_single_account(account, acc_result)
-            self._save_history()  # 每次账号运行结束后立即保存状态，以便前端及时更新
+        try:
+            if accounts and not self._ensure_internet_available(history_entry, run_id):
+                return
 
-        history_entry['end_time'] = datetime.now().isoformat()
-        self._save_history()  # 运行结束后保存
-        self.running = False
-        self.current_account_id = None
-        self.current_account_name = None
+            for account in accounts:
+                if not self.running:
+                    break
+                
+                acc_result = {
+                    'account_id': account['id'],
+                    'account_name': account['name'],
+                    'success': False,
+                    'log_file': f"log_{run_id}_{account['id']}.txt",
+                    'start_time': None,
+                    'end_time': None
+                }
+                history_entry['accounts'].append(acc_result)
+                self._run_single_account(account, acc_result)
+                self._save_history()  # 每次账号运行结束后立即保存状态，以便前端及时更新
+        finally:
+            history_entry['end_time'] = datetime.now().isoformat()
+            self._save_history()  # 运行结束后保存
+            self.running = False
+            self.current_account_id = None
+            self.current_account_name = None
+            self._reset_internet_retry_state()
 
     def _run_single_account(self, account, acc_result):
         acc_result['start_time'] = datetime.now().isoformat()

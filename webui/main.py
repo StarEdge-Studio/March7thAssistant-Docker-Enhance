@@ -222,11 +222,7 @@ def get_me(user: UserInfo = Depends(get_current_user)):
 
 @app.get("/api/status")
 def get_status(user: UserInfo = Depends(get_current_user)):
-    return {
-        "running": scheduler.running,
-        "current_account_id": scheduler.current_account_id,
-        "current_account_name": scheduler.current_account_name
-    }
+    return scheduler.get_status()
 
 
 @app.get("/api/settings")

@@ -38,6 +38,14 @@ const Dashboard = {
                 <span class="text-xs text-slate-500 uppercase tracking-wider block mb-1">Current Account</span>
                 <span class="text-sm text-slate-700 dark:text-slate-300 font-medium">{{ status.current_account_name || 'Loading...' }}</span>
                 <span class="text-[10px] text-slate-400 dark:text-slate-600 font-mono block mt-1">{{ status.current_account_id }}</span>
+                <div v-if="status.waiting_for_retry" class="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/50">
+                  <span class="text-xs text-amber-600 dark:text-amber-400 block">
+                    联网检查失败，等待第 {{ status.internet_retry_count }}/{{ status.internet_max_retries }} 次重试
+                  </span>
+                  <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono block mt-1">
+                    {{ formatRetryTime(status.next_retry_time) }}
+                  </span>
+                </div>
               </div>
             </div>
             
@@ -300,6 +308,10 @@ const Dashboard = {
       const m = Math.floor(diff / 60);
       const sec = diff % 60;
       return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+    },
+    formatRetryTime(value) {
+      if (!value) return '';
+      return `预计重试：${new Date(value).toLocaleString()}`;
     }
   }
 };
