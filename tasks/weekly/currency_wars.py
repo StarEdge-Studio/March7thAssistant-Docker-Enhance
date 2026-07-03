@@ -232,9 +232,10 @@ class CurrencyWars:
                     return target
         return None
 
-    def start(self):
+    def start(self) -> bool:
         log.hr('准备货币战争', '0')
-        if self.run():
+        success = self.run()
+        if success:
             Base.send_notification_with_screenshot("货币战争已完成", NotificationLevel.ALL, self.screenshot)
             self.screenshot = None
         else:
@@ -246,6 +247,7 @@ class CurrencyWars:
         if has_reward and cfg.currencywars_bonus_enable:
             self.process_ornament()
         log.hr("完成", 2)
+        return success
 
     def check_currency_wars_score(self) -> bool:
         """
