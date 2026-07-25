@@ -50,6 +50,8 @@ RUN \
     # 如果需要使用国内源，可以取消下面一行的注释
     # sed -i 's/deb.debian.org/mirrors.cloud.tencent.com/g' /etc/apt/sources.list.d/debian.sources && \
     apt-get update && apt-get install -yq --no-install-recommends \
+    # Lightweight init for proper zombie reaping (PID 1)
+    tini \
     # Dependencies for OpenCV
     libgl1 \
     # Dependencies for headless Chrome
@@ -113,5 +115,5 @@ RUN python build.py --task ocr \
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]
 CMD ["python", "webui/main.py"]

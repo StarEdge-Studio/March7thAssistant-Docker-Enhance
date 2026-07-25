@@ -260,11 +260,67 @@ class CloudGameController(GameControllerBase):
             ]
             if is_docker_started():
                 # Docker 环境下需要额外参数
-                args.append("--no-sandbox")
+                args += [
+                    "--no-sandbox",
+                    "--no-zygote",                  # 禁用 Zygote 进程模型，减少子进程数量，防止僵尸进程
+                    "--disable-gpu",                 # 无头环境不需要 GPU
+                    "--disable-dev-shm-usage",       # 避免 /dev/shm 空间不足导致崩溃
+                    "--disable-software-rasterizer",  # 无头环境不需要软件光栅化
+                ]
         if self.cfg.cloud_game_fullscreen_enable and not headless:
             args.append("--start-fullscreen")  # 全屏启动
         args.extend(self.cfg.browser_launch_argument)  # 用户自定义参数
         return args
+
+    def _preflight_profile_cleanup(self) -> None:
+        """启动浏览器前主动校验并清理损坏的配置文件，防止 SessionNotCreatedException。
+
+        Chrome 被强制退出（如 SIGKILL、容器重启）时，Local State 和 Preferences 文件
+        可能处于半写入状态（空文件或截断的 JSON），导致下次启动报错：
+            "cannot parse internal JSON template: EOF while parsing a value"
+        此方法在浏览器启动前主动检测并移除这些损坏的文件，让 Chrome 自行重建。
+        """
+        if not os.path.exists(self.user_profile_path):
+            return
+
+        # 1. 校验关键 JSON 配置文件
+        config_files = [
+            os.path.join(self.user_profile_path, "Local State"),
+            os.path.join(self.user_profile_path, "Default", "Preferences"),
+        ]
+        for filepath in config_files:
+            if not os.path.exists(filepath):
+                continue
+            try:
+                file_size = os.path.getsize(filepath)
+                # 空文件必定损坏
+                if file_size == 0:
+                    os.remove(filepath)
+                    self.log_info(f"已清理空的配置文件: {filepath}")
+                    continue
+                # 尝试解析 JSON，无效则删除
+                with open(filepath, "r", encoding="utf-8", errors="replace") as f:
+                    json.load(f)
+            except (json.JSONDecodeError, ValueError):
+                try:
+                    os.remove(filepath)
+                    self.log_info(f"已清理损坏的配置文件: {filepath}")
+                except Exception as ex:
+                    self.log_warning(f"清理损坏配置文件失败 {filepath}: {ex}")
+            except Exception as e:
+                self.log_debug(f"检查配置文件时出错 {filepath}: {e}")
+
+        # 2. 清理 Singleton 锁文件（Docker 环境下容器重启后这些文件会残留导致浏览器无法启动）
+        if is_docker_started():
+            singleton_files = ["SingletonCookie", "SingletonLock", "SingletonSocket"]
+            for filename in singleton_files:
+                file_path = os.path.join(self.user_profile_path, filename)
+                try:
+                    if os.path.lexists(file_path):
+                        os.remove(file_path)
+                        self.log_debug(f"已清理残留锁文件: {file_path}")
+                except Exception as e:
+                    self.log_warning(f"清理残留锁文件失败: {file_path}, 错误: {e}")
 
     def _connect_or_create_browser(self, headless=False, _retry=False) -> None:
         """尝试连接到现有的（由小助手启动的）浏览器，如果没有，那就创建一个"""
@@ -291,11 +347,6 @@ class CloudGameController(GameControllerBase):
         # 记录 driver 可执行路径和 service，以便后续清理 chromedriver 进程
         self.driver_path = driver_path
         self._webdriver_service = service
-        # 记录 driver pid
-        try:
-            self._driver_pid = self.driver.service.process.pid
-        except AttributeError:
-            self._driver_pid = None
 
         # 关掉 headless 不匹配的浏览器，防止端口冲突
         if self.close_all_m7a_browser(headless=not headless):
@@ -306,6 +357,11 @@ class CloudGameController(GameControllerBase):
                 options.debugger_address = f"127.0.0.1:{self.cfg.browser_debug_port}"
                 self.driver = webdriver_type(service=service, options=options)
                 self.log_info("已连接到现有浏览器")
+                # 记录 driver pid（连接成功后）
+                try:
+                    self._driver_pid = self.driver.service.process.pid
+                except AttributeError:
+                    self._driver_pid = None
                 return  # 连接成功，直接返回
             except Exception:
                 self.log_info(f"连接现有浏览器失败")
@@ -321,29 +377,26 @@ class CloudGameController(GameControllerBase):
         for arg in self._get_browser_arguments(headless=headless):
             options.add_argument(arg)
 
-        # 清理失效的断链 (Broken Symlinks) 防止浏览器无法启动
-        if is_docker_started():
-            singleton_files = ["SingletonCookie", "SingletonLock", "SingletonSocket"]
-            for filename in singleton_files:
-                file_path = os.path.join(self.user_profile_path, filename)
-                try:
-                    # 逻辑：是一个链接，但指向的目标不存在
-                    if os.path.islink(file_path) and not os.path.exists(file_path):
-                        os.remove(file_path)
-                        self.log_debug(f"已清理断开的软链接: {file_path}")
-                except Exception as e:
-                    self.log_warning(f"处理残留链接失败: {file_path}, 错误: {e}")
+        # 启动前主动清理损坏的配置文件和残留锁文件，避免 SessionNotCreatedException
+        self._preflight_profile_cleanup()
 
         try:
             self.log_debug("启动浏览器中...")
             self.driver = webdriver_type(service=service, options=options)
             self.log_debug("浏览器启动成功")
+            # 记录 driver pid（在 driver 成功创建后）
+            try:
+                self._driver_pid = self.driver.service.process.pid
+            except AttributeError:
+                self._driver_pid = None
         except SessionNotCreatedException as e:
             self.log_error(f"浏览器启动失败: {e}")
             
             # 自动修复浏览器配置文件损坏导致无法启动的问题
             if "cannot parse internal JSON template" in str(e) and not _retry:
                 self.log_warning("检测到浏览器配置文件损坏 (通常因强制退出导致)，正在尝试清理并重试...")
+                # 清理上一次启动残留的浏览器和 chromedriver 进程
+                self.close_all_m7a_browser()
                 import shutil
                 prefs_files = [
                     os.path.join(self.user_profile_path, "Local State"),
@@ -386,6 +439,7 @@ class CloudGameController(GameControllerBase):
         if self.cfg.browser_dump_cookies_enable:
             self._load_cookies()
         self._refresh_page()
+        self._cleanup_localstorage_bloat()
 
     def _restart_browser(self, headless=False) -> None:
         """重启浏览器"""
@@ -784,10 +838,22 @@ class CloudGameController(GameControllerBase):
             except Exception:
                 pass
 
+        # 等待被 terminate 的浏览器进程退出，避免僵尸进程
+        if closed_proc:
+            gone, alive = psutil.wait_procs(closed_proc, timeout=5)
+            for proc in alive:
+                try:
+                    proc.kill()
+                except psutil.Error:
+                    pass
+            if alive:
+                psutil.wait_procs(alive, timeout=3)
+
         # 也尝试关闭与当前 driver_path 对应的 chromedriver 进程
         closed = self._terminate_chromedriver_processes()
         if closed:
             closed_proc.extend(closed)
+            psutil.wait_procs(closed, timeout=5)
         return closed_proc
 
     def _terminate_chromedriver_processes(self) -> list[psutil.Process]:
@@ -1564,6 +1630,42 @@ class CloudGameController(GameControllerBase):
             })(arguments[0]);
         """, text)
 
+    def _cleanup_localstorage_bloat(self) -> None:
+        """清理 localStorage 中非必要的大体积键，释放配额空间。
+
+        云游戏网页会在 localStorage 中累积埋点/分析数据（如 clgm-web-app-analysis-hkrpg_cn），
+        长期运行后可能占满 5MB 配额，导致写入 cg_hkrpg_cn_cloudData 等必要键时报错：
+            "Failed to execute 'setItem' on 'Storage': Setting the value exceeded the quota."
+        """
+        if not self.driver:
+            return
+        # 已知的非必要大体积键（匹配前缀）
+        bloat_prefixes = [
+            "clgm-web-app-analysis",   # 埋点分析数据
+            "clgm-web-app-log",        # 日志数据
+        ]
+        try:
+            removed = self.driver.execute_script("""
+                var prefixes = arguments[0];
+                var removed = [];
+                for (var i = localStorage.length - 1; i >= 0; i--) {
+                    var key = localStorage.key(i);
+                    for (var j = 0; j < prefixes.length; j++) {
+                        if (key && key.indexOf(prefixes[j]) === 0) {
+                            var size = (localStorage.getItem(key) || '').length;
+                            localStorage.removeItem(key);
+                            removed.push(key + ' (' + Math.round(size / 1024) + 'KB)');
+                            break;
+                        }
+                    }
+                }
+                return removed;
+            """, bloat_prefixes)
+            if removed:
+                self.log_info(f"已清理 localStorage 冗余数据: {', '.join(removed)}")
+        except Exception as e:
+            self.log_debug(f"清理 localStorage 冗余数据失败: {e}")
+
     def change_auto_battle(self, status: bool) -> None:
         """
         从 local storage 中读取并修改 auto battle
@@ -1614,6 +1716,10 @@ class CloudGameController(GameControllerBase):
         - 如果未开启兼容模式: 弹窗提示用户选择 (退出游戏 / 开启兼容模式 / 下载客户端)
         """
         ls = json.loads(self.driver.execute_script("return JSON.stringify(localStorage)"))
+
+        # 清理非必要的大体积 localStorage 键（如埋点分析数据），防止配额溢出
+        self._cleanup_localstorage_bloat()
+
         cloud = json.loads(ls.get("cg_hkrpg_cn_cloudData", "{}"))
         cloud.setdefault("value", {})
         save = json.loads(cloud["value"].get("RPGCloudSave", "{}") or "{}")
@@ -1635,7 +1741,6 @@ class CloudGameController(GameControllerBase):
 
         save["IntDicts"] = int_dicts
         cloud["value"]["RPGCloudSave"] = json.dumps(save)
-        ls["cg_hkrpg_cn_cloudData"] = json.dumps(cloud)
 
         # # 开启兼容模式
         # app_settings = json.loads(ls.get("clgm_web_app_settings_hkrpg_cn", "{}"))
@@ -1643,8 +1748,10 @@ class CloudGameController(GameControllerBase):
         # ls["clgm_web_app_settings_hkrpg_cn"] = json.dumps(app_settings)
         # self.log_debug("设置兼容模式为开启")
 
-        for k, v in ls.items():
-            self.driver.execute_script(f"localStorage.setItem('{k}', arguments[0]);", v)
+        # 仅写回被修改的键，避免因全量写回导致配额溢出
+        cloud_data_json = json.dumps(cloud)
+        self.driver.execute_script("localStorage.setItem(arguments[0], arguments[1]);",
+                                   "cg_hkrpg_cn_cloudData", cloud_data_json)
 
     def stop_game(self) -> bool:
         """退出游戏，关闭浏览器"""
@@ -1663,8 +1770,18 @@ class CloudGameController(GameControllerBase):
                 self.log_info("关闭浏览器成功")
             except Exception:
                 pass
-            self.driver.quit()
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
             self.driver = None
+
+            # 等待 Chrome 进程自然退出（给予时间刷新配置文件到磁盘）
+            remaining = self.get_m7a_browsers()
+            if remaining:
+                _, alive = psutil.wait_procs(remaining, timeout=5)
+                if alive:
+                    self.log_debug(f"等待 Chrome 退出超时，将强制终止 {len(alive)} 个进程")
 
         # 清理所有未正常退出的浏览器
         try:

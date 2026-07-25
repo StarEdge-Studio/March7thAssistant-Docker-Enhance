@@ -1,6 +1,7 @@
 services:
   march7thassistant:
     container_name: m7a
+    init: true
     build: .
     # image: ghcr.io/moesnow/march7thassistant:latest
     # image: ghcr.nju.edu.cn/moesnow/march7thassistant:latest

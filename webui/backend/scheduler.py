@@ -7,7 +7,6 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timedelta
 import ruamel.yaml
-from module.game.cloud import CloudGameController
 
 from .account_manager import account_manager, DATA_DIR, PROFILES_DIR
 
@@ -126,12 +125,44 @@ class Scheduler:
 
         # 清理可能残留的由小助手启动的浏览器进程
         try:
-            controller = CloudGameController.__new__(CloudGameController)
-            controller.close_all_m7a_browser()
+            self._kill_all_m7a_processes()
         except Exception as e:
             print(f"清理残留浏览器进程失败: {e}")
 
         return True
+
+    @staticmethod
+    def _kill_all_m7a_processes():
+        """通过 psutil 直接查找并终止所有带有 M7A 标记的浏览器和 chromedriver 进程"""
+        import psutil
+        BROWSER_TAG = "--march-7th-assistant-sr-cloud-game"
+        target_names = {
+            'chrome', 'chrome.exe', 'chromium', 'chromium-browser',
+            'msedge', 'msedge.exe', 'chromedriver', 'chromedriver.exe',
+            'msedgedriver', 'msedgedriver.exe',
+            'google-chrome', 'google-chrome-stable',
+        }
+        killed = []
+        for proc in psutil.process_iter(['pid', 'name']):
+            name = proc.info.get('name', '')
+            if not name or name.lower() not in target_names:
+                continue
+            try:
+                cmdline = proc.cmdline()
+                if BROWSER_TAG in cmdline or name.lower().startswith(('chromedriver', 'msedgedriver')):
+                    proc.terminate()
+                    killed.append(proc)
+            except psutil.Error:
+                continue
+        if killed:
+            gone, alive = psutil.wait_procs(killed, timeout=5)
+            for p in alive:
+                try:
+                    p.kill()
+                except psutil.Error:
+                    pass
+            if alive:
+                psutil.wait_procs(alive, timeout=3)
 
     def _reset_internet_retry_state(self):
         self.waiting_for_retry = False
@@ -472,6 +503,11 @@ class Scheduler:
                         pass
 
             self.current_process = None
+            # 清理该账号运行可能残留的浏览器进程
+            try:
+                self._kill_all_m7a_processes()
+            except Exception:
+                pass
             if os.path.exists(temp_config_path):
                 try:
                     os.remove(temp_config_path)
