@@ -1,5 +1,11 @@
 # 更新日志
 
+## v2026.9.7
+- 修复货币战争入口交互异常 [#1209](https://github.com/moesnow/March7thAssistant/pull/1209) @LumiaBlack51
+- 修复 OpenSSL 环境变量导致的启动闪退
+- 优化性能和稳定性并修复若干已知问题
+- [欢迎关注我们的B站账号，获取最新动态和教程](https://space.bilibili.com/3706960664857075)
+
 ## v2026.8.28
 - 启动游戏前检测游戏是否已在运行 [#1189](https://github.com/moesnow/March7thAssistant/pull/1189) @girl-dream
 - 邮件推送新增纯文本模式 [#1173](https://github.com/moesnow/March7thAssistant/pull/1173)
