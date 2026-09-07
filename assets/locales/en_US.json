@@ -1499,5 +1499,7 @@
     "游戏已在运行": "Game Already Running",
     "无需重复启动游戏": "There is no need to launch it again",
     "纯文本模式": "Plain Text Mode",
-    "可选参数，是否以纯文本格式发送邮件（适用于 Outlook 等邮箱）": "Optional parameter: whether to send emails in plain text format (suitable for Outlook and other email services)"
+    "可选参数，是否以纯文本格式发送邮件（适用于 Outlook 等邮箱）": "Optional parameter: whether to send emails in plain text format (suitable for Outlook and other email services)",
+    "选择流程:": "Select workflow:",
+    "请选择要运行的流程编排": "Please select a workflow to run"
 }

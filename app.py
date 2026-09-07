@@ -61,6 +61,11 @@ def parse_args():
         action="store_true",
         help="不隐藏控制台窗口，显示命令行输出（仅 Windows）"
     )
+    optional.add_argument(
+        "--start-minimized-to-tray",
+        action="store_true",
+        help="启动后最小化到托盘"
+    )
 
     args = parser.parse_args()
 
@@ -272,7 +277,11 @@ if __name__ == "__main__":
 
     # 传递任务参数给主窗口
     from app.main_window import MainWindow
-    w = MainWindow(task=args.task, exit_on_complete=args.exit)
+    w = MainWindow(
+        task=args.task,
+        exit_on_complete=args.exit,
+        start_minimized_to_tray=args.start_minimized_to_tray,
+    )
 
     # 注册主窗口并处理启动期间收到的挂起消息
     _main_window = w

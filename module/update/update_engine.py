@@ -414,22 +414,26 @@ class UpdateEngine:
 
     # ── 启动应用 ─────────────────────────────────────────────────────
 
-    def launch_application(self):
+    def launch_application(self, start_minimized_to_tray: bool = False):
         """启动新版本的 March7th Launcher。"""
         self._check_cancelled()
         self._emit_progress(UpdateStage.LAUNCH, tr("正在启动新版本..."), indeterminate=True)
 
         launcher = os.path.abspath("./March7th Launcher.exe")
         env = build_independent_process_env()
+        command = [launcher]
+        if start_minimized_to_tray:
+            command.append("--start-minimized-to-tray")
+
         try:
             subprocess.Popen(
-                [launcher],
+                command,
                 creationflags=getattr(subprocess, "DETACHED_PROCESS", 0),
                 env=env,
                 close_fds=True,
             )
         except Exception:
-            subprocess.Popen([launcher], env=env, close_fds=True)
+            subprocess.Popen(command, env=env, close_fds=True)
 
         self._cleanup_self_backup()
         self._emit_progress(UpdateStage.DONE, tr("更新完成"), 1, 1)
@@ -452,7 +456,7 @@ class UpdateEngine:
         self.extract_file()
         return True
 
-    def finalize_update(self, wait_pid: int | None = None):
+    def finalize_update(self, wait_pid: int | None = None, start_minimized_to_tray: bool = False):
         """最终安装：等待退出 → 终止进程 → 覆盖 → 清理 → 启动。"""
         self._log("info", "开始最终化更新")
         self._require_package(require_download_url=False)
@@ -460,14 +464,17 @@ class UpdateEngine:
         self.terminate_processes()
         self.cover_folder()
         self.cleanup()
-        self.launch_application()
+        self.launch_application(start_minimized_to_tray=start_minimized_to_tray)
 
-    def run_full_update(self, wait_pid: int | None = None) -> bool:
+    def run_full_update(self, wait_pid: int | None = None, start_minimized_to_tray: bool = False) -> bool:
         """完整更新流程。"""
         self._log("info", "开始完整更新流程")
         if not self.prepare_update():
             return False
-        self.finalize_update(wait_pid=wait_pid)
+        self.finalize_update(
+            wait_pid=wait_pid,
+            start_minimized_to_tray=start_minimized_to_tray,
+        )
         return True
 
     # ── 内部辅助 ─────────────────────────────────────────────────────

@@ -1070,6 +1070,14 @@ class LogInterface(ScrollArea):
                 self._active_task_chain = []
             program = str(task.get('program', '')).strip()
             args = str(task.get('args', '') or '')
+            if program.lower() == 'workflow':
+                workflow_name = str(task.get('workflow_name') or args).strip()
+                if getattr(sys, 'frozen', False):
+                    program = os.path.abspath('./March7th Assistant.exe')
+                    args = shlex.join(['--workflow-name', workflow_name])
+                else:
+                    program = sys.executable
+                    args = shlex.join([os.path.abspath('main.py'), '--workflow-name', workflow_name])
             timeout = int(task.get('timeout', 0) or 0)
             if program.lower() == 'self':
                 self._startTask(args, timeout)

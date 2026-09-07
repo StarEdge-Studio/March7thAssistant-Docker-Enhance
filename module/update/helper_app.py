@@ -192,6 +192,7 @@ class HelperOptions:
     wait_pid: int | None
     auto_mode: bool = False
     cleanup_backup_path: str | None = None
+    start_minimized_to_tray: bool = False
 
 
 @dataclass(slots=True)
@@ -395,7 +396,10 @@ class NativeUpdaterWindow:
                 self._run_retry_from_stage(engine, retry_context.stage)
             elif self.options.mode == "finalize":
                 self._log("info", f"执行最终化模式，等待PID={self.options.wait_pid}")
-                engine.finalize_update(wait_pid=self.options.wait_pid)
+                engine.finalize_update(
+                    wait_pid=self.options.wait_pid,
+                    start_minimized_to_tray=self.options.start_minimized_to_tray,
+                )
             else:
                 # 未预设 URL 时，通过统一的版本检测获取更新信息
                 if not engine.download_url:
@@ -423,7 +427,10 @@ class NativeUpdaterWindow:
                     engine.set_update_info(info)
                     self._log("info", f"发现新版本: {info.version} ({info.source})")
 
-                if not engine.run_full_update(wait_pid=self.options.wait_pid):
+                if not engine.run_full_update(
+                    wait_pid=self.options.wait_pid,
+                    start_minimized_to_tray=self.options.start_minimized_to_tray,
+                ):
                     self._set_result("no-update", tr("当前已是最新版本"))
                     return
 
@@ -461,15 +468,22 @@ class NativeUpdaterWindow:
         if stage == UpdateStage.COVER:
             engine.cover_folder()
             engine.cleanup()
-            engine.launch_application()
+            engine.launch_application(
+                start_minimized_to_tray=self.options.start_minimized_to_tray,
+            )
             return
 
         if stage == UpdateStage.CLEANUP:
             engine.cleanup()
-            engine.launch_application()
+            engine.launch_application(
+                start_minimized_to_tray=self.options.start_minimized_to_tray,
+            )
             return
 
-        engine.finalize_update(wait_pid=self.options.wait_pid)
+        engine.finalize_update(
+            wait_pid=self.options.wait_pid,
+            start_minimized_to_tray=self.options.start_minimized_to_tray,
+        )
 
     def _build_retry_context(
         self,
@@ -675,6 +689,7 @@ def parse_args(argv=None) -> HelperOptions:
     parser.add_argument("--sha256", default=None)
     parser.add_argument("--extract-folder-path", default=None)
     parser.add_argument("--cleanup-backup-path", default=None)
+    parser.add_argument("--start-minimized-to-tray", action="store_true")
     parser.add_argument("--auto", "-a", action="store_true", dest="auto_mode")
 
     args = parser.parse_args(normalized_argv)
@@ -700,6 +715,7 @@ def parse_args(argv=None) -> HelperOptions:
         wait_pid=args.wait_pid,
         auto_mode=args.auto_mode,
         cleanup_backup_path=args.cleanup_backup_path,
+        start_minimized_to_tray=args.start_minimized_to_tray,
     )
 
 
