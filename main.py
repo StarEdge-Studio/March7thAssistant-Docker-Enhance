@@ -93,13 +93,16 @@ import base64
 import time
 
 if sys.platform == 'win32':
-    from utils.admin import is_user_admin, run_as_admin
-    if not is_user_admin():
-        try:
-            run_as_admin()
-            sys.exit(0)
-        except Exception:
-            sys.exit(1)
+    # 当从 WebUI 或 Docker 启动时，跳过 UAC 提权以防止环境丢失和后台挂起
+    from utils.console import is_gui_started, is_docker_started
+    if not is_gui_started() and not is_docker_started():
+        from utils.admin import is_user_admin, run_as_admin
+        if not is_user_admin():
+            try:
+                run_as_admin()
+                sys.exit(0)
+            except Exception:
+                sys.exit(1)
 
 from module.config import cfg
 from module.logger import log
