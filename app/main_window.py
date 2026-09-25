@@ -93,6 +93,7 @@ class MainWindow(MSFluentWindow):
         self.startup_task = task  # 保存启动时要执行的任务
         self.exit_on_complete = exit_on_complete  # 任务完成后是否退出
         self.start_minimized_to_tray = start_minimized_to_tray
+        self._defer_startup_checks = False  # 静默启动时推迟的启动检查（检查更新/公告）
         self.detected_update_version = None
         self.updateVersionBadge = None
         qconfig.themeChanged.connect(self._on_theme_changed)
@@ -114,6 +115,9 @@ class MainWindow(MSFluentWindow):
         if self.startup_task:
             from PySide6.QtCore import QTimer
             QTimer.singleShot(1000, self._executeStartupTask)
+        elif self.start_minimized_to_tray:
+            # 最小化到托盘启动：不弹出任何窗口，检查更新与公告推迟到主窗口首次显示
+            self._defer_startup_checks = True
         else:
             # 检查更新
             checkUpdate(self, flag=True)
@@ -189,13 +193,24 @@ class MainWindow(MSFluentWindow):
         else:
             self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
 
+        # 记录期望的窗口几何（尺寸与位置）
+        target_geometry = self.geometry()
+
         # 根据配置决定窗口显示方式
-        if window_memory in ('size', 'size_and_position') and cfg.get_value('window_maximized', False):
+        if self.start_minimized_to_tray:
+            # 最小化到托盘启动：不显示主窗口与启动画面（SplashScreen 是主窗口子控件，随父窗口隐藏），直接进托盘
+            self.hide()
+        elif window_memory in ('size', 'size_and_position') and cfg.get_value('window_maximized', False):
             self.showMaximized()
         else:
             self.show()
 
         QApplication.processEvents()
+
+        if self.start_minimized_to_tray:
+            # 托盘启动跳过了 show() 的几何同步：构造期堆积的窗口几何事件会在 processEvents 中被处理，
+            # 把窗口尺寸打回原生默认值（500x500），导致从托盘恢复后窗口异常变小，需重新应用一次几何
+            self.setGeometry(target_geometry)
 
     def _baseTitleBarText(self):
         return f"March7th Assistant {cfg.version}"
@@ -364,6 +379,21 @@ class MainWindow(MSFluentWindow):
         if sys.platform == 'win32':
             self.tray_icon.activated.connect(self.onTrayIconActivated)
         self.tray_icon.show()
+
+    def is_minimized_to_tray(self) -> bool:
+        """是否处于最小化到托盘状态（主窗口隐藏且托盘图标可见）"""
+        try:
+            return not self.isVisible() and self.tray_icon.isVisible()
+        except Exception:
+            return False
+
+    def showEvent(self, event):
+        """主窗口显示时补做静默启动推迟的启动检查（检查更新/公告）"""
+        super().showEvent(event)
+        if self._defer_startup_checks:
+            self._defer_startup_checks = False
+            checkUpdate(self, flag=True)
+            checkAnnouncement(self)
 
     def _show_main_window(self):
         """显示主界面，macOS 下确保窗口置顶"""

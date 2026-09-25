@@ -45,6 +45,30 @@ AVAILABLE_TASKS = {
 # 任务名称映射（兼容旧名称调用方）
 TASK_NAMES = AVAILABLE_TASKS
 
+# 支持「暂停/继续」的内置任务白名单。
+# 仅针对内置任务 ID；workflow（用户自定义流程）经 workflow 启动路径单独启用
+# （运行于 main.py 进程内、走同一套动作卡点），外部/自定义程序与更新、
+# 启动器、原生界面类子任务不支持暂停。判定逻辑见 LogInterface._resolvePauseSupport。
+PAUSABLE_TASKS = frozenset({
+    "main",
+    "routine",
+    "daily",
+    "power",
+    "currencywars",
+    "currencywarsloop",
+    "currencywarstemp",
+    "divergent",
+    "divergentloop",
+    "divergenttemp",
+    "fight",
+    "universe",
+    "forgottenhall",
+    "purefiction",
+    "apocalyptic",
+    "redemption",
+    "screen_test",
+})
+
 
 def task_display_names() -> dict:
     """任务ID -> 当前语言显示名。

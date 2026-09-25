@@ -16,8 +16,10 @@ def parse_args():
     parser = argparse.ArgumentParser(
         prog='March7th Assistant',
         description='三月七小助手 - 崩坏：星穹铁道自动化工具 (CLI)',
-        epilog='更多信息请访问: https://m7a.top',
-        add_help=False
+        epilog='更多信息请访问: https://m7a.top\n'
+               '运行自定义流程: March7th Assistant.exe --workflow-name "流程名称"',
+        add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
     # 位置参数组
@@ -48,9 +50,14 @@ def parse_args():
         help='列出所有可用的任务'
     )
     optional.add_argument(
+        '--list-workflows',
+        action='store_true',
+        help='列出所有可用的流程'
+    )
+    optional.add_argument(
         '--workflow-name',
         metavar='NAME',
-        help='按名称运行流程'
+        help='按名称运行流程（用 --list-workflows 查看可用名称）'
     )
     optional.add_argument(
         '--workflow-step-path',
@@ -74,6 +81,24 @@ def parse_args():
         print("\n使用示例:")
         print("  启动并执行完整运行:     March7th Assistant.exe main")
         print("  执行每日实训:           March7th Assistant.exe daily")
+        sys.exit(0)
+
+    # 处理 --list-workflows 参数
+    if args.list_workflows:
+        from module.workflow import list_workflow_names
+
+        names = list_workflow_names()
+        print("\n可用的流程列表:")
+        print("-" * 40)
+        if names:
+            for name in names:
+                print(f"  {name}")
+        else:
+            print("  （暂无流程，请先在图形界面的流程编排中创建）")
+        print("-" * 40)
+        print("\n使用示例:")
+        print('  运行流程:       March7th Assistant.exe --workflow-name "流程名称"')
+        print('  运行指定步骤:   March7th Assistant.exe --workflow-name "流程名称" --workflow-step-path 0/1')
         sys.exit(0)
 
     if args.task and args.workflow_name:
@@ -115,7 +140,7 @@ from module.localization import load_language
 # 初始化界面语言（CLI 界面输出与后续 tr() 使用；日志按约定固定中文原文）
 load_language()
 from module.ocr import ocr
-from module.workflow import WorkflowRunner, load_workflow_execution_payload
+from module.workflow import WorkflowRunner, load_workflow_execution_payload, describe_available_workflows
 from utils.screenshot_util import save_error_screenshot
 
 import tasks.game as game
@@ -137,6 +162,7 @@ from tasks.base import screen_test
 
 
 from utils.console import pause_on_error, pause_on_success, pause_always, is_docker_started
+from utils.pause import pause_ctl
 
 telemetry.init(
     enabled=cfg.get_value("telemetry_enable", True),
@@ -280,7 +306,22 @@ def run_notify_action():
 
 
 def run_workflow_action(workflow_name: str, workflow_step_path=None):
-    workflow = load_workflow_execution_payload(workflow_name, workflow_step_path)
+    # 先校验用户输入（名称/步骤路径），再做游戏窗口检查与切换：
+    # 名称错误不应要求游戏在运行才能得到反馈
+    try:
+        workflow = load_workflow_execution_payload(workflow_name, workflow_step_path)
+    except ValueError:
+        # 名称/步骤路径错误属于用户输入问题：给出可用流程清单，不走异常通知/截图
+        step_hint = f"（步骤路径：{workflow_step_path}）" if workflow_step_path else ""
+        log.error(
+            f"未找到流程「{workflow_name}」或步骤路径无效{step_hint}"
+            f"；可用流程：{describe_available_workflows()}（使用 --list-workflows 查看）"
+        )
+        sys.exit(1)
+    # 与流程编排启动语义一致：游戏未启动或无法切换到游戏窗口时直接报错终止，
+    # 避免按键/点击打进当前聚焦的其它窗口（定时任务、命令行直跑均在此收口）
+    if not game.ensure_game_ready():
+        sys.exit(1)
     runner = WorkflowRunner(
         log_callback=lambda message: print(message, flush=True),
         mirror_to_project_log=False,
@@ -290,6 +331,8 @@ def run_workflow_action(workflow_name: str, workflow_step_path=None):
 
 def main(action=None, no_run_immediately=False, workflow_name=None, workflow_step_path=None):
     first_run()
+    # 启动暂停控制器（仅在 GUI 注入了 MARCH7TH_CONTROL_FILE 时生效，其余场景惰性关闭）
+    pause_ctl.start()
     telemetry.track_startup()
 
     if workflow_name:

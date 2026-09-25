@@ -694,3 +694,120 @@ class TestDuplicateWorkflowNameExtended:
         from module.workflow import duplicate_workflow_name
         result = duplicate_workflow_name("测试流程", set())
         assert result == "测试流程"
+
+
+class TestFormatWorkflowStepPath:
+    def test_list_input(self):
+        from module.workflow import format_workflow_step_path
+        assert format_workflow_step_path([0, 1]) == "0/1"
+
+    def test_string_passthrough(self):
+        from module.workflow import format_workflow_step_path
+        assert format_workflow_step_path(" 0/1/2 ") == "0/1/2"
+
+    def test_none_and_empty(self):
+        from module.workflow import format_workflow_step_path
+        assert format_workflow_step_path(None) is None
+        assert format_workflow_step_path("") is None
+
+
+class TestBuildWorkflowTask:
+    """workflow 启动任务统一构造：产出 program='workflow' 标记形态。"""
+
+    def test_marker_form_fields(self):
+        from module.workflow import build_workflow_task
+        task = build_workflow_task("示例流程")
+        assert task["program"] == "workflow"
+        assert task["workflow_name"] == "示例流程"
+        assert task["args"] == "示例流程"  # 兼容旧字段
+        assert task["timeout"] == 0
+        assert "workflow_step_path" not in task
+
+    def test_step_path_from_indices(self):
+        from module.workflow import build_workflow_task
+        task = build_workflow_task("示例流程", step_path=[0, 1])
+        assert task["workflow_step_path"] == "0/1"
+
+    def test_step_path_from_string(self):
+        from module.workflow import build_workflow_task
+        task = build_workflow_task("示例流程", step_path="0/1/2")
+        assert task["workflow_step_path"] == "0/1/2"
+
+    def test_name_and_timeout(self):
+        from module.workflow import build_workflow_task
+        task = build_workflow_task("示例流程", timeout=60, name="流程编排 - 示例流程")
+        assert task["name"] == "流程编排 - 示例流程"
+        assert task["timeout"] == 60
+
+
+class TestListWorkflowNames:
+    def test_extracts_names_and_skips_empty(self, monkeypatch):
+        import module.workflow as wf
+        monkeypatch.setattr(wf, "load_workflows", lambda: [
+            {"name": "流程A"},
+            {"name": ""},
+            {"name": "流程B"},
+            {},
+        ])
+        assert wf.list_workflow_names() == ["流程A", "流程B"]
+
+    def test_listed_names_resolve_with_get_workflow_by_name(self, monkeypatch):
+        # --list-workflows 列出的名字必须能被 get_workflow_by_name 匹配（可直接用于 --workflow-name）
+        import module.workflow as wf
+        workflows = [{"name": "流程A"}, {"name": "流程B"}]
+        monkeypatch.setattr(wf, "load_workflows", lambda: workflows)
+        for name in wf.list_workflow_names():
+            assert wf.get_workflow_by_name(name, workflows) is not None
+
+
+class TestDescribeAvailableWorkflows:
+    def test_joins_names(self, monkeypatch):
+        import module.workflow as wf
+        monkeypatch.setattr(wf, "load_workflows", lambda: [{"name": "流程A"}, {"name": "流程B"}])
+        assert wf.describe_available_workflows() == "流程A、流程B"
+
+    def test_placeholder_when_empty(self, monkeypatch):
+        import module.workflow as wf
+        monkeypatch.setattr(wf, "load_workflows", lambda: [])
+        assert wf.describe_available_workflows() == "（无）"
+
+
+class TestWorkflowCliFlags:
+    """main.py 无法安全导入（模块级 parse_args/提权），用源码结构断言 CLI 参数存在。"""
+
+    def _main_source(self):
+        from pathlib import Path
+        return (Path(__file__).resolve().parents[2] / 'main.py').read_text(encoding='utf-8')
+
+    def test_list_workflows_flag_defined(self):
+        source = self._main_source()
+        assert '--list-workflows' in source
+        assert 'list_workflow_names' in source
+
+    def test_workflow_name_help_mentions_discovery(self):
+        assert '--list-workflows 查看可用名称' in self._main_source()
+
+
+class TestLoadWorkflowExecutionPayloadErrors:
+    """步骤路径类输入错误统一抛 ValueError（CLI 据此走友好报错而非异常通知）。"""
+
+    def _patch_workflow(self, monkeypatch):
+        import module.workflow as wf
+        workflow = {"name": "示例流程", "steps": [{"type": "wait", "title": "等待"}]}
+        monkeypatch.setattr(wf, "get_workflow_by_name", lambda name, workflows=None: workflow)
+        return wf
+
+    def test_out_of_range_step_path_raises_value_error(self, monkeypatch):
+        wf = self._patch_workflow(monkeypatch)
+        with pytest.raises(ValueError):
+            wf.load_workflow_execution_payload("示例流程", "9/9")
+
+    def test_non_digit_step_path_raises_value_error(self, monkeypatch):
+        wf = self._patch_workflow(monkeypatch)
+        with pytest.raises(ValueError):
+            wf.load_workflow_execution_payload("示例流程", "0/x")
+
+    def test_valid_step_path_returns_single_step_workflow(self, monkeypatch):
+        wf = self._patch_workflow(monkeypatch)
+        result = wf.load_workflow_execution_payload("示例流程", "0")
+        assert len(result["steps"]) == 1
