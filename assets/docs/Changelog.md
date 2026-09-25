@@ -1,14 +1,19 @@
 # 更新日志
 
-## v2026.9.23
+## v2026.9.25
 - 支持 Fate 联动角色远坂凛与吉尔伽美什
 - 流程编排支持滑动鼠标 [#1221](https://github.com/moesnow/March7thAssistant/pull/1221) @AnonMoi
 - 定时任务支持添加流程编排
+- 新增 Qmsg 酱 QQ 推送通知 [#1229](https://github.com/moesnow/March7thAssistant/pull/1229)
 - 修复货币战争循环中的结算退出与开局确认 [#1223](https://github.com/moesnow/March7thAssistant/pull/1223) @LumiaBlack51
 - 修复 SMTP 纯文本模式下忽略截图的问题 [#1217](https://github.com/moesnow/March7thAssistant/pull/1217) @23swccp
 - 修复主页卡片编辑器深色模式样式不生效 [#1166](https://github.com/moesnow/March7thAssistant/pull/1166) @wha7ev9r
 - 修复差分宇宙贪吃面具最后区域选择阶段的确认弹窗
 - 修复更新后未恢复托盘最小化状态
+- 修复配置文件损坏时未备份导致配置丢失
+- 修复货币战争云游戏保活、超时退出及败局结算识别 [#1226](https://github.com/moesnow/March7thAssistant/pull/1226) @LumiaBlack51
+- 修复 Docker 单文件挂载时配置文件无法保存 [#1231](https://github.com/moesnow/March7thAssistant/pull/1231) @lingyezhixing
+- 优化多语言翻译，修正繁体用语并补全英日韩文案
 - 优化性能和稳定性并修复若干已知问题
 - [欢迎关注我们的B站账号，获取最新动态和教程](https://space.bilibili.com/3706960664857075)
 

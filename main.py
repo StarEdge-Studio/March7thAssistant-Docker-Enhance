@@ -62,9 +62,13 @@ def parse_args():
 
     # 处理 --list 参数
     if args.list:
+        from module.localization import load_language
+        from utils.tasks import task_display_names
+
+        load_language()
         print("\n可用的任务列表:")
         print("-" * 40)
-        for task_id, task_name in AVAILABLE_TASKS.items():
+        for task_id, task_name in task_display_names().items():
             print(f"  {task_id:<20} {task_name}")
         print("-" * 40)
         print("\n使用示例:")
@@ -92,10 +96,10 @@ if sys.platform == 'win32':
     # 当从 WebUI 或 Docker 启动时，跳过 UAC 提权以防止环境丢失和后台挂起
     from utils.console import is_gui_started, is_docker_started
     if not is_gui_started() and not is_docker_started():
-        import pyuac
-        if not pyuac.isUserAdmin():
+        from utils.admin import is_user_admin, run_as_admin
+        if not is_user_admin():
             try:
-                pyuac.runAsAdmin(False)
+                run_as_admin()
                 sys.exit(0)
             except Exception:
                 sys.exit(1)
@@ -105,6 +109,11 @@ from module.logger import log
 from module.notification import notif
 from module.telemetry import telemetry
 from module.notification.notification import NotificationLevel
+
+from module.localization import load_language
+
+# 初始化界面语言（CLI 界面输出与后续 tr() 使用；日志按约定固定中文原文）
+load_language()
 from module.ocr import ocr
 from module.workflow import WorkflowRunner, load_workflow_execution_payload
 from utils.screenshot_util import save_error_screenshot

@@ -8,7 +8,7 @@ from .common.style_sheet import StyleSheet
 import tasks.tool as tool
 import base64
 import subprocess
-import pyperclip
+from utils import clipboard
 from module.config import cfg
 from tasks.base.tasks import start_task
 import os
@@ -183,7 +183,7 @@ class ToolsInterface(ScrollArea):
             if not game_path or not os.path.exists(game_path):
                 InfoBar.warning(
                     title=tr('游戏路径配置错误(╥╯﹏╰╥)'),
-                    content=tr("请在“设置”-->“程序”中配置正确的游戏路径"),
+                    content=tr("请在“设置”→“程序”中配置正确的游戏路径"),
                     orient=Qt.Orientation.Horizontal,
                     isClosable=True,
                     position=InfoBarPosition.TOP,
@@ -220,7 +220,7 @@ class ToolsInterface(ScrollArea):
                     cp.write(f)
             args = ["-HKSR", "-EnableMobileUI"]
             subprocess.Popen([exe_path] + args, cwd=config_dir)
-            pyperclip.copy(f'cd "{config_dir}" && "{exe_path}" {" ".join(args)}')
+            clipboard.copy(f'cd "{config_dir}" && "{exe_path}" {" ".join(args)}')
             InfoBar.success(
                 title=tr('启动成功(＾∀＾●)'),
                 content=tr("已将命令复制到剪贴板"),
