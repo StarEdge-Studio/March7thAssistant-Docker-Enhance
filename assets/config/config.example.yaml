@@ -368,7 +368,8 @@ apocalyptic_timestamp: 0 # 上次运行末日幻影的时间戳，用于记录�
 auto_battle_detect_enable: true # 是否启用自动战斗和二倍速检测。true 开启，false 关闭。
 
 # OCR 加速配置
-ocr_gpu_acceleration: auto # OCR 加速模式，可选值：auto（自动）, gpu（GPU）, onnx_dml（ONNXRuntime + DirectML）, cpu（CPU）, openvino_cpu（OpenVINO CPU）, onnx_cpu（ONNXRuntime CPU）。若 DML 模式过慢会自动切换到 cpu。
+ocr_gpu_acceleration: auto # OCR 加速模式，可选值：auto（自动）, gpu（GPU）, onnx_dml（ONNXRuntime + DirectML）, cpu（CPU）, openvino_cpu（OpenVINO CPU）, onnx_cpu（ONNXRuntime CPU）。若 DML 连续过慢会自动降级到 cpu。
+ocr_slow_threshold: 5.0 # DML 模式下单次 OCR 耗时超过此值（秒）计为一次"慢"，连续 2 次即降级到 cpu；仅在 ocr_gpu_acceleration 为 auto/gpu/onnx_dml 时生效；非法值回退默认，设为极大值可视为禁用自动降级。
 
 # 自动修改分辨率配置
 auto_set_resolution_enable: true # 是否启用自动修改分辨率功能。true 开启，false 关闭。
@@ -573,6 +574,16 @@ notify_onebot_endpoint: "" # OneBot 的服务端点 URL，例如 http://127.0.0.
 notify_onebot_token: "" # 可选参数，验证请求的 Access Token。
 notify_onebot_user_id: "" # 可选参数，私聊消息的接收用户 ID。
 notify_onebot_group_id: "" # 可选参数，群消息的接收群组 ID。
+
+# QQ 官方机器人通知配置（QQ 开放平台）
+# 仅需 AppID + AppSecret，无需部署 NapCat / Lagrange 等 OneBot 协议端，无封号风险
+# 支持发送截图（官方分片上传）
+# openid / group_openid 无法通过接口查询，可在软件内「自动绑定收件标识」，或从机器人收到的事件（如私聊、@ 机器人、机器人入群）中获取
+notify_qqbot_enable: false # 是否启用 QQ 官方机器人通知。true 开启，false 关闭。
+notify_qqbot_appid: "" # QQ 开放平台的机器人 AppID（纯数字时建议加引号填写）。
+notify_qqbot_client_secret: "" # QQ 开放平台的机器人 AppSecret（敏感凭证，请勿泄露；建议加引号填写）。
+notify_qqbot_openid: "" # 可选参数，单聊消息的接收用户 openid。
+notify_qqbot_group_openid: "" # 可选参数，群聊消息的接收群 group_openid。
 
 # Go-cqhttp 通知配置（已停止维护）
 # 支持发送截图
