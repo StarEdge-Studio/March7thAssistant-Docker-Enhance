@@ -223,19 +223,18 @@ import base64
 import time
 
 if sys.platform == 'win32':
-    from utils.admin import is_user_admin
-    if not is_user_admin():
-        # 未提权（终端、脚本或 AI Agent 通过 m7a.exe 调用，或源码运行）：把任务交给管理员进程执行，
-        # 同时在当前终端跟随输出，结束后返回任务的真实退出码
-        from utils.cli_entry import run_task_elevated
-        sys.exit(run_task_elevated(sys.argv[1:], json_output=args.json, detach=args.detach))
+    from utils.console import is_gui_started, is_docker_started
+    if not is_gui_started() and not is_docker_started():
+        from utils.admin import is_user_admin
+        if not is_user_admin():
+            from utils.cli_entry import run_task_elevated
+            sys.exit(run_task_elevated(sys.argv[1:], json_output=args.json, detach=args.detach))
 
 from utils.cli_entry import read_version
 from utils.console import is_gui_started, is_docker_started, is_non_interactive
 from utils.runs import (RunSession, EXIT_OK, EXIT_FAILED, EXIT_FIRST_RUN_REQUIRED, EXIT_BUSY, EXIT_STOPPED,
                         STATUS_INTERRUPTED, STATUS_STOPPED, LOCK_BUSY, LOCK_FORCED, LOCK_UNAVAILABLE,
                         describe_run, exit_code_of)
-
 
 def _run_invoker():
     """本次运行的发起方（写入运行记录与匿名统计）。"""
@@ -248,7 +247,6 @@ def _run_invoker():
     if is_non_interactive():
         return "non_interactive"
     return "cli"
-
 
 # 运行记录：分配运行编号并捕获完整输出（必须在导入日志模块之前），结束时写入结果
 run_session = RunSession.begin(
