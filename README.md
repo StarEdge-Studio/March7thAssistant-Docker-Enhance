@@ -48,7 +48,7 @@ vim docker-compose.yml
 services:
   march7thassistant:
     container_name: m7a
-    image: ghcr.io/shing-yu/march7thassistant-docker-enhance:main
+    image: ghcr.io/staredge-studio/march7thassistant-docker-enhance:main
     ports:
       - "18080:8080"  # [宿主机端口]:[容器内端口]，可根据需求修改左侧端口
     volumes:
