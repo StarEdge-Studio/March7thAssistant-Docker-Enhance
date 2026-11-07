@@ -235,13 +235,18 @@ import base64
 import time
 
 if sys.platform == 'win32':
-    from utils.admin import is_user_admin
-    # 带 --run-id 的是入口转交出来的管理员进程：即使没拿到管理员权限也不能再转交一次，否则会不断重复启动自己
-    if not is_user_admin() and not args.run_id:
-        # 未提权（终端、脚本或 AI Agent 通过 m7a.exe 调用，或源码运行）：把任务交给管理员进程执行，
-        # 同时在当前终端跟随输出，结束后返回任务的真实退出码
-        from utils.cli_entry import run_task_elevated
-        sys.exit(run_task_elevated(sys.argv[1:], json_output=args.json, detach=args.detach))
+    from utils.console import is_gui_started, is_docker_started
+    
+    # 仅在非 GUI 且非 Docker 环境下才尝试判断是否需要提权
+    if not is_gui_started() and not is_docker_started():
+        from utils.admin import is_user_admin
+        
+        # 带 --run-id 的是入口转交出来的管理员进程：即使没拿到管理员权限也不能再转交一次，否则会不断重复启动自己
+        if not is_user_admin() and not getattr(args, 'run_id', None):
+            # 未提权（终端、脚本或 AI Agent 通过 m7a.exe 调用，或源码运行）：把任务交给管理员进程执行，
+            # 同时在当前终端跟随输出，结束后返回任务的真实退出码
+            from utils.cli_entry import run_task_elevated
+            sys.exit(run_task_elevated(sys.argv[1:], json_output=args.json, detach=args.detach))
 
 # 由免 UAC 计划任务启动的管理员进程：与 UAC 启动的窗口一致，最小化且不抢焦点（输出已转发到调用方的终端）
 if args.minimize_console:
@@ -254,7 +259,6 @@ from utils.runs import (RunSession, EXIT_OK, EXIT_FAILED, EXIT_FIRST_RUN_REQUIRE
                         EXIT_STOPPED, STATUS_INTERRUPTED, STATUS_STOPPED, LOCK_BUSY, LOCK_FORCED, LOCK_UNAVAILABLE,
                         describe_run, exit_code_of)
 
-
 def _run_invoker():
     """本次运行的发起方（写入运行记录与匿名统计）。"""
     if is_gui_started():
@@ -266,7 +270,6 @@ def _run_invoker():
     if is_non_interactive():
         return "non_interactive"
     return "cli"
-
 
 # 运行记录：分配运行编号并捕获完整输出（必须在导入日志模块之前），结束时写入结果
 run_session = RunSession.begin(
