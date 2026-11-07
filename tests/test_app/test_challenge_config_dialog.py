@@ -67,12 +67,12 @@ def test_unconfigured_third_team_defaults_to_dan_heng_and_cannot_be_empty(editor
 
 
 @pytest.mark.parametrize('prefix', ['forgottenhall', 'purefiction', 'apocalyptic'])
-def test_all_modes_show_three_teams_with_purefiction_switch(editor, qtbot, prefix):
+def test_all_modes_show_three_teams_with_stellar_switch(editor, qtbot, prefix):
     _, data, _, parent = editor
     data.pop('purefiction_stellar_enable')
     dialog = module.ChallengeConfigDialog('test', prefix, 4, parent)
     qtbot.addWidget(dialog)
-    assert len(dialog.findChildren(CheckBox)) == (1 if prefix == 'purefiction' else 0)
+    assert len(dialog.findChildren(CheckBox)) == 1
     dialog.select_team(2)
     assert dialog.pages.currentIndex() == 2
     assert len(dialog.team_rows) == 3
@@ -218,6 +218,36 @@ def test_regular_mode_ignores_invalid_third_team_until_enabled(editor):
     assert not dialog.validate_inputs()
 
 
+def test_memoryofchaos_mode_is_disabled_by_default_and_keeps_third_team(editor, qtbot):
+    _, data, _, parent = editor
+    data['forgottenhall_level'] = [11, 12]
+    for index in range(1, 4):
+        data[f'forgottenhall_team{index}'] = data[f'purefiction_team{index}']
+    dialog = module.ChallengeConfigDialog('test', 'forgottenhall', 12, parent)
+    qtbot.addWidget(dialog)
+    assert not dialog.stellar_enable.isChecked()
+    dialog.team_rows[2][0][0].setCurrentText('角色0')
+    assert dialog.validate_inputs()
+    assert dialog.values()['forgottenhall_stellar_enable'] is False
+    dialog.stellar_enable.setChecked(True)
+    assert not dialog.validate_inputs()
+
+
+def test_apocalyptic_mode_is_disabled_by_default_and_keeps_third_team(editor, qtbot):
+    _, data, _, parent = editor
+    data['apocalyptic_level'] = [3, 4]
+    for index in range(1, 4):
+        data[f'apocalyptic_team{index}'] = data[f'purefiction_team{index}']
+    dialog = module.ChallengeConfigDialog('test', 'apocalyptic', 4, parent)
+    qtbot.addWidget(dialog)
+    assert not dialog.stellar_enable.isChecked()
+    dialog.team_rows[2][0][0].setCurrentText('角色0')
+    assert dialog.validate_inputs()
+    assert dialog.values()['apocalyptic_stellar_enable'] is False
+    dialog.stellar_enable.setChecked(True)
+    assert not dialog.validate_inputs()
+
+
 def test_reversed_range_is_rejected(editor):
     dialog, _, _, _ = editor
     dialog.first_level.setValue(4)
@@ -234,6 +264,78 @@ def test_range_controls_use_mode_level_limits(editor, qtbot, prefix, highest):
         assert box.isEnabled()
         assert box.minimum() == 1
         assert box.maximum() == highest
+
+
+@pytest.mark.parametrize('prefix,highest', [('forgottenhall', 12), ('purefiction', 4), ('apocalyptic', 4)])
+def test_single_level_config_initializes_card_and_both_range_controls(editor, qtbot, prefix, highest):
+    _, data, config, parent = editor
+    data[f'{prefix}_level'] = [3]
+    card = module.ChallengeConfigCard(QIcon(), 'test', prefix, highest, parent)
+    qtbot.addWidget(card)
+    dialog = module.ChallengeConfigDialog('test', prefix, highest, parent)
+    qtbot.addWidget(dialog)
+
+    assert card.contentLabel.text() == f"{module.tr('关卡范围')} 3–3 · {module.tr('常规模式')}"
+    assert dialog.values()[f'{prefix}_level'] == [3, 3]
+    for box in (dialog.first_level, dialog.last_level):
+        assert box.minimum() == 1
+        assert box.maximum() == highest
+    dialog.reject()
+    assert data[f'{prefix}_level'] == [3]
+    config.set_value.assert_not_called()
+    config.set_values.assert_not_called()
+
+
+@pytest.mark.parametrize('levels', [[], None, 3, '3', [1, 2, 3], ['bad', 4], [True, 4]])
+def test_invalid_level_config_uses_safe_range_in_card_and_dialog(editor, qtbot, levels):
+    _, data, config, parent = editor
+    data['purefiction_level'] = levels
+    card = module.ChallengeConfigCard(QIcon(), 'test', 'purefiction', 4, parent)
+    qtbot.addWidget(card)
+    dialog = module.ChallengeConfigDialog('test', 'purefiction', 4, parent)
+    qtbot.addWidget(dialog)
+
+    assert card.contentLabel.text() == f"{module.tr('关卡范围')} 4–4 · {module.tr('常规模式')}"
+    assert dialog.values()['purefiction_level'] == [4, 4]
+    for box in (dialog.first_level, dialog.last_level):
+        assert box.minimum() == 1
+        assert box.maximum() == 4
+    config.set_value.assert_not_called()
+    config.set_values.assert_not_called()
+
+
+@pytest.mark.parametrize('prefix,highest', [('forgottenhall', 12), ('purefiction', 4), ('apocalyptic', 4)])
+def test_out_of_bounds_range_is_consistent_in_card_and_dialog(editor, qtbot, prefix, highest):
+    _, data, _, parent = editor
+    data[f'{prefix}_level'] = [0, highest + 1]
+    card = module.ChallengeConfigCard(QIcon(), 'test', prefix, highest, parent)
+    qtbot.addWidget(card)
+    dialog = module.ChallengeConfigDialog('test', prefix, highest, parent)
+    qtbot.addWidget(dialog)
+
+    assert card.contentLabel.text() == f"{module.tr('关卡范围')} 1–{highest} · {module.tr('常规模式')}"
+    assert dialog.values()[f'{prefix}_level'] == [1, highest]
+
+
+def test_saving_single_level_config_writes_two_endpoints_once(editor, qtbot, monkeypatch):
+    _, data, config, parent = editor
+    data['purefiction_level'] = [3]
+    dialog = module.ChallengeConfigDialog('test', 'purefiction', 4, parent)
+    qtbot.addWidget(dialog)
+    assert dialog.validate_inputs()
+    dialog.exec = Mock(return_value=True)
+    monkeypatch.setattr(module, 'ChallengeConfigDialog', Mock(return_value=dialog))
+    config.set_values.side_effect = lambda values: data.update(deepcopy(values))
+    card = module.ChallengeConfigCard(QIcon(), 'test', 'purefiction', 4, parent)
+    qtbot.addWidget(card)
+    config.set_values.assert_not_called()
+
+    card._edit()
+
+    config.set_values.assert_called_once()
+    assert data['purefiction_level'] == [3, 3]
+    assert data['purefiction_timestamp'] == 0
+    assert card.contentLabel.text() == f"{module.tr('关卡范围')} 3–3 · {module.tr('常规模式')}"
 
 
 def test_save_is_one_write_with_all_three_teams(editor, monkeypatch):

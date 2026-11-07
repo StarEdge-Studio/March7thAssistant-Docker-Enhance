@@ -111,6 +111,10 @@ if sys.platform == 'win32':
             sys.exit(1)
 
 
+# 控制台已隐藏，崩溃信息写入 logs/crash.log，否则闪退时什么都留不下
+from utils.crash_log import enable_crash_log, record_crash
+enable_crash_log()
+
 # 开机自启：按配置决定是否打开图形界面，以及启动后自动执行的任务
 _autostart_gui_task = None
 _autostart_minimized = False
@@ -129,6 +133,7 @@ if args.autostart:
 
 from PySide6.QtCore import Qt, QLocale, qInstallMessageHandler, QtMsgType
 from PySide6.QtWidgets import QApplication
+from app.common.application import create_application
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 import json
 import hashlib
@@ -150,6 +155,7 @@ def qt_message_handler(mode, context, message):
         print(f"Qt Critical: {message}")
     elif mode == QtMsgType.QtFatalMsg:
         print(f"Qt Fatal: {message}")
+        record_crash(f"Qt Fatal: {message}")
 
 
 qInstallMessageHandler(qt_message_handler)
@@ -241,15 +247,12 @@ if __name__ == "__main__":
     # 设置应用属性，必须在创建 QApplication 之前调用
     QApplication.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings)
 
-    # 避免用户环境变量干扰打包后的 Qt 和 OpenSSL 运行时
+    # 避免用户环境中已有的 Qt 环境变量干扰打包后的 Qt 插件加载
     if getattr(sys, 'frozen', False):
-        for _runtime_key in (
-            'QT_PLUGIN_PATH', 'QT_QPA_PLATFORM_PLUGIN_PATH', 'QML2_IMPORT_PATH', 'QT_QPA_FONTDIR',
-            'SSLKEYLOGFILE', 'OPENSSL_CONF',
-        ):
-            os.environ.pop(_runtime_key, None)
+        for _qt_key in ('QT_PLUGIN_PATH', 'QT_QPA_PLATFORM_PLUGIN_PATH', 'QML2_IMPORT_PATH', 'QT_QPA_FONTDIR'):
+            os.environ.pop(_qt_key, None)
 
-    app = QApplication(sys.argv)
+    app = create_application(sys.argv)
 
     # 单实例：尝试通知现有实例（若存在），若成功则退出；否则在本实例启动 server
     _key = _get_server_key()
@@ -298,6 +301,13 @@ if __name__ == "__main__":
         from module.config import cfg
         from utils.install_registry import register_install
         register_install(cfg.version, gui_pid=os.getpid())
+    except Exception:
+        pass
+
+    # AI 助手里已安装的 Skill 副本跟随小助手更新（仅打包版）。更新后自动重启时就在这里完成，下次 AI 会话读到的已是新版
+    try:
+        from utils.agent_skill import sync_installed_skills
+        sync_installed_skills()
     except Exception:
         pass
 

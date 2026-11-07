@@ -41,9 +41,9 @@ def wait_until(condition, timeout, period=1):
     return False
 
 
-def start():
+def start(headless=None):
     log.hr("开始运行", 0)
-    start_game()
+    start_game(headless=headless)
     log.hr("完成", 2)
 
 
@@ -78,7 +78,7 @@ def ensure_game_ready():
     return True
 
 
-def start_game():
+def start_game(headless=None):
     MAX_RETRY = 3
 
     def check_and_click_enter():
@@ -217,7 +217,7 @@ def start_game():
             time.sleep(1)
 
     def start_cloud_game():
-        if not cloud_game.start_game_process():
+        if not cloud_game.start_game_process(headless=headless):
             raise ConnectionError("启动或连接浏览器失败")
         if not cloud_game.is_in_game():
             if not cloud_game.enter_cloud_game():
@@ -303,34 +303,11 @@ def stop(detect_loop=False):
         sys.exit(0)
 
 
-def after_finish_is_loop(force_scheduled=False):
-
-    def get_wait_time(current_power):
-        # 距离体力到达配置文件指定的上限剩余秒数
-        wait_time_power_limit = (cfg.power_limit - current_power) * 6 * 60
-        # 距离第二天凌晨4点剩余秒数，+30避免显示3点59分不美观，#7
-        wait_time_next_day = Date.get_time_next_x_am(cfg.refresh_hour) + 30
-        # 取最小值
-        wait_time = min(wait_time_power_limit, wait_time_next_day)
-        return wait_time
-
-    if not force_scheduled and cfg.loop_mode == "power":
-        current_power = Power.get(use_supplement=False)
-        if current_power >= cfg.power_limit:
-            log.info(f"开拓力 >= {cfg.power_limit}")
-            log.info("即将再次运行")
-            log.hr("完成", 2)
-            notif.flush_batch()
-            return
-        else:
-            get_game_controller().stop_game()
-            wait_time = get_wait_time(current_power)
-            future_time = Date.calculate_future_time(wait_time)
-    else:
-        get_game_controller().stop_game()
-        scheduled_time = cfg.scheduled_time
-        wait_time = Date.time_to_seconds(scheduled_time)
-        future_time = Date.calculate_future_time(scheduled_time)
+def after_finish_is_loop():
+    get_game_controller().stop_game()
+    scheduled_time = cfg.scheduled_time
+    wait_time = Date.time_to_seconds(scheduled_time)
+    future_time = Date.calculate_future_time(scheduled_time)
 
     # 图形界面不支持循环模式，提前检查并退出
     if is_gui_started():
@@ -371,8 +348,7 @@ def wait_after_cloud_zero_duration(error):
     msg = cfg.notify_template['ErrorOccurred'].format(error=error)
     log.error(msg)
     notif.flush_batch(extra_content=msg, level=NotificationLevel.ERROR)
-    # 无法进入游戏读取开拓力，开拓力循环也改按定时时间等待
-    after_finish_is_loop(force_scheduled=True)
+    after_finish_is_loop()
     return True
 
 

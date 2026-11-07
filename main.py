@@ -128,8 +128,14 @@ def parse_args():
     )
     # 内部参数：未提权入口把任务交给管理员进程时传入的运行编号
     agent.add_argument('--run-id', help=argparse.SUPPRESS)
+    # 内部参数：由免 UAC 计划任务启动时最小化自身窗口（计划任务无法指定窗口状态）
+    agent.add_argument('--minimize-console', action='store_true', help=argparse.SUPPRESS)
 
     args = parser.parse_args()
+
+    # AI 助手里已安装的 Skill 副本跟随小助手更新（仅打包版；不输出内容，不影响下面查询类命令的结果）
+    from utils.agent_skill import sync_installed_skills
+    sync_installed_skills()
 
     # 查询类命令只读配置：可能由未提权的 m7a.exe 调用，安装目录不一定可写
     if args.list or args.list_workflows:
@@ -163,9 +169,15 @@ def parse_args():
 
     # 处理 --list-workflows 参数
     if args.list_workflows:
-        from module.workflow import list_workflow_names
-
-        names = list_workflow_names()
+        if args.json:
+            # 工作流模块初始化及读取过程可能输出日志，结构化结果只写入 stdout。
+            from contextlib import redirect_stdout
+            with redirect_stdout(sys.stderr):
+                from module.workflow import list_workflow_names
+                names = list_workflow_names()
+        else:
+            from module.workflow import list_workflow_names
+            names = list_workflow_names()
         if args.json:
             import json
             print(json.dumps({"workflows": names}, ensure_ascii=True))
@@ -224,16 +236,27 @@ import time
 
 if sys.platform == 'win32':
     from utils.console import is_gui_started, is_docker_started
+    
+    # 仅在非 GUI 且非 Docker 环境下才尝试判断是否需要提权
     if not is_gui_started() and not is_docker_started():
         from utils.admin import is_user_admin
-        if not is_user_admin():
+        
+        # 带 --run-id 的是入口转交出来的管理员进程：即使没拿到管理员权限也不能再转交一次，否则会不断重复启动自己
+        if not is_user_admin() and not getattr(args, 'run_id', None):
+            # 未提权（终端、脚本或 AI Agent 通过 m7a.exe 调用，或源码运行）：把任务交给管理员进程执行，
+            # 同时在当前终端跟随输出，结束后返回任务的真实退出码
             from utils.cli_entry import run_task_elevated
             sys.exit(run_task_elevated(sys.argv[1:], json_output=args.json, detach=args.detach))
 
+# 由免 UAC 计划任务启动的管理员进程：与 UAC 启动的窗口一致，最小化且不抢焦点（输出已转发到调用方的终端）
+if args.minimize_console:
+    from utils.console import minimize_console_window
+    minimize_console_window()
+
 from utils.cli_entry import read_version
 from utils.console import is_gui_started, is_docker_started, is_non_interactive
-from utils.runs import (RunSession, EXIT_OK, EXIT_FAILED, EXIT_FIRST_RUN_REQUIRED, EXIT_BUSY, EXIT_STOPPED,
-                        STATUS_INTERRUPTED, STATUS_STOPPED, LOCK_BUSY, LOCK_FORCED, LOCK_UNAVAILABLE,
+from utils.runs import (RunSession, EXIT_OK, EXIT_FAILED, EXIT_FIRST_RUN_REQUIRED, EXIT_BUSY, EXIT_ELEVATION_FAILED,
+                        EXIT_STOPPED, STATUS_INTERRUPTED, STATUS_STOPPED, LOCK_BUSY, LOCK_FORCED, LOCK_UNAVAILABLE,
                         describe_run, exit_code_of)
 
 def _run_invoker():
@@ -259,6 +282,15 @@ run_session = RunSession.begin(
     version=read_version(),
 )
 run_session.print_json = args.json
+
+if sys.platform == 'win32' and not is_user_admin():
+    # 入口转交的管理员进程却没有管理员权限（例如免 UAC 运行的计划任务被改成了不以最高权限运行）：
+    # 不执行任务，把原因写进运行记录，入口会照常转告调用方
+    _message = "没有获得管理员权限，任务未运行。如果开启了免 UAC 运行，请在图形界面「设置 → 杂项」中关闭后重新开启"
+    print(_message, flush=True)
+    run_session.note(error=_message)
+    run_session.finish(EXIT_ELEVATION_FAILED)
+    sys.exit(EXIT_ELEVATION_FAILED)
 
 from module.config import cfg
 from module.logger import log
@@ -293,6 +325,7 @@ from tasks.weekly.currency_wars import CurrencyWars
 from tasks.weekly.divergent_universe import DivergentUniverse
 from tasks.base.genshin_starRail_fps_unlocker import Genshin_StarRail_fps_unlocker
 from tasks.base import screen_test
+from tasks import character_export
 
 
 from utils.console import pause_on_error, pause_on_success, pause_always, is_docker_started
@@ -381,8 +414,11 @@ def run_main_actions(no_run_immediately=False):
 
 
 def run_sub_task(action):
+    # 不兼容无窗口模式的任务仅覆盖本次启动方式，不修改用户配置。
+    visible_cloud_tasks = {"fight", "universe"}
+    success = True
     if action not in ("currencywarstemp", "divergenttemp"):
-        game.start()
+        game.start(headless=False if action in visible_cloud_tasks else None)
     else:
         if cfg.cloud_game_enable:
             if not cloud_game.start_game_process():
@@ -430,6 +466,7 @@ def run_sub_task(action):
         "divergenttemp": lambda: divergent("temp"),
         "fight": Fight.start,
         "screen_test": screen_test.run,
+        "character_export": character_export.run,
         "universe": lambda: Universe.start(category="universe"),
         "forgottenhall": lambda: challenge.start("memoryofchaos"),
         "purefiction": lambda: challenge.start("purefiction"),
@@ -444,13 +481,19 @@ def run_sub_task(action):
             telemetry.track_task_start(action)
             task_start_time = time.time()
             try:
-                task()
-                telemetry.track_task_complete(action, True, time.time() - task_start_time)
+                result = task()
+                success = result is not False
+                telemetry.track_task_complete(action, success, time.time() - task_start_time)
             except Exception:
                 telemetry.track_task_complete(action, False, time.time() - task_start_time)
                 raise
-    if action != "screen_test":
-        game.stop(False)
+    if action not in ("screen_test", "character_export"):
+        if success:
+            game.stop(False)
+        elif cfg.after_finish == "Exit":
+            # 失败时仅响应显式退出游戏，不执行成功后的系统操作或循环等待。
+            game.get_game_controller().stop_game()
+    return success
 
 
 def run_sub_task_gui(action):
@@ -525,8 +568,8 @@ def main(action=None, no_run_immediately=False, workflow_name=None, workflow_ste
         run_main_actions(no_run_immediately)
 
     # 子任务
-    elif action in ["routine", "daily", "power", "currencywars", "currencywarsloop", "currencywarstemp", "divergent", "divergentloop", "divergenttemp", "fight", "universe", "forgottenhall", "purefiction", "apocalyptic", "redemption", "screen_test"]:
-        run_sub_task(action)
+    elif action in ["routine", "daily", "power", "currencywars", "currencywarsloop", "currencywarstemp", "divergent", "divergentloop", "divergenttemp", "fight", "universe", "forgottenhall", "purefiction", "apocalyptic", "redemption", "screen_test", "character_export"]:
+        return run_sub_task(action)
 
     # 子任务 原生图形界面
     elif action in ["universe_gui", "fight_gui"]:
@@ -590,6 +633,7 @@ if __name__ == "__main__":
     try:
         try:
             atexit.register(exit_handler)
+            args.no_run_immediately = args.no_run_immediately or cfg.get_value("no_run_immediately", False)
             if args.workflow_name:
                 result = main(
                     no_run_immediately=args.no_run_immediately,
