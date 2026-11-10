@@ -17,6 +17,7 @@ EXAMPLE_CONFIG_PATH = os.path.abspath("assets/config/config.example.yaml")
 
 DOCKER_DEFAULT_OVERRIDES = {
     "cloud_game_enable": True,
+    "browser_persistent_enable": True,
     "browser_headless_enable": True,
     "browser_headless_restart_on_not_logged_in": False,
     "after_finish": "Exit",
@@ -27,6 +28,7 @@ DOCKER_DEFAULT_OVERRIDES = {
 # 禁止写回用户配置的容器运行期固定键
 PROTECTED_RUNTIME_KEYS = {
     "cloud_game_enable",
+    "browser_persistent_enable",
     "browser_headless_enable",
     "browser_headless_restart_on_not_logged_in",
     "after_finish",

@@ -150,7 +150,7 @@ def collect_status() -> dict:
         "config_exists": os.path.exists(config_path),
         "config_writable": _dir_writable(install_dir),
         "config_reference": os.path.abspath(os.path.join("assets", "config", "config.example.yaml")),
-        "first_run_completed": bool(cfg.get_value(base64.b64decode("YXV0b191cGRhdGU=").decode("utf-8"))),
+        "first_run_completed": True,
         "cloud_game_enable": bool(cfg.get_value("cloud_game_enable", False)),
         "game_path": game_path,
         "game_path_exists": bool(game_path) and os.path.exists(game_path),

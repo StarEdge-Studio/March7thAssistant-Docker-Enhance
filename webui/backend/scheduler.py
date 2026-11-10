@@ -278,9 +278,11 @@ class Scheduler:
         profile_dir = account_manager.get_profile_dir(acc_id)
 
         env = os.environ.copy()
+        env["MARCH7TH_WEBUI_STARTED"] = "true"
         env["MARCH7TH_CONFIG_PATH"] = runtime_cfg_path
         env["MARCH7TH_USER_PROFILE_DIR"] = profile_dir
         env["MARCH7TH_CLOUD_GAME_ENABLE"] = "true"
+        env["MARCH7TH_BROWSER_PERSISTENT_ENABLE"] = "true"
         env["MARCH7TH_BROWSER_HEADLESS_ENABLE"] = "true"
         env["MARCH7TH_BROWSER_HEADLESS_RESTART_ON_NOT_LOGGED_IN"] = "false"
         env["MARCH7TH_AFTER_FINISH"] = "Exit"
