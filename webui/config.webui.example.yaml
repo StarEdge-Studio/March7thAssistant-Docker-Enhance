@@ -1,0 +1,12 @@
+# ==============================================================================
+# WebUI 扩展配置模板 (config.webui.example.yaml)
+# 此文件在运行时自动与上游 assets/config/config.example.yaml 合并，避免修改上游模板导致冲突
+# ==============================================================================
+
+# PushChan QQ 通知配置
+# 支持发送截图，基于 qq-push-bot 通过 HTTP 接口将消息推送到指定的 QQ 用户（私聊）或 QQ 群（群聊）
+notify_pushchanqq_enable: false # 是否启用 PushChan QQ 通知。true 开启，false 关闭。
+notify_pushchanqq_endpoint: "https://pushchan.shingyu.cn" # PushChan QQ 的 API 服务地址，默认 https://pushchan.shingyu.cn。
+notify_pushchanqq_token: "" # 可选参数，调用接口的鉴权 Token。
+notify_pushchanqq_openid: "" # 接收者：用户 openid（私聊）、群 openid（群聊）或服务端 [names] 名字映射。
+notify_pushchanqq_group: false # 是否为群聊消息。false 为私聊，true 为群聊。

@@ -997,6 +997,17 @@ const rewardFields = [
 ]
 
 const notifyProviders = [
+  {
+    name: 'pushchanqq',
+    title: 'PushChan QQ',
+    keys: ['enable', 'endpoint', 'token', 'openid', 'group'],
+    fieldLabels: {
+      endpoint: 'API 地址',
+      openid: 'OpenID / 名称映射',
+      group: '群聊推送',
+    },
+    boolFields: ['enable', 'group'],
+  },
   { name: 'telegram', title: 'Telegram', keys: ['enable', 'token', 'userid', 'api_url', 'proxies'] },
   { name: 'matrix', title: 'Matrix', keys: ['enable', 'homeserver', 'device_id', 'user_id', 'access_token', 'room_id', 'proxy', 'separately_text_media'] },
   { name: 'serverchanturbo', title: 'Server酱 Turbo', keys: ['enable', 'sctkey', 'channel', 'openid'] },
@@ -1298,10 +1309,15 @@ function setBorrowFriendName(index, value) {
 }
 
 function providerFieldModels(provider) {
+  const customBool = Array.isArray(provider.boolFields) ? new Set(provider.boolFields) : null
   return provider.keys.map((suffix) => ({
     key: `notify_${provider.name}_${suffix}`,
-    label: notifyFieldLabels[suffix] || suffix,
-    type: notifyBoolFields.has(suffix) ? 'bool' : notifyNumberFields.has(suffix) ? 'number' : 'text',
+    label: provider.fieldLabels?.[suffix] || notifyFieldLabels[suffix] || suffix,
+    type: (customBool ? customBool.has(suffix) : notifyBoolFields.has(suffix))
+      ? 'bool'
+      : notifyNumberFields.has(suffix)
+        ? 'number'
+        : 'text',
     min: suffix === 'priority' ? 1 : 0,
     max: suffix === 'priority' ? 10 : 9999,
     defaultValue: suffix === 'priority' ? 3 : 0,

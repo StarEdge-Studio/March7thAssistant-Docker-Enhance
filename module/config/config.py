@@ -199,6 +199,8 @@ class Config(metaclass=SingletonMeta):
                     self._update_config(config[key], value)
                 else:
                     config[key] = value
+            elif isinstance(key, str) and key.startswith("notify_"):
+                config[key] = value
 
     def _load_default_config(self, config_example_path):
         """加载默认配置信息"""

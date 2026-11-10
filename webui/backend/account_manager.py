@@ -14,6 +14,9 @@ PROFILES_DIR = os.path.join(DATA_DIR, "profiles")
 CONFIGS_DIR = os.path.join(DATA_DIR, "configs")
 RUNTIME_DIR = os.path.join(DATA_DIR, "runtime")
 EXAMPLE_CONFIG_PATH = os.path.abspath("assets/config/config.example.yaml")
+WEBUI_EXAMPLE_CONFIG_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../config.webui.example.yaml")
+)
 
 DOCKER_DEFAULT_OVERRIDES = {
     "cloud_game_enable": True,
@@ -152,9 +155,17 @@ class AccountManager:
 
     def _load_example_commented_map(self) -> Any:
         y = _create_yaml()
+        combined_text = ""
         if os.path.exists(EXAMPLE_CONFIG_PATH):
             with open(EXAMPLE_CONFIG_PATH, "r", encoding="utf-8") as f:
-                data = y.load(f)
+                combined_text = f.read()
+        if os.path.exists(WEBUI_EXAMPLE_CONFIG_PATH):
+            with open(WEBUI_EXAMPLE_CONFIG_PATH, "r", encoding="utf-8") as f:
+                webui_extra = f.read()
+            if webui_extra.strip():
+                combined_text = (combined_text.rstrip() + "\n\n" + webui_extra.lstrip()) if combined_text else webui_extra
+        if combined_text:
+            data = y.load(combined_text)
             if isinstance(data, dict):
                 _deep_merge_ruamel(data, DOCKER_DEFAULT_OVERRIDES)
                 return data
