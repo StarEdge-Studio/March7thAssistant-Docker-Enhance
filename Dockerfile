@@ -44,6 +44,8 @@ ENV MARCH7TH_BROWSER_DOWNLOAD_USE_MIRROR=false
 ENV MARCH7TH_AFTER_FINISH=Exit
 # 标记从 Docker 启动，避免控制台阻塞
 ENV MARCH7TH_DOCKER_STARTED=true
+# 前端设计语言主题：m3e (默认 Material 3 Expressive) 或 simple (轻量简洁版)
+ENV WEBUI_THEME=m3e
 
 WORKDIR /m7a
 

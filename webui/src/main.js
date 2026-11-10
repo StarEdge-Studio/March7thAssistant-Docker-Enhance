@@ -1,26 +1,69 @@
-import { createApp } from 'vue'
+import { createApp, defineComponent, h } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
 import './style.css'
 import { applyTheme, fetchCurrentUser, loadAuthConfig, store } from './state.js'
 
-import LoginView from './views/LoginView.vue'
-import UnauthorizedView from './views/UnauthorizedView.vue'
-import DashboardView from './views/DashboardView.vue'
-import AccountsView from './views/AccountsView.vue'
-import TasksView from './views/TasksView.vue'
-import SettingsView from './views/SettingsView.vue'
+// Simple (经典轻量简洁版) 视图
+import SimpleLoginView from './views/LoginView.vue'
+import SimpleUnauthorizedView from './views/UnauthorizedView.vue'
+import SimpleDashboardView from './views/DashboardView.vue'
+import SimpleAccountsView from './views/AccountsView.vue'
+import SimpleTasksView from './views/TasksView.vue'
+import SimpleSettingsView from './views/SettingsView.vue'
+
+// M3E (Material 3 Expressive) 视图
+import M3ELoginView from './views/m3e/LoginView.vue'
+import M3EUnauthorizedView from './views/m3e/UnauthorizedView.vue'
+import M3EDashboardView from './views/m3e/DashboardView.vue'
+import M3EAccountsView from './views/m3e/AccountsView.vue'
+import M3ETasksView from './views/m3e/TasksView.vue'
+import M3ESettingsView from './views/m3e/SettingsView.vue'
 
 applyTheme()
 
+function createThemedRouteComponent(M3EComp, SimpleComp) {
+  return defineComponent({
+    setup() {
+      return () => h(store.uiTheme === 'simple' ? SimpleComp : M3EComp)
+    },
+  })
+}
+
 const routes = [
   { path: '/', redirect: '/dashboard' },
-  { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
-  { path: '/unauthorized', name: 'unauthorized', component: UnauthorizedView },
-  { path: '/dashboard', name: 'dashboard', component: DashboardView },
-  { path: '/accounts', name: 'accounts', component: AccountsView },
-  { path: '/tasks', name: 'tasks', component: TasksView },
-  { path: '/settings', name: 'settings', component: SettingsView, meta: { adminOnly: true } },
+  {
+    path: '/login',
+    name: 'login',
+    component: createThemedRouteComponent(M3ELoginView, SimpleLoginView),
+    meta: { public: true },
+  },
+  {
+    path: '/unauthorized',
+    name: 'unauthorized',
+    component: createThemedRouteComponent(M3EUnauthorizedView, SimpleUnauthorizedView),
+  },
+  {
+    path: '/dashboard',
+    name: 'dashboard',
+    component: createThemedRouteComponent(M3EDashboardView, SimpleDashboardView),
+  },
+  {
+    path: '/accounts',
+    name: 'accounts',
+    component: createThemedRouteComponent(M3EAccountsView, SimpleAccountsView),
+  },
+  {
+    path: '/tasks',
+    name: 'tasks',
+    component: createThemedRouteComponent(M3ETasksView, SimpleTasksView),
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: createThemedRouteComponent(M3ESettingsView, SimpleSettingsView),
+    meta: { adminOnly: true },
+  },
 ]
 
 const router = createRouter({

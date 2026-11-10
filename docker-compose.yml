@@ -11,6 +11,8 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - MARCH7TH_LOG_LEVEL=INFO
+      # 前端界面风格切换：m3e (默认，Material 3 Expressive) 或 simple (轻量简洁版)
+      - WEBUI_THEME=m3e
       # ==========================================================
       # 认证模式一：Token 密钥认证（默认启用，未配置 OIDC 时生效）
       # ==========================================================

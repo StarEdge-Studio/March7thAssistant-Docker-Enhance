@@ -53,6 +53,8 @@ class AuthContext:
     mode: str  # "oidc" | "token"
     role: str  # "admin" | "user" | "unauthorized"
     username: str = ""
+    display_name: str = ""
+    avatar: str = ""
     account_ids: List[str] = field(default_factory=list)
 
     @property
@@ -258,15 +260,55 @@ def _extract_username(claims: Dict[str, Any], preferred_claim: str = "") -> str:
     return ""
 
 
-def resolve_oidc_context(username: str) -> AuthContext:
+def _extract_display_name(claims: Dict[str, Any], fallback: str = "") -> str:
+    for key in ("name", "nickname", "display_name", "preferred_username", "username", "login"):
+        val = claims.get(key)
+        if val and isinstance(val, (str, int)):
+            s = str(val).strip()
+            if s:
+                return s
+    return fallback
+
+
+def _extract_avatar(claims: Dict[str, Any]) -> str:
+    for key in ("picture", "avatar", "avatar_url", "profile_picture", "photo"):
+        val = claims.get(key)
+        if val and isinstance(val, str):
+            s = val.strip()
+            if s.startswith(("http://", "https://", "data:image/", "/")):
+                return s
+    return ""
+
+
+def resolve_oidc_context(
+    username: str,
+    display_name: str = "",
+    avatar: str = "",
+) -> AuthContext:
     oidc = get_oidc_settings()
     clean_user = (username or "").strip()
+    eff_display = (display_name or clean_user).strip()
+    eff_avatar = (avatar or "").strip()
     if not clean_user:
-        return AuthContext(mode="oidc", role="unauthorized", username="", account_ids=[])
+        return AuthContext(
+            mode="oidc",
+            role="unauthorized",
+            username="",
+            display_name="",
+            avatar="",
+            account_ids=[],
+        )
 
     if clean_user.lower() in oidc["admin_usernames"]:
         all_ids = [a["id"] for a in account_manager.get_accounts()]
-        return AuthContext(mode="oidc", role="admin", username=clean_user, account_ids=all_ids)
+        return AuthContext(
+            mode="oidc",
+            role="admin",
+            username=clean_user,
+            display_name=eff_display,
+            avatar=eff_avatar,
+            account_ids=all_ids,
+        )
 
     matched = account_manager.get_accounts_by_username(clean_user)
     if matched:
@@ -274,10 +316,19 @@ def resolve_oidc_context(username: str) -> AuthContext:
             mode="oidc",
             role="user",
             username=clean_user,
+            display_name=eff_display,
+            avatar=eff_avatar,
             account_ids=[a["id"] for a in matched],
         )
 
-    return AuthContext(mode="oidc", role="unauthorized", username=clean_user, account_ids=[])
+    return AuthContext(
+        mode="oidc",
+        role="unauthorized",
+        username=clean_user,
+        display_name=eff_display,
+        avatar=eff_avatar,
+        account_ids=[],
+    )
 
 
 def exchange_oidc_code(code: str, state: str, redirect_uri: Optional[str] = None) -> Dict[str, Any]:
@@ -346,11 +397,16 @@ def exchange_oidc_code(code: str, state: str, redirect_uri: Optional[str] = None
     if not username:
         raise HTTPException(status_code=401, detail="无法从 OIDC 响应中解析出有效的用户名 (username)")
 
-    ctx = resolve_oidc_context(username)
+    display_name = _extract_display_name(claims, fallback=username)
+    avatar = _extract_avatar(claims)
+
+    ctx = resolve_oidc_context(username, display_name=display_name, avatar=avatar)
     session_token = create_session_token(
         {
             "mode": "oidc",
             "username": ctx.username,
+            "display_name": ctx.display_name,
+            "avatar": ctx.avatar,
             "sub": str(claims.get("sub") or ctx.username),
         }
     )
@@ -360,6 +416,8 @@ def exchange_oidc_code(code: str, state: str, redirect_uri: Optional[str] = None
         "brand": oidc["brand"],
         "role": ctx.role,
         "username": ctx.username,
+        "display_name": ctx.display_name,
+        "avatar": ctx.avatar,
         "account_ids": ctx.account_ids,
         "account_id": ctx.primary_account_id,
     }
@@ -375,13 +433,15 @@ def login_with_token(raw_token: str) -> Dict[str, Any]:
 
     if hmac.compare_digest(clean_token, get_admin_token()):
         all_ids = [a["id"] for a in account_manager.get_accounts()]
-        session_token = create_session_token({"mode": "token", "role": "admin", "username": "admin"})
+        session_token = create_session_token({"mode": "token", "role": "admin", "username": ""})
         return {
             "token": session_token,
             "mode": "token",
             "brand": "",
             "role": "admin",
-            "username": "admin",
+            "username": "",
+            "display_name": "",
+            "avatar": "",
             "account_ids": all_ids,
             "account_id": all_ids[0] if all_ids else None,
         }
@@ -403,6 +463,8 @@ def login_with_token(raw_token: str) -> Dict[str, Any]:
             "brand": "",
             "role": "user",
             "username": acc["name"],
+            "display_name": "",
+            "avatar": "",
             "account_ids": [acc["id"]],
             "account_id": acc["id"],
         }
@@ -433,11 +495,15 @@ def get_current_session(
             raise HTTPException(status_code=401, detail="系统认证模式已变更，请重新登录")
 
         if mode == "oidc":
-            return resolve_oidc_context(payload.get("username", ""))
+            return resolve_oidc_context(
+                payload.get("username", ""),
+                display_name=payload.get("display_name", ""),
+                avatar=payload.get("avatar", ""),
+            )
         else:
             if payload.get("role") == "admin":
                 all_ids = [a["id"] for a in account_manager.get_accounts()]
-                return AuthContext(mode="token", role="admin", username="admin", account_ids=all_ids)
+                return AuthContext(mode="token", role="admin", username="", display_name="", avatar="", account_ids=all_ids)
             acc_id = payload.get("account_id")
             sec_key = payload.get("secret_key")
             acc = account_manager.get_account(acc_id) if acc_id else None

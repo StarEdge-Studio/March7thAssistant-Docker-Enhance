@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -86,7 +86,25 @@ class RawYamlUpdateRequest(BaseModel):
     raw_yaml: str
 
 
-# ==================== 认证接口 ====================
+# ==================== 认证与前端主题接口 ====================
+
+def get_ui_theme() -> str:
+    """
+    通过环境变量切换前端设计语言:
+    支持 WEBUI_THEME / WEBUI_FRONTEND / WEBUI_UI:
+      - 'm3e' (默认): Material 3 Expressive 设计语言前端
+      - 'simple': 经典轻量简洁版前端
+    """
+    raw = (
+        os.environ.get("WEBUI_THEME")
+        or os.environ.get("WEBUI_FRONTEND")
+        or os.environ.get("WEBUI_UI")
+        or "m3e"
+    ).strip().lower()
+    if raw in ("simple", "classic", "legacy"):
+        return "simple"
+    return "m3e"
+
 
 @app.get("/api/auth/config")
 def api_auth_config():
@@ -94,6 +112,7 @@ def api_auth_config():
     return {
         "mode": "oidc" if oidc["enabled"] else "token",
         "brand": oidc["brand"] if oidc["enabled"] else "",
+        "ui_theme": get_ui_theme(),
     }
 
 
@@ -120,6 +139,8 @@ def api_auth_me(ctx: AuthContext = Depends(get_current_session)):
         "brand": oidc["brand"] if ctx.mode == "oidc" else "",
         "role": ctx.role,
         "username": ctx.username,
+        "display_name": ctx.display_name,
+        "avatar": ctx.avatar,
         "account_ids": ctx.account_ids,
         "account_id": ctx.primary_account_id,
     }
@@ -138,11 +159,14 @@ def api_get_status(ctx: AuthContext = Depends(require_authorized)):
 
     oidc = get_oidc_settings()
     return {
+        "ui_theme": get_ui_theme(),
         "auth": {
             "mode": ctx.mode,
             "brand": oidc["brand"] if ctx.mode == "oidc" else "",
             "role": ctx.role,
             "username": ctx.username,
+            "display_name": ctx.display_name,
+            "avatar": ctx.avatar,
             "account_ids": ctx.account_ids,
             "account_id": ctx.primary_account_id,
         },
@@ -551,9 +575,18 @@ if os.path.exists(STATIC_DIR):
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="API endpoint not found")
         candidate = os.path.abspath(os.path.join(STATIC_DIR, full_path))
-        if candidate.startswith(STATIC_DIR) and os.path.isfile(candidate):
+        if candidate.startswith(STATIC_DIR) and os.path.isfile(candidate) and os.path.basename(candidate) != "index.html":
             return FileResponse(candidate)
-        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+        index_path = os.path.join(STATIC_DIR, "index.html")
+        try:
+            with open(index_path, "r", encoding="utf-8") as f:
+                html_content = f.read()
+            theme_script = f'<script>window.__M7A_UI_THEME__ = "{get_ui_theme()}";</script>'
+            if "</head>" in html_content:
+                html_content = html_content.replace("</head>", f"  {theme_script}\n</head>", 1)
+            return HTMLResponse(content=html_content)
+        except Exception:
+            return FileResponse(index_path)
 
 
 if __name__ == "__main__":

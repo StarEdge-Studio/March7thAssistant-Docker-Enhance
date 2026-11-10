@@ -3,10 +3,239 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Material 3 Expressive (M3E) Light Palette - March 7th Iris & Sakura Tonal Seed */
+    --m3-surface: #fcf8ff;
+    --m3-surface-dim: #dcd8e2;
+    --m3-surface-bright: #fcf8ff;
+    --m3-surface-container-lowest: #ffffff;
+    --m3-surface-container-low: #f5effa;
+    --m3-surface-container: #efe9f5;
+    --m3-surface-container-high: #e9e3ef;
+    --m3-surface-container-highest: #e3dde9;
+    --m3-on-surface: #1c1b20;
+    --m3-on-surface-variant: #48454f;
+
+    --m3-primary: #5e479c;
+    --m3-on-primary: #ffffff;
+    --m3-primary-container: #e7deff;
+    --m3-on-primary-container: #1b0256;
+
+    --m3-secondary: #605b71;
+    --m3-on-secondary: #ffffff;
+    --m3-secondary-container: #e6dff9;
+    --m3-on-secondary-container: #1d192b;
+
+    --m3-tertiary: #844c69;
+    --m3-on-tertiary: #ffffff;
+    --m3-tertiary-container: #ffd8e8;
+    --m3-on-tertiary-container: #360924;
+
+    --m3-error: #ba1a1a;
+    --m3-on-error: #ffffff;
+    --m3-error-container: #ffdad6;
+    --m3-on-error-container: #410002;
+
+    --m3-success: #166c44;
+    --m3-success-container: #c5f6da;
+    --m3-on-success-container: #002111;
+
+    --m3-outline: #79757f;
+    --m3-outline-variant: #cac4d0;
+
+    --m3-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --m3-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .dark {
+    /* Material 3 Expressive (M3E) Dark Palette */
+    --m3-surface: #131218;
+    --m3-surface-dim: #131218;
+    --m3-surface-bright: #3a383f;
+    --m3-surface-container-lowest: #0e0d13;
+    --m3-surface-container-low: #1b1921;
+    --m3-surface-container: #201e26;
+    --m3-surface-container-high: #2a2831;
+    --m3-surface-container-highest: #35333c;
+    --m3-on-surface: #e6e1e9;
+    --m3-on-surface-variant: #cac4d0;
+
+    --m3-primary: #ccbdff;
+    --m3-on-primary: #30176b;
+    --m3-primary-container: #462f83;
+    --m3-on-primary-container: #e7deff;
+
+    --m3-secondary: #cac3dc;
+    --m3-on-secondary: #322e41;
+    --m3-secondary-container: #494458;
+    --m3-on-secondary-container: #e6dff9;
+
+    --m3-tertiary: #f7b1d3;
+    --m3-on-tertiary: #4e1f39;
+    --m3-tertiary-container: #683550;
+    --m3-on-tertiary-container: #ffd8e8;
+
+    --m3-error: #ffb4ab;
+    --m3-on-error: #690005;
+    --m3-error-container: #93000a;
+    --m3-on-error-container: #ffdad6;
+
+    --m3-success: #86d8ab;
+    --m3-success-container: #005232;
+    --m3-on-success-container: #a2f5c5;
+
+    --m3-outline: #948f99;
+    --m3-outline-variant: #48454f;
+  }
+
   html {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-family: "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
+}
+
+/* M3E Expressive Component Primitives */
+.m3-surface {
+  background-color: var(--m3-surface);
+  color: var(--m3-on-surface);
+}
+
+.m3-surface-low {
+  background-color: var(--m3-surface-container-low);
+  color: var(--m3-on-surface);
+}
+
+.m3-surface-container {
+  background-color: var(--m3-surface-container);
+  color: var(--m3-on-surface);
+}
+
+.m3-surface-high {
+  background-color: var(--m3-surface-container-high);
+  color: var(--m3-on-surface);
+}
+
+.m3-surface-highest {
+  background-color: var(--m3-surface-container-highest);
+  color: var(--m3-on-surface);
+}
+
+.m3-card {
+  background-color: var(--m3-surface-container-low);
+  border: 1px solid color-mix(in srgb, var(--m3-outline-variant) 55%, transparent);
+  border-radius: 28px;
+  transition: transform 0.28s var(--m3-emphasized), background-color 0.25s ease, border-color 0.25s ease, border-radius 0.3s var(--m3-spring);
+}
+
+.m3-card-elevated {
+  background-color: var(--m3-surface-container-lowest);
+  border: 1px solid color-mix(in srgb, var(--m3-outline-variant) 45%, transparent);
+  border-radius: 24px;
+  transition: all 0.25s var(--m3-emphasized);
+}
+
+.dark .m3-card-elevated {
+  background-color: var(--m3-surface-container);
+}
+
+/* M3E Expressive Button with Shape Morphing on Active Press */
+.m3-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition:
+    border-radius 0.32s var(--m3-spring),
+    transform 0.22s var(--m3-spring),
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+  user-select: none;
+}
+
+.m3-btn:active:not(:disabled) {
+  border-radius: 14px;
+  transform: scale(0.96);
+}
+
+.m3-btn-filled {
+  background-color: var(--m3-primary);
+  color: var(--m3-on-primary);
+}
+
+.m3-btn-filled:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px -4px color-mix(in srgb, var(--m3-primary) 45%, transparent);
+}
+
+.m3-btn-tonal {
+  background-color: var(--m3-secondary-container);
+  color: var(--m3-on-secondary-container);
+}
+
+.m3-btn-tonal:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--m3-secondary-container) 86%, var(--m3-primary));
+}
+
+.m3-btn-tertiary {
+  background-color: var(--m3-tertiary-container);
+  color: var(--m3-on-tertiary-container);
+}
+
+.m3-btn-tertiary:hover:not(:disabled) {
+  filter: brightness(0.97);
+}
+
+.m3-btn-error {
+  background-color: var(--m3-error-container);
+  color: var(--m3-on-error-container);
+}
+
+.m3-btn-error:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+.m3-btn-outlined {
+  background-color: transparent;
+  border: 1px solid var(--m3-outline-variant);
+  color: var(--m3-on-surface);
+}
+
+.m3-btn-outlined:hover:not(:disabled) {
+  background-color: var(--m3-surface-container-high);
+}
+
+/* M3E Filled/Outlined Form Input & Select */
+.m3-input {
+  background-color: var(--m3-surface-container-highest);
+  color: var(--m3-on-surface);
+  border: 1.5px solid transparent;
+  border-radius: 16px;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.8125rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease, border-radius 0.28s var(--m3-spring), box-shadow 0.2s ease;
+}
+
+.m3-input:focus {
+  outline: none;
+  background-color: var(--m3-surface-container-lowest);
+  border-color: var(--m3-primary);
+  border-radius: 12px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--m3-primary) 18%, transparent);
+}
+
+.dark .m3-input:focus {
+  background-color: var(--m3-surface-container-low);
+}
+
+/* M3E Navigation Pill Indicator Animation */
+.m3-nav-pill {
+  border-radius: 9999px;
+  transition:
+    background-color 0.28s var(--m3-emphasized),
+    transform 0.35s var(--m3-spring),
+    width 0.35s var(--m3-spring);
 }
 
 /* 精致滚动条 */

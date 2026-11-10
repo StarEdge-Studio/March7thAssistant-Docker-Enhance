@@ -1,6 +1,9 @@
 import { reactive } from 'vue'
 
 export const store = reactive({
+  // 前端设计语言主题: 'm3e' (Material 3 Expressive) | 'simple' (经典轻量简洁版)
+  uiTheme: (typeof window !== 'undefined' && window.__M7A_UI_THEME__ === 'simple') ? 'simple' : 'm3e',
+
   // 认证配置与当前会话
   authConfigLoaded: false,
   authMode: 'token', // 'token' | 'oidc'
@@ -8,6 +11,8 @@ export const store = reactive({
   token: localStorage.getItem('m7a_session_token') || '',
   role: '', // 'admin' | 'user' | 'unauthorized' | ''
   username: '',
+  displayName: '',
+  avatar: '',
   accountIds: [],
   primaryAccountId: null,
 
@@ -113,6 +118,8 @@ export function setSession(authData) {
   if (authData.brand !== undefined) store.authBrand = authData.brand || 'SSO'
   store.role = authData.role || ''
   store.username = authData.username || ''
+  store.displayName = authData.display_name || ''
+  store.avatar = authData.avatar || ''
   store.accountIds = authData.account_ids || []
   store.primaryAccountId = authData.account_id || (store.accountIds[0] || null)
 }
@@ -121,6 +128,8 @@ export function clearSession() {
   store.token = ''
   store.role = ''
   store.username = ''
+  store.displayName = ''
+  store.avatar = ''
   store.accountIds = []
   store.primaryAccountId = null
   localStorage.removeItem('m7a_session_token')
@@ -176,11 +185,14 @@ export async function loadAuthConfig() {
     const cfg = await apiFetch('/api/auth/config')
     store.authMode = cfg.mode || 'token'
     store.authBrand = cfg.brand || 'SSO'
+    if (cfg.ui_theme) {
+      store.uiTheme = cfg.ui_theme === 'simple' ? 'simple' : 'm3e'
+    }
     store.authConfigLoaded = true
     return cfg
   } catch (e) {
     store.authConfigLoaded = true
-    return { mode: 'token', brand: '' }
+    return { mode: 'token', brand: '', ui_theme: store.uiTheme }
   }
 }
 
@@ -200,6 +212,9 @@ export async function refreshStatus() {
   if (!store.token || !store.role || store.role === 'unauthorized') return null
   try {
     const data = await apiFetch('/api/status')
+    if (data.ui_theme) {
+      store.uiTheme = data.ui_theme === 'simple' ? 'simple' : 'm3e'
+    }
     if (data.auth) {
       setSession(data.auth)
     }
