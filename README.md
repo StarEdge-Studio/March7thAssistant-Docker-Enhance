@@ -1,60 +1,165 @@
 <div align="center">
-  <h1 align="center">
-    <img src="./assets/screenshot/March7th.png" width="200">
-    <br/>
-    March7thAssistant (Docker 多账号增强版)
-  </h1>
+  <h1>🐳 March7thAssistant Docker-Enhance</h1>
+  <p>专为每日日常任务自动化、多账号云游戏托管、Docker 容器化部署与远程 Web 管理设计的 <b>三月七小助手</b> 增强重构版</p>
+
+  <a href="https://github.com/staredge-studio/March7thAssistant-Docker-Enhance/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/staredge-studio/March7thAssistant-Docker-Enhance"></a>
+  <a href="https://github.com/staredge-studio/March7thAssistant-Docker-Enhance/pulls"><img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/staredge-studio/March7thAssistant-Docker-Enhance"></a>
+  <img alt="License" src="https://img.shields.io/badge/License-GPL%20v3-blue.svg">
 </div>
 
-## 🚀 Docker 多账号增强版核心特性
+<br/>
 
-本项目基于上游 [moesnow/March7thAssistant](https://github.com/moesnow/March7thAssistant) 构建，针对云·星穹铁道 Docker 部署进行了全面重构：
+> [!CAUTION]
+> **重构版镜像名称变更提示**：本项目已完成全面底层重构，移除了旧版的全局配置覆盖机制并调整了数据存储结构。为防止开启了每日自动更新镜像（如 Watchtower）的旧版用户拉取后导致容器运行失败，**重构版已改用全新的镜像名称 `ghcr.io/staredge-studio/march7thassistant-docker-enhance-v2`**。旧镜像 `ghcr.io/staredge-studio/march7thassistant-docker-enhance` 不再更新，请及时迁移至新镜像。由此带来的不便，敬请谅解。
 
-1. **轻量级现代 WebUI（移动端与桌面端自适应）**
-   - 移除繁重的 UI 组件库，全量打包体积压缩 **95%+**（Gzip 后仅 ~70KB），大幅降低网页内存与 CPU 占用。
-   - 完美适配手机端触控操作（底部导航栏 + 可视化配置表单），同时在桌面端保留带行号与语法校验的 **YAML 高级源码编辑器**。
-   - **增量式实时日志终端**：按字节偏移增量拉取日志，支持阶段横幅高亮、日志级别筛选、关键字检索、自动滚动锁定与日志下载。
-2. **单账号完全独立配置**
-   - 移除旧版全局配置覆盖逻辑，每个游戏账号拥有独立的 YAML 配置文件（`webui/data/configs/<id>.yaml`）与浏览器数据目录（`webui/data/profiles/<id>`）。
-   - 运行时自动与上游 `assets/config/config.example.yaml` 合并补全，并在任务结束后将冷却时间戳（`*_timestamp`）、体力计划进度（`power_plan`）、已使用兑换码等状态自动回写至账号配置。
-3. **双轨身份认证系统（Token 密钥 / OIDC PKCE）**
-   - **OIDC 模式（推荐多用户场景）**：当环境变量配置了 `OIDC_ENDPOINT`、`OIDC_CLIENT_ID`、`OIDC_CLIENT_SECRET`（及可选 `OIDC_BRAND`）时全面启用 OIDC (OAuth 2.1 PKCE `S256`) 登录。
-     - 管理员用户名通过环境变量 `OIDC_ADMIN_USERNAME` 指定（支持逗号分隔多个管理员）。
-     - 普通用户的 `username` 由管理员在 WebUI「账号管理」后台绑定；未绑定的其他 OIDC 用户登录后展示无权限提示页。
-   - **Token 模式（默认）**：未配置 OIDC 时启用。管理员使用 `WEBUI_TOKEN` 登录；普通用户使用管理员分发的单账号专属密钥（`Secret Key`）登录。
-4. **浏览器生命周期与进程隔离修复**
-   - 修复 Chrome 关闭时被强制 `SIGKILL` 导致 `Preferences` / `Local State` 损坏及下次启动报 `cannot parse internal JSON template: EOF while parsing a value at line 1 column 0` 的问题。
-   - 内置进程组清理、Profile 级实例隔离、运行锁清理与僵尸进程（`<defunct>`）自动回收，杜绝前序账号异常影响后续账号运行。
+> [!IMPORTANT]
+> **适用人群说明**：本项目专为有多账号云游戏托管、服务器 Docker 容器化运行与远程 Web 集中管理需求的进阶用户设计。**普通单账号用户或本地电脑运行用户强烈推荐直接使用原版项目 [moesnow/March7thAssistant](https://github.com/moesnow/March7thAssistant)**，原版桌面端拥有最完善的功能支持与开箱即用的图形界面体验。
 
-### 快速部署 (`docker-compose.yml`)
+> [!WARNING]
+> **功能限制说明**：本增强版专注于**每日实训、清体力、培养目标、历战余响、奖励领取等日常自动化**及轻量级远程管理。在无头浏览器（Headless）云游戏容器环境下，**差分宇宙、货币战争、模拟宇宙、锄大地等高阶复杂交互功能可能出现异常或无法正常工作**。如需稳定使用上述功能，请使用原版桌面端。
+
+---
+
+## ✨ 核心特性
+
+* 🎨 **响应式双主题 Web 控制台（M3E / Simple）**
+  * **M3E 主题（默认）**：基于 Google **Material 3 Expressive** 规范打造，提供现代化的动态色彩容器、卡片式分组布局与流畅交互动效。
+  * **Simple 主题**：极简轻量的经典管理界面，可通过环境变量 `WEBUI_THEME=simple` 切换。
+  * **全端响应式适配**：同时适配移动端触控操作与桌面端大屏管理，移动端提供专属顶栏与底部胶囊导航，桌面端提供更宽敞的多栏视图与源码编辑体验。
+* 👥 **多用户与双轨权限认证（Token 密钥 / OIDC）**
+  * **OIDC 统一身份认证**：配置 `OIDC_ENDPOINT`、`OIDC_CLIENT_ID`、`OIDC_CLIENT_SECRET` 后即可启用 **OAuth 2.1 PKCE (`S256`)** 标准登录，支持同步用户头像与显示名称。
+    * 管理员可通过环境变量 `OIDC_ADMIN_USERNAME` 指定（支持逗号分隔多个管理员），拥有全局管理权限。
+    * 普通用户由管理员在后台绑定至对应游戏账号（支持同一用户绑定多个账号），登录后仅可查看与操作已授权的账号。
+  * **Token 密钥认证（默认）**：未配置 OIDC 时启用。管理员使用 `WEBUI_TOKEN` 登录管理全局；普通用户使用**账号专属密钥（Secret Key）**登录，仅管理对应单账号。
+* ⚙️ **多账号托管与双模式独立配置**
+  * **单账号完全隔离**：支持添加与托管任意数量的云游戏账号，每个账号均拥有独立的 YAML 配置文件（`webui/data/configs/<id>.yaml`）与独立的浏览器数据目录（`webui/data/profiles/<id>`），支持自定义执行顺序与启用状态。
+  * **可视化 + 源码双模式编辑**：提供直观的**简洁可视化模式**（支持培养目标快捷设置、按副本类型动态展示配置项）与支持行号、搜索、保留完整注释的**高级 YAML 源码编辑模式**。
+  * **状态自动持久化**：任务运行期间产生的冷却时间戳、体力计划进度、已使用兑换码等动态数据会自动保存回对应账号配置。
+* 📱 **Web 端扫码登录与定时任务调度**
+  * **内置云游戏扫码器**：直接在网页端启动无头浏览器获取「云·星穹铁道」登录二维码，使用手机米游社 App 扫码即可完成账号登录授权，二维码过期支持自动刷新。
+  * **多时间点定时调度与进程守护**：支持设置每日多个定时启动时间点及外网连通性预检；内置浏览器 Profile 状态自检、进程隔离清理与运行锁管理，保障多账号长周期稳定运行。
+* 🖥️ **实时日志终端与多渠道消息通知**
+  * **实时日志终端**：支持任务运行日志实时流式查看、阶段横幅高亮、日志级别筛选、关键词检索、自动滚动锁定与日志文件下载。
+  * **多渠道通知推送**：支持原版全部通知方式（Server酱、Bark、Telegram、企业微信、飞书、钉钉、Gotify、Webhook、邮件等），并内置 **[PushChan QQ](https://github.com/shing-yu/pushchan-qq-bot)** 消息与截图推送（支持自定义 API 地址及私聊/群聊切换）。
+
+
+---
+
+## 🚀 快速部署 (Docker Compose)
+
+### 1. 创建部署目录与配置文件
+
+```bash
+mkdir m7a-docker && cd m7a-docker
+vim docker-compose.yml
+```
+
+### 2. 编写 `docker-compose.yml`
 
 ```yaml
 services:
   march7thassistant:
     container_name: m7a-enhance
-    image: ghcr.io/shingyu/march7thassistant-docker-enhance:latest
+    image: ghcr.io/staredge-studio/march7thassistant-docker-enhance-v2:latest
     ports:
-      - "8080:8080"
+      - "18080:8080"  # [宿主机端口]:[容器内端口]，可按需修改左侧宿主机端口
     volumes:
       - ./data:/m7a/webui/data
       - ./logs:/m7a/logs
     environment:
       - TZ=Asia/Shanghai
-      # --- 模式一：Token 认证（未配置 OIDC 时生效） ---
-      - WEBUI_TOKEN=12345678
-      # --- 模式二：OIDC 认证（配置以下三项后全面启用 OIDC PKCE） ---
+      - MARCH7TH_LOG_LEVEL=INFO
+      # 前端界面风格：m3e (默认 Material 3 Expressive) 或 simple (轻量简洁版)
+      - WEBUI_THEME=m3e
+      # ==========================================================
+      # 认证模式一：Token 密钥认证（默认启用，未配置 OIDC 时生效）
+      # ==========================================================
+      - WEBUI_TOKEN=your_strong_admin_token_here
+      # ==========================================================
+      # 认证模式二：OIDC 统一身份认证（配置以下三项后自动切换为 OIDC 模式）
+      # ==========================================================
       # - OIDC_ENDPOINT=https://auth.example.com/application/o/m7a/
       # - OIDC_CLIENT_ID=your_client_id
       # - OIDC_CLIENT_SECRET=your_client_secret
       # - OIDC_BRAND=SSO
       # - OIDC_ADMIN_USERNAME=admin
+    network_mode: "bridge"
     shm_size: 2g
     init: true
     restart: unless-stopped
 ```
 
+### 3. 启动容器
+
+```bash
+docker compose up -d
+```
+
+启动完成后，浏览器访问 `http://<服务器IP>:18080` 即可进入控制台。
+
 ---
 
+## 🔧 环境变量说明
+
+| 环境变量 | 默认值 | 说明 |
+| :--- | :--- | :--- |
+| `WEBUI_THEME` | `m3e` | 前端主题风格：`m3e`（Material 3 Expressive）或 `simple`（简洁版） |
+| `WEBUI_TOKEN` | `12345678` | Token 模式下的管理员登录密码（生产环境请务必修改） |
+| `OIDC_ENDPOINT` | 空 | OIDC Issuer 地址或 `.well-known/openid-configuration` 地址 |
+| `OIDC_CLIENT_ID` | 空 | OIDC 客户端 ID |
+| `OIDC_CLIENT_SECRET` | 空 | OIDC 客户端密钥（当 Endpoint / ID / Secret 均非空时全面启用 OIDC） |
+| `OIDC_BRAND` | `OIDC` | 登录页按钮展示的认证品牌名称（例如 `Pocket ID`、`Authelia`、`Casdoor`） |
+| `OIDC_ADMIN_USERNAME` | 空 | OIDC 管理员用户名，支持用英文逗号分隔多个管理员 |
+| `OIDC_SCOPES` | `openid profile email` | OIDC 请求的权限范围 |
+| `MARCH7TH_LOG_LEVEL` | `INFO` | 小助手运行日志级别（`INFO` / `DEBUG` / `WARNING` / `ERROR`） |
+
+> **OIDC 回调地址配置提示**：在您的 OIDC 服务端（如 Authelia / Authentik / Casdoor / Pocket ID）中，请将 Redirect URI（回调地址）配置为前端根路径：`http(s)://<您的访问域名或IP:端口>/`。
+
+---
+
+## 📖 使用指南
+
+1. **添加账号**：管理员登录 WebUI 后，进入「账号配置」页面，点击右上角「新增账号」，填写账号备注名（OIDC 模式下可同时填写授权用户的 `username`）。
+2. **扫码登录**：在账号卡片上点击「扫码登录」，使用手机**米游社 App** 扫描弹出的二维码并在手机端点击确认登录，等待状态变为「已登录」。
+3. **配置任务**：
+   * 进入「任务配置」页面，在顶部选择需要编辑的账号。
+   * **简洁模式**：可视化配置「体力与副本」（培养目标优先级高于下方普通副本）、「周积分线奖励」、「支援角色」、「消息推送」等常用项。
+   * **高级模式**（桌面端）：直接编辑带完整注释的独立 YAML 配置文件。
+4. **启动与定时运行**：
+   * 在「全局设置」中可配置每日定时触发时间（支持多个 `HH:MM` 时间点）及外网连通性预检。
+   * 在「运行与日志」页面可随时点击「全部执行」或单账号立即执行，并实时查看高亮运行日志。
+
+---
+
+## 💻 系统配置要求
+
+| 硬件/环境 | 最低要求 | 推荐配置 | 说明 |
+| :--- | :--- | :--- | :--- |
+| **操作系统** | Linux (`amd64` / `arm64`) | Ubuntu / Debian 纯净环境 | 需安装 Docker 与 Docker Compose |
+| **共享内存 (`shm_size`)** | `1g` | **`2g`** | 防止无头 Chrome 渲染云游戏画面时因 `/dev/shm` 不足崩溃 |
+| **内存 (RAM)** | **4 GB** | 6 GB 或以上 | 保障浏览器 WebGL 渲染与 RapidOCR 文字识别稳定运行 |
+| **处理器 (CPU)** | 2 核 | 4 核或以上 | 影响云游戏帧率与图像识别速度 |
+
+---
+
+## 📄 许可证
+
+本项目采用与上游一致的开源许可证（[GPL-3.0](LICENSE)），仅供个人学习、技术研究与自动化测试使用。
+
+---
+
+> [!TIP]
+> **以下为原项目 README 内容：**
+
+---
+
+<div align="center">
+  <h1 align="center">
+    <img src="./assets/screenshot/March7th.png" width="200">
+    <br/>
+    March7thAssistant
+  </h1>
+</div>
 
 <br/>
 
