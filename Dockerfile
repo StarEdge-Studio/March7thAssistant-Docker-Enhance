@@ -1,7 +1,7 @@
 FROM --platform=$BUILDPLATFORM node:22-alpine AS webui-builder
 WORKDIR /webui
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
-COPY webui/package.json webui/pnpm-lock.yaml* webui/pnpm-workspace.yaml* webui/vite.config.mjs webui/tailwind.config.js webui/postcss.config.js webui/index.html ./
+COPY webui/package.json webui/pnpm-lock.yaml* webui/vite.config.mjs webui/tailwind.config.js webui/postcss.config.js webui/index.html ./
 COPY webui/src ./src
 RUN pnpm install --no-frozen-lockfile && pnpm run build
 
