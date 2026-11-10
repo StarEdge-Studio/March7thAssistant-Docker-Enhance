@@ -221,3 +221,8 @@ CLAUDE.md
 
 # Telemetry server
 telemetry_server/
+
+# WebUI
+webui/data/
+webui/node_modules/
+webui/static/

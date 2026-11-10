@@ -205,7 +205,10 @@ class CloudGameController(GameControllerBase):
             self.log_warning(f"无窗口模式禁用 Pointer Lock 失败: {e}")
 
     def _prepare_browser_and_driver(self, browser_type: str, integrated: bool) -> tuple[str, str]:
-        self.user_profile_path = os.path.join(self.BROWSER_INSTALL_PATH, "UserProfile", self.cfg.browser_type.capitalize())
+        self.user_profile_path = os.environ.get(
+            "MARCH7TH_USER_PROFILE_DIR",
+            os.path.join(self.BROWSER_INSTALL_PATH, "UserProfile", self.cfg.browser_type.capitalize())
+        )
         # 判断环境变量 MARCH7TH_BROWSER_PATH 和 MARCH7TH_DRIVER_PATH，同时存在时优先使用
         env_browser_path = os.environ.get("MARCH7TH_BROWSER_PATH")
         env_driver_path = os.environ.get("MARCH7TH_DRIVER_PATH")
@@ -343,11 +346,138 @@ class CloudGameController(GameControllerBase):
                 "--headless=new",  # 无窗口模式
                 "--mute-audio",    # 后台静音
             ]
+        if is_docker_started():
+            args += [
+                "--no-sandbox",
+                "--disable-gpu",
+                "--disable-dev-shm-usage",
+                "--disable-software-rasterizer",
+                "--no-first-run",
+                "--no-default-browser-check",
+                "--disable-background-networking",
+                "--disable-sync",
+                "--disable-breakpad",
+                "--disable-crash-reporter",
+            ]
 
         if self.cfg.cloud_game_fullscreen_enable and not headless:
             args.append("--start-fullscreen")  # 全屏启动
         args.extend(self.cfg.browser_launch_argument)  # 用户自定义参数
         return args
+
+    def _preflight_profile_cleanup(self) -> None:
+        """在启动浏览器前修复或清理损坏的 Profile JSON 与残留锁文件，防止 chromedriver 报 EOF JSON 解析错误。"""
+        if not getattr(self, "user_profile_path", None):
+            return
+
+        default_dir = os.path.join(self.user_profile_path, "Default")
+        try:
+            os.makedirs(default_dir, exist_ok=True)
+        except Exception as e:
+            self.log_warning(f"创建浏览器 Profile 目录失败: {e}")
+            return
+
+        # 清理上次异常中断遗留的临时写入文件
+        for scan_dir in (self.user_profile_path, default_dir):
+            try:
+                for entry in os.listdir(scan_dir):
+                    if entry.endswith(".tmp") or entry.startswith(".org.chromium.Chromium"):
+                        tmp_path = os.path.join(scan_dir, entry)
+                        if os.path.isfile(tmp_path) or os.path.islink(tmp_path):
+                            os.remove(tmp_path)
+                            self.log_debug(f"已清理残留临时文件: {tmp_path}")
+            except Exception:
+                pass
+
+        # chromedriver PrepareUserDataDir 会直接读取并解析 Local State 与 Default/Preferences 作为内部 JSON 模板；
+        # 若文件为 0 字节或损坏，chromedriver 会抛出 "cannot parse internal JSON template: EOF while parsing a value at line 1 column 0"。
+        template_json_files = [
+            os.path.join(self.user_profile_path, "Local State"),
+            os.path.join(default_dir, "Preferences"),
+        ]
+        for fpath in template_json_files:
+            needs_reset = False
+            if not os.path.exists(fpath):
+                needs_reset = True
+            else:
+                try:
+                    if os.path.getsize(fpath) == 0:
+                        needs_reset = True
+                    else:
+                        with open(fpath, "r", encoding="utf-8") as f:
+                            parsed = json.load(f)
+                        if not isinstance(parsed, dict):
+                            needs_reset = True
+                except Exception as e:
+                    self.log_warning(f"检测到损坏的浏览器模板 JSON ({e})，将重置为有效空对象: {fpath}")
+                    needs_reset = True
+
+            if needs_reset:
+                try:
+                    with open(fpath, "w", encoding="utf-8") as f:
+                        f.write("{}")
+                        f.flush()
+                        os.fsync(f.fileno())
+                except Exception as e:
+                    self.log_warning(f"写入默认 JSON 模板失败 {fpath}: {e}")
+
+        # 其他辅助 JSON 若损坏则直接删除，由浏览器重建
+        auxiliary_json_files = [
+            os.path.join(default_dir, "Secure Preferences"),
+            os.path.join(default_dir, "Network", "TransportSecurity"),
+        ]
+        for fpath in auxiliary_json_files:
+            if os.path.exists(fpath):
+                try:
+                    if os.path.getsize(fpath) == 0:
+                        os.remove(fpath)
+                        continue
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        json.load(f)
+                except Exception:
+                    try:
+                        os.remove(fpath)
+                        self.log_debug(f"已移除损坏的辅助配置: {fpath}")
+                    except Exception:
+                        pass
+
+        # 清理失效软链接与残留 Singleton/LOCK 锁文件（当前 Profile 无活跃浏览器时）
+        active_for_profile = self.get_m7a_browsers(profile_only=True)
+        lock_paths = [
+            os.path.join(self.user_profile_path, "SingletonCookie"),
+            os.path.join(self.user_profile_path, "SingletonLock"),
+            os.path.join(self.user_profile_path, "SingletonSocket"),
+            os.path.join(default_dir, "LOCK"),
+        ]
+        for lock_path in lock_paths:
+            try:
+                if os.path.islink(lock_path) and not os.path.exists(lock_path):
+                    os.remove(lock_path)
+                    self.log_debug(f"已清理断开的软链接: {lock_path}")
+                elif (is_docker_started() or not active_for_profile) and os.path.lexists(lock_path):
+                    os.remove(lock_path)
+                    self.log_debug(f"已清理残留锁文件: {lock_path}")
+            except Exception as e:
+                self.log_debug(f"清理锁文件失败 {lock_path}: {e}")
+
+        self._cleanup_localstorage_bloat()
+
+    def _cleanup_localstorage_bloat(self) -> None:
+        """清理异常膨胀的 Local Storage leveldb 日志或数据文件。"""
+        if not getattr(self, "user_profile_path", None):
+            return
+        leveldb_dir = os.path.join(self.user_profile_path, "Default", "Local Storage", "leveldb")
+        if not os.path.exists(leveldb_dir):
+            return
+        try:
+            for fname in os.listdir(leveldb_dir):
+                if fname.endswith((".ldb", ".log")):
+                    fpath = os.path.join(leveldb_dir, fname)
+                    if os.path.isfile(fpath) and os.path.getsize(fpath) > 5 * 1024 * 1024:
+                        os.remove(fpath)
+                        self.log_info(f"已清理过大的 LocalStorage 缓存文件: {fname}")
+        except Exception as e:
+            self.log_debug(f"检查 LocalStorage 大小异常: {e}")
 
     def _connect_or_create_browser(self, headless=False, *, connect_only=False) -> None:
         """连接小助手的浏览器；connect_only 时不启动、关闭或重建浏览器。"""
@@ -380,41 +510,44 @@ class CloudGameController(GameControllerBase):
             actual_port = self._find_available_port(configured_port)
             self.log_info(f"将使用端口 {actual_port} 启动浏览器")
 
-        if not os.path.exists(self.user_profile_path):
+        if not os.path.exists(os.path.join(self.user_profile_path, "Default", "Local Storage")):
             first_run = True
 
-        if browser_type == "chrome":
-            options = ChromeOptions()
-            service = ChromeService(executable_path=driver_path, log_path=os.devnull)
-            webdriver_type = webdriver.Chrome
-        elif browser_type == "edge":
-            options = EdgeOptions()
-            service = EdgeService(executable_path=driver_path, log_path=os.devnull)
-            webdriver_type = webdriver.Edge
-        else:  # chromium
-            options = ChromiumOptions()
-            service = ChromiumService(executable_path=driver_path, log_path=os.devnull)
-            webdriver_type = webdriver.Chrome
+        def _make_options_and_service():
+            if browser_type == "chrome":
+                return ChromeOptions(), ChromeService(executable_path=driver_path, log_path=os.devnull), webdriver.Chrome
+            elif browser_type == "edge":
+                return EdgeOptions(), EdgeService(executable_path=driver_path, log_path=os.devnull), webdriver.Edge
+            else:
+                return ChromiumOptions(), ChromiumService(executable_path=driver_path, log_path=os.devnull), webdriver.Chrome
+
+        options, service, webdriver_type = _make_options_and_service()
         # 记录 driver 可执行路径和 service，以便后续清理 chromedriver 进程
         self.driver_path = driver_path
         self._webdriver_service = service
-        # 记录 driver pid
-        try:
-            self._driver_pid = self.driver.service.process.pid
-        except AttributeError:
-            self._driver_pid = None
+        self._driver_pid = None
 
-        # 关掉 headless 不匹配的浏览器，防止端口冲突
+        # 关掉 headless 不匹配或不属于当前账号 Profile 的浏览器，防止端口冲突或串号
         if not connect_only:
-            if self.close_all_m7a_browser(headless=not headless):
-                self.log_info(f"已关闭正在运行的{'前台' if headless else '后台'}浏览器")
-            existing = self.get_m7a_browsers(headless=headless)
+            all_running = self.get_m7a_browsers()
+            matching_profile = self.get_m7a_browsers(headless=headless, profile_only=True)
+            matching_pids = {p.pid for p in matching_profile}
+            if any(p.pid not in matching_pids for p in all_running):
+                if self.close_all_m7a_browser():
+                    self.log_info("已清理其他实例或模式不匹配的残留浏览器")
+                existing = []
+            else:
+                existing = matching_profile
         if existing:
             # 从进程命令行解析真实调试端口（首次启动可能已回退到其它端口）
             reconnect_port = self._get_debug_port_from_cmdline(existing[0]) or configured_port
             try:
                 options.debugger_address = f"127.0.0.1:{reconnect_port}"
                 self.driver = webdriver_type(service=service, options=options)
+                try:
+                    self._driver_pid = self.driver.service.process.pid
+                except Exception:
+                    pass
                 self._configure_pointer_lock(headless)
                 self.log_info("已连接到现有浏览器")
                 return
@@ -423,62 +556,56 @@ class CloudGameController(GameControllerBase):
                     raise
                 self.log_info("连接现有浏览器失败")
                 self.close_all_m7a_browser()
-                # 重连失败后重建 options，避免 debugger_address 残留导致 Selenium 尝试重连而非启动新浏览器
-                if browser_type == "chrome":
-                    options = ChromeOptions()
-                elif browser_type == "edge":
-                    options = EdgeOptions()
-                else:
-                    options = ChromiumOptions()
+                options, service, webdriver_type = _make_options_and_service()
+                self._webdriver_service = service
 
         self.log_info(f"正在启动 {browser_type} 浏览器")
-        options.binary_location = browser_path
-        options.add_experimental_option("prefs", self.PERFERENCES)  # 允许云游戏权限权限
+        self._preflight_profile_cleanup()
+
+        def _configure_launch_options(opts, port_to_use: int):
+            opts.binary_location = browser_path
+            opts.add_experimental_option("prefs", self.PERFERENCES)
+            for arg in self._get_browser_arguments(headless=headless):
+                opts.add_argument(arg)
+            opts.add_argument(f"--remote-debugging-port={port_to_use}")
+            if integrated or is_docker_started():
+                opts.add_argument("--no-sandbox")
 
         self.log_debug(f"启动参数： {self._get_browser_arguments(headless=headless)}")
-        # 设置浏览器启动参数
-        for arg in self._get_browser_arguments(headless=headless):
-            options.add_argument(arg)
-        options.add_argument(f"--remote-debugging-port={actual_port}")
-        if integrated or is_docker_started():  # 修复 Windows 部分情况下启动 Chrome 报错
-            options.add_argument("--no-sandbox")
-
-        # 清理失效的断链 (Broken Symlinks) 防止浏览器无法启动
-        if is_docker_started():
-            singleton_files = ["SingletonCookie", "SingletonLock", "SingletonSocket"]
-            for filename in singleton_files:
-                file_path = os.path.join(self.user_profile_path, filename)
-                try:
-                    # 逻辑：是一个链接，但指向的目标不存在
-                    if os.path.islink(file_path) and not os.path.exists(file_path):
-                        os.remove(file_path)
-                        self.log_debug(f"已清理断开的软链接: {file_path}")
-                except Exception as e:
-                    self.log_warning(f"处理残留链接失败: {file_path}, 错误: {e}")
+        _configure_launch_options(options, actual_port)
 
         try:
             self.log_debug("启动浏览器中...")
             self.driver = webdriver_type(service=service, options=options)
+            try:
+                self._driver_pid = self.driver.service.process.pid
+            except Exception:
+                pass
             self.log_debug("浏览器启动成功")
-        except SessionNotCreatedException as e:
-            self.log_error(f"浏览器启动失败: {e}")
-            # 清理残留文件，防止浏览器无法启动
-            if is_docker_started():
-                singleton_files = ["SingletonCookie", "SingletonLock", "SingletonSocket"]
-                for filename in singleton_files:
-                    file_path = os.path.join(self.user_profile_path, filename)
-                    try:
-                        if os.path.lexists(file_path):
-                            os.remove(file_path)
-                            self.log_debug(f"已删除残留文件: {file_path}")
-                    except Exception as e:
-                        self.log_warning(f"删除残留文件失败: {file_path}, 错误: {e}")
-            self.log_error("如果设置了浏览器启动参数，请去掉所有浏览器启动参数后重试")
-            self.log_error("如果仍然存在问题，请更换浏览器重试")
-            raise RuntimeError("浏览器启动失败")
+        except SessionNotCreatedException as first_err:
+            self.log_warning(f"首次启动浏览器失败，正在清理残留状态并重试一次: {first_err}")
+            self.close_all_m7a_browser()
+            self._preflight_profile_cleanup()
+            if not self._is_port_available(actual_port):
+                actual_port = self._find_available_port(configured_port)
+            options, service, webdriver_type = _make_options_and_service()
+            self._webdriver_service = service
+            _configure_launch_options(options, actual_port)
+            try:
+                self.driver = webdriver_type(service=service, options=options)
+                try:
+                    self._driver_pid = self.driver.service.process.pid
+                except Exception:
+                    pass
+                self.log_info("重试启动浏览器成功")
+            except Exception as retry_err:
+                self.log_error(f"浏览器启动失败: {retry_err}")
+                self.log_error("如果设置了浏览器启动参数，请去掉所有浏览器启动参数后重试")
+                self.log_error("如果仍然存在问题，请更换浏览器重试")
+                raise RuntimeError("浏览器启动失败") from retry_err
         except Exception as e:
             self.log_error(f"浏览器启动失败: {e}")
-            raise RuntimeError("浏览器启动失败")
+            raise RuntimeError("浏览器启动失败") from e
 
         self._configure_pointer_lock(headless)
         if not self.cfg.cloud_game_fullscreen_enable:
@@ -816,7 +943,13 @@ class CloudGameController(GameControllerBase):
             raise SystemExit("云游戏付费时长已耗尽，游戏中断")
 
     def _clean_at_exit(self) -> None:
-        """当脚本退出时，关闭所有 headless 浏览器"""
+        """当脚本退出时，优先优雅关闭当前浏览器，再清理所有残留后台浏览器"""
+        if self.driver is not None:
+            try:
+                self.stop_game()
+                return
+            except Exception:
+                pass
         if self.close_all_m7a_browser(headless=True):
             self.log_info("已关闭所有后台浏览器")
 
@@ -827,10 +960,11 @@ class CloudGameController(GameControllerBase):
         """当前是否已经下载内置浏览器"""
         return os.path.exists(self._get_integrated_browser_path()) and os.path.exists(self._get_integrated_driver_path())
 
-    def get_m7a_browsers(self, headless=None) -> list[psutil.Process]:
+    def get_m7a_browsers(self, headless=None, profile_only: bool = False) -> list[psutil.Process]:
         """
         获取由小助手打开的浏览器
         headless: None 所有，True 仅 headless 无窗口浏览器，False 仅有窗口浏览器
+        profile_only: True 时仅返回匹配当前 self.user_profile_path 的浏览器进程
 
         return 浏览器的 Process
         """
@@ -852,12 +986,20 @@ class CloudGameController(GameControllerBase):
         if env_path:
             browser_names.add(os.path.basename(env_path).lower())
 
-        for proc in psutil.process_iter(['pid', 'name']):
+        expected_profile_norm = None
+        if profile_only and getattr(self, "user_profile_path", None):
+            expected_profile_norm = os.path.normcase(os.path.abspath(self.user_profile_path))
+
+        for proc in psutil.process_iter(['pid', 'name', 'status']):
+            if proc.info.get('status') == psutil.STATUS_ZOMBIE:
+                continue
             name = proc.info.get('name')
             if not name or name.lower() not in browser_names:
                 continue
 
             try:
+                if proc.status() == psutil.STATUS_ZOMBIE:
+                    continue
                 cmdline = proc.cmdline()
             except psutil.Error:
                 continue
@@ -870,29 +1012,67 @@ class CloudGameController(GameControllerBase):
                 if headless != is_headless:
                     continue
 
+            if expected_profile_norm:
+                matched_profile = False
+                for arg in cmdline:
+                    if arg.startswith("--user-data-dir="):
+                        arg_profile = os.path.normcase(os.path.abspath(arg.split("=", 1)[1]))
+                        if arg_profile == expected_profile_norm:
+                            matched_profile = True
+                            break
+                if not matched_profile:
+                    continue
+
             browsers.append(proc)
 
         return browsers
 
     def close_all_m7a_browser(self, headless=None) -> list[psutil.Process]:
         """
-        关闭所有由小助手打开的浏览器
+        关闭所有由小助手打开的浏览器及关联驱动/崩溃处理进程
         headless: None 所有，True 仅 headless 无窗口浏览器，False 仅 headful 有窗口浏览器
 
         return 被关闭浏览器的 Process
         """
         closed_proc = []
-        for proc in self.get_m7a_browsers(headless=headless) or []:
+        browser_procs = self.get_m7a_browsers(headless=headless) or []
+        for proc in browser_procs:
             try:
                 proc.terminate()
                 closed_proc.append(proc)
-            except Exception:
+            except psutil.Error:
                 pass
 
+        # 清理残留的 crashpad 进程
+        crashpad_procs = []
+        if headless is None or is_docker_started():
+            for proc in psutil.process_iter(['pid', 'name', 'status']):
+                if proc.info.get('status') == psutil.STATUS_ZOMBIE:
+                    continue
+                name = (proc.info.get('name') or '').lower()
+                if name in ('chrome_crashpad_handler', 'chrome_crashpad', 'chrome_crashpad_handler.exe'):
+                    try:
+                        proc.terminate()
+                        crashpad_procs.append(proc)
+                    except psutil.Error:
+                        pass
+
         # 也尝试关闭与当前 driver_path 对应的 chromedriver 进程
-        closed = self._terminate_chromedriver_processes()
-        if closed:
-            closed_proc.extend(closed)
+        driver_procs = self._terminate_chromedriver_processes()
+        if driver_procs:
+            closed_proc.extend(driver_procs)
+
+        wait_targets = browser_procs + crashpad_procs + (driver_procs or [])
+        if wait_targets:
+            _, alive = psutil.wait_procs(wait_targets, timeout=5)
+            for p in alive:
+                try:
+                    p.kill()
+                except psutil.Error:
+                    pass
+            if alive:
+                psutil.wait_procs(alive, timeout=3)
+
         return closed_proc
 
     def _terminate_chromedriver_processes(self) -> list[psutil.Process]:
@@ -903,17 +1083,21 @@ class CloudGameController(GameControllerBase):
         if hasattr(self, '_driver_pid') and self._driver_pid:
             try:
                 p = psutil.Process(self._driver_pid)
-                p.terminate()
-                closed.append(p)
+                if p.status() != psutil.STATUS_ZOMBIE:
+                    p.terminate()
+                    closed.append(p)
+                self._driver_pid = None
                 return closed
-            except psutil.NoSuchProcess:
-                pass
+            except psutil.Error:
+                self._driver_pid = None
 
         try:
             chromedrivers: list[psutil.Process] = []
 
             # 只获取轻量字段，避免 ppid / exe 带来的性能问题
-            for proc in psutil.process_iter(['pid', 'name']):
+            for proc in psutil.process_iter(['pid', 'name', 'status']):
+                if proc.info.get('status') == psutil.STATUS_ZOMBIE:
+                    continue
                 name = proc.info.get('name')
                 if name and name.lower() in ('chromedriver.exe', 'chromedriver', 'msedgedriver', 'msedgedriver.exe'):
                     chromedrivers.append(proc)
@@ -1760,8 +1944,8 @@ class CloudGameController(GameControllerBase):
         - 如果已开启兼容模式: 直接重连
         - 如果未开启兼容模式: 弹窗提示用户选择 (退出游戏 / 开启兼容模式 / 下载客户端)
         """
-        ls = json.loads(self.driver.execute_script("return JSON.stringify(localStorage)"))
-        cloud = json.loads(ls.get("cg_hkrpg_cn_cloudData", "{}"))
+        raw_cloud = self.driver.execute_script("return localStorage.getItem('cg_hkrpg_cn_cloudData')")
+        cloud = json.loads(raw_cloud or "{}")
         cloud.setdefault("value", {})
         save = json.loads(cloud["value"].get("RPGCloudSave", "{}") or "{}")
         int_dicts = save.get("IntDicts", {})
@@ -1782,16 +1966,8 @@ class CloudGameController(GameControllerBase):
 
         save["IntDicts"] = int_dicts
         cloud["value"]["RPGCloudSave"] = json.dumps(save)
-        ls["cg_hkrpg_cn_cloudData"] = json.dumps(cloud)
-
-        # # 开启兼容模式
-        # app_settings = json.loads(ls.get("clgm_web_app_settings_hkrpg_cn", "{}"))
-        # app_settings["compatibleModeSwitch"] = True
-        # ls["clgm_web_app_settings_hkrpg_cn"] = json.dumps(app_settings)
-        # self.log_debug("设置兼容模式为开启")
-
-        for k, v in ls.items():
-            self.driver.execute_script(f"localStorage.setItem('{k}', arguments[0]);", v)
+        self.driver.execute_script("localStorage.setItem('cg_hkrpg_cn_cloudData', arguments[0]);", json.dumps(cloud))
+        self._cleanup_localstorage_bloat()
 
     def stop_game(self) -> bool:
         """退出游戏，关闭浏览器"""
@@ -1804,28 +1980,63 @@ class CloudGameController(GameControllerBase):
         except Exception as e:
             self.log_debug(f"删除二维码图片失败（可忽略）: {e}")
 
+        graceful_closed = False
         if self.driver:
             driver = self.driver
             client_config = driver.command_executor._client_config
             previous_timeout = client_config.timeout
-            client_config.timeout = min(previous_timeout, 15) if previous_timeout is not None else 15
+            client_config.timeout = min(previous_timeout, 10) if previous_timeout is not None else 10
             try:
+                tracked_browsers = self.get_m7a_browsers()
                 try:
-                    driver.execute(Command.CLOSE)
-                    self.log_info("关闭浏览器成功")
+                    driver.execute_script("window.onbeforeunload = null;")
+                    driver.get("about:blank")
                 except Exception as exc:
-                    self.log_debug(f"关闭浏览器窗口失败，将清理进程: {exc}")
+                    self.log_debug(f"卸载云游戏页面失败（可忽略）: {exc}")
+
+                close_sent = False
+                try:
+                    driver.execute_cdp_cmd("Browser.close", {})
+                    close_sent = True
+                except Exception as cdp_exc:
+                    self.log_debug(f"CDP Browser.close 失败，尝试 Command.CLOSE: {cdp_exc}")
+                    try:
+                        driver.execute(Command.CLOSE)
+                        close_sent = True
+                    except Exception as close_exc:
+                        self.log_debug(f"关闭浏览器窗口失败，将清理进程: {close_exc}")
+
+                if tracked_browsers:
+                    # 等待浏览器优雅退出并完成 Local State / Preferences 落盘
+                    _, alive = psutil.wait_procs(tracked_browsers, timeout=8)
+                    if alive:
+                        for p in alive:
+                            try:
+                                p.terminate()
+                            except psutil.Error:
+                                pass
+                        _, alive = psutil.wait_procs(alive, timeout=5)
+                    if not alive:
+                        graceful_closed = True
+                elif close_sent:
+                    graceful_closed = True
+
                 try:
                     driver.quit()
                 except Exception as exc:
-                    self.log_debug(f"退出浏览器会话失败，将清理进程: {exc}")
+                    self.log_debug(f"退出浏览器驱动会话异常（可忽略）: {exc}")
+
+                if graceful_closed:
+                    self.log_info("关闭浏览器成功")
             finally:
                 client_config.timeout = previous_timeout
                 self.driver = None
 
-        # 清理所有未正常退出的浏览器
+        # 清理所有未正常退出的浏览器与驱动进程
         try:
-            if self.close_all_m7a_browser():
+            remaining_browsers = self.get_m7a_browsers()
+            self.close_all_m7a_browser()
+            if remaining_browsers and not graceful_closed:
                 self.log_info("检测到由小助手启动的浏览器，已成功关闭")
         except Exception as e:
             self.log_warning(f"检测到由小助手启动的浏览器，关闭失败: {e}")

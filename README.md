@@ -2,10 +2,59 @@
   <h1 align="center">
     <img src="./assets/screenshot/March7th.png" width="200">
     <br/>
-    March7thAssistant
+    March7thAssistant (Docker 多账号增强版)
   </h1>
-  <a href="https://trendshift.io/repositories/3892" target="_blank"><img src="https://trendshift.io/api/badge/repositories/3892" alt="moesnow%2FMarch7thAssistant | Trendshift" style="width: 200px; height: 46px;" width="250" height="46"/></a>
 </div>
+
+## 🚀 Docker 多账号增强版核心特性
+
+本项目基于上游 [moesnow/March7thAssistant](https://github.com/moesnow/March7thAssistant) 构建，针对云·星穹铁道 Docker 部署进行了全面重构：
+
+1. **轻量级现代 WebUI（移动端与桌面端自适应）**
+   - 移除繁重的 UI 组件库，全量打包体积压缩 **95%+**（Gzip 后仅 ~70KB），大幅降低网页内存与 CPU 占用。
+   - 完美适配手机端触控操作（底部导航栏 + 可视化配置表单），同时在桌面端保留带行号与语法校验的 **YAML 高级源码编辑器**。
+   - **增量式实时日志终端**：按字节偏移增量拉取日志，支持阶段横幅高亮、日志级别筛选、关键字检索、自动滚动锁定与日志下载。
+2. **单账号完全独立配置**
+   - 移除旧版全局配置覆盖逻辑，每个游戏账号拥有独立的 YAML 配置文件（`webui/data/configs/<id>.yaml`）与浏览器数据目录（`webui/data/profiles/<id>`）。
+   - 运行时自动与上游 `assets/config/config.example.yaml` 合并补全，并在任务结束后将冷却时间戳（`*_timestamp`）、体力计划进度（`power_plan`）、已使用兑换码等状态自动回写至账号配置。
+3. **双轨身份认证系统（Token 密钥 / OIDC PKCE）**
+   - **OIDC 模式（推荐多用户场景）**：当环境变量配置了 `OIDC_ENDPOINT`、`OIDC_CLIENT_ID`、`OIDC_CLIENT_SECRET`（及可选 `OIDC_BRAND`）时全面启用 OIDC (OAuth 2.1 PKCE `S256`) 登录。
+     - 管理员用户名通过环境变量 `OIDC_ADMIN_USERNAME` 指定（支持逗号分隔多个管理员）。
+     - 普通用户的 `username` 由管理员在 WebUI「账号管理」后台绑定；未绑定的其他 OIDC 用户登录后展示无权限提示页。
+   - **Token 模式（默认）**：未配置 OIDC 时启用。管理员使用 `WEBUI_TOKEN` 登录；普通用户使用管理员分发的单账号专属密钥（`Secret Key`）登录。
+4. **浏览器生命周期与进程隔离修复**
+   - 修复 Chrome 关闭时被强制 `SIGKILL` 导致 `Preferences` / `Local State` 损坏及下次启动报 `cannot parse internal JSON template: EOF while parsing a value at line 1 column 0` 的问题。
+   - 内置进程组清理、Profile 级实例隔离、运行锁清理与僵尸进程（`<defunct>`）自动回收，杜绝前序账号异常影响后续账号运行。
+
+### 快速部署 (`docker-compose.yml`)
+
+```yaml
+services:
+  march7thassistant:
+    container_name: m7a-enhance
+    image: ghcr.io/shingyu/march7thassistant-docker-enhance:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/m7a/webui/data
+      - ./logs:/m7a/logs
+    environment:
+      - TZ=Asia/Shanghai
+      # --- 模式一：Token 认证（未配置 OIDC 时生效） ---
+      - WEBUI_TOKEN=12345678
+      # --- 模式二：OIDC 认证（配置以下三项后全面启用 OIDC PKCE） ---
+      # - OIDC_ENDPOINT=https://auth.example.com/application/o/m7a/
+      # - OIDC_CLIENT_ID=your_client_id
+      # - OIDC_CLIENT_SECRET=your_client_secret
+      # - OIDC_BRAND=SSO
+      # - OIDC_ADMIN_USERNAME=admin
+    shm_size: 2g
+    init: true
+    restart: unless-stopped
+```
+
+---
+
 
 <br/>
 

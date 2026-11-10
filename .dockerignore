@@ -29,6 +29,10 @@ dist/
 # WebBrowser UserProfile (very large)
 3rdparty/WebBrowser/UserProfile/
 
+# WebUI runtime data & node_modules
+webui/data/
+webui/node_modules/
+
 # Test and temporary files
 tests/
 temp/
