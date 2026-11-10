@@ -33,6 +33,9 @@ jobs:
         id: sync
         run: |
           BRANCH_NAME="upstream-sync-branch"
+          UPSTREAM_HEAD=$(git log -1 --format="%h %s" upstream/main)
+          echo "upstream_head=$UPSTREAM_HEAD" >> $GITHUB_OUTPUT
+
           echo "正在尝试自动合并上游代码..."
           if git merge upstream/main --no-edit; then
             echo "✅ 自动合并成功，没有任何冲突！"
@@ -40,24 +43,110 @@ jobs:
             echo "merged=true" >> $GITHUB_OUTPUT
           else
             echo "❌ 发现冲突！"
+            CONFLICT_FILES=$(git diff --name-only --diff-filter=U | paste -sd ', ' -)
+            echo "conflict_files=$CONFLICT_FILES" >> $GITHUB_OUTPUT
             git merge --abort
             git push -f origin upstream/main:refs/heads/$BRANCH_NAME
             echo "merged=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create PR on Conflict
+        id: pr
         if: steps.sync.outputs.merged == 'false'
         run: |
           BRANCH_NAME="upstream-sync-branch"
-          PR_EXISTS=$(gh pr list --repo ${{ github.repository }} --head $BRANCH_NAME --state open --json number --jq '.[0].number')
-          if [ -z "$PR_EXISTS" ]; then
-            gh pr create \
+          PR_URL=$(gh pr list --repo ${{ github.repository }} --head $BRANCH_NAME --state open --json url --jq '.[0].url')
+          if [ -z "$PR_URL" ] || [ "$PR_URL" = "null" ]; then
+            BODY=$(printf "### 🔄 自动同步报告\n检测到上游仓库有新代码（\`%s\`），但与本地修改存在冲突，无法自动合并。\n冲突文件：\`%s\`" "${{ steps.sync.outputs.upstream_head }}" "${{ steps.sync.outputs.conflict_files }}")
+            PR_URL=$(gh pr create \
               --repo ${{ github.repository }} \
               --title "⚠️ 发现上游更新，存在代码冲突" \
               --base main \
               --head $BRANCH_NAME \
-              --body "### 🔄 自动同步报告
-                      检测到上游仓库有新代码，但与本地修改存在冲突，无法自动合并。"
+              --body "$BODY")
+          else
+            echo "已存在待处理冲突 PR: $PR_URL"
           fi
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.PAT }}
+
+      - name: Notify on Conflict via PushChan QQ
+        if: steps.sync.outputs.merged == 'false'
+        env:
+          PUSHCHAN_QQ_ENDPOINT: ${{ secrets.PUSHCHAN_QQ_ENDPOINT }}
+          PUSHCHAN_QQ_TOKEN: ${{ secrets.PUSHCHAN_QQ_TOKEN }}
+          PUSHCHAN_QQ_OPENID: ${{ secrets.PUSHCHAN_QQ_OPENID }}
+          PUSHCHAN_QQ_GROUP: ${{ secrets.PUSHCHAN_QQ_GROUP }}
+          REPO_NAME: ${{ github.repository }}
+          UPSTREAM_HEAD: ${{ steps.sync.outputs.upstream_head }}
+          CONFLICT_FILES: ${{ steps.sync.outputs.conflict_files }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.error
+          import urllib.request
+
+          openid = (os.environ.get("PUSHCHAN_QQ_OPENID") or "").strip()
+          if not openid:
+              print("未配置 PUSHCHAN_QQ_OPENID Secret，跳过 PushChan QQ 冲突通知。")
+              sys.exit(0)
+
+          endpoint = (os.environ.get("PUSHCHAN_QQ_ENDPOINT") or "https://pushchan.shingyu.cn").strip().rstrip("/")
+          for suffix in ("/sendmessage", "/sendmarkdown", "/sendcard"):
+              if endpoint.lower().endswith(suffix):
+                  endpoint = endpoint[:-len(suffix)].rstrip("/")
+                  break
+
+          token = (os.environ.get("PUSHCHAN_QQ_TOKEN") or "").strip()
+          raw_group = (os.environ.get("PUSHCHAN_QQ_GROUP") or "").strip().lower()
+          group = raw_group in ("true", "1", "yes", "group")
+
+          repo = os.environ.get("REPO_NAME", "")
+          upstream_head = os.environ.get("UPSTREAM_HEAD", "未知")
+          conflict_files = os.environ.get("CONFLICT_FILES") or "未知"
+          pr_url = os.environ.get("PR_URL") or os.environ.get("RUN_URL", "")
+
+          lines = [
+              "⚠️ 上游同步冲突提醒",
+              f"仓库：{repo}",
+              f"上游提交：{upstream_head}",
+              f"冲突文件：{conflict_files}",
+          ]
+          if pr_url:
+              lines.append(f"处理链接：{pr_url}")
+
+          payload = {
+              "content": "\n".join(lines),
+              "group": group,
+              "openid": openid,
+          }
+          if token:
+              payload["token"] = token
+
+          headers = {"Content-Type": "application/json"}
+          if token:
+              headers["Authorization"] = f"Bearer {token}"
+
+          req = urllib.request.Request(
+              f"{endpoint}/sendmessage",
+              data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+              headers=headers,
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=30) as resp:
+                  body = resp.read().decode("utf-8", errors="replace")
+                  print(f"PushChan QQ 通知发送成功 ({resp.status}): {body}")
+          except urllib.error.HTTPError as e:
+              err_body = e.read().decode("utf-8", errors="replace")
+              print(f"PushChan QQ 通知发送失败 (HTTP {e.code}): {err_body}", file=sys.stderr)
+              sys.exit(1)
+          except Exception as e:
+              print(f"PushChan QQ 通知发送异常: {e}", file=sys.stderr)
+              sys.exit(1)
+          PY

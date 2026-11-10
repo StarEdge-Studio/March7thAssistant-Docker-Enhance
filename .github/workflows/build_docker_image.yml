@@ -74,6 +74,7 @@ jobs:
 
       # 步骤 6: 自动清理旧版本镜像
       - name: Delete old image versions
+        continue-on-error: true
         uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ github.event.repository.name }}
