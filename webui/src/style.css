@@ -44,7 +44,10 @@
     --m3-outline-variant: #cac4d0;
 
     --m3-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --m3-spring-soft: cubic-bezier(0.22, 1.28, 0.36, 1);
     --m3-emphasized: cubic-bezier(0.2, 0, 0, 1);
+    --m3-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+    --m3-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
   }
 
   .dark {
@@ -124,14 +127,26 @@
   background-color: var(--m3-surface-container-low);
   border: 1px solid color-mix(in srgb, var(--m3-outline-variant) 55%, transparent);
   border-radius: 28px;
-  transition: transform 0.28s var(--m3-emphasized), background-color 0.25s ease, border-color 0.25s ease, border-radius 0.3s var(--m3-spring);
+  transition:
+    transform 0.32s var(--m3-spring-soft),
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    border-radius 0.35s var(--m3-spring-soft),
+    box-shadow 0.28s var(--m3-emphasized);
+}
+
+.m3-card-interactive:hover {
+  transform: translateY(-2px);
+  border-radius: 24px;
+  border-color: color-mix(in srgb, var(--m3-primary) 35%, var(--m3-outline-variant));
+  box-shadow: 0 10px 26px -10px color-mix(in srgb, var(--m3-primary) 22%, transparent);
 }
 
 .m3-card-elevated {
   background-color: var(--m3-surface-container-lowest);
   border: 1px solid color-mix(in srgb, var(--m3-outline-variant) 45%, transparent);
   border-radius: 24px;
-  transition: all 0.25s var(--m3-emphasized);
+  transition: all 0.28s var(--m3-spring-soft);
 }
 
 .dark .m3-card-elevated {
@@ -144,19 +159,25 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 9999px;
+  /* 使用真实胶囊半径 26px 替代 9999px，避免从 9999px 过渡时因弹簧超调下冲至负数（0px 方形） */
+  border-radius: 26px;
   font-weight: 600;
   transition:
-    border-radius 0.32s var(--m3-spring),
-    transform 0.22s var(--m3-spring),
+    border-radius 0.22s var(--m3-emphasized),
+    transform 0.24s var(--m3-spring),
     background-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.22s ease,
+    filter 0.2s ease;
   user-select: none;
 }
 
+.m3-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
 .m3-btn:active:not(:disabled) {
-  border-radius: 14px;
-  transform: scale(0.96);
+  border-radius: 10px;
+  transform: translateY(0) scale(0.95);
 }
 
 .m3-btn-filled {
@@ -236,6 +257,157 @@
     background-color 0.28s var(--m3-emphasized),
     transform 0.35s var(--m3-spring),
     width 0.35s var(--m3-spring);
+}
+
+/* ==================== M3E Motion & Transition System ==================== */
+
+/* 1. Route Page Shared-Axis Transition (m3-page) */
+.m3-page-enter-active {
+  transition:
+    opacity 0.24s var(--m3-emphasized-decelerate),
+    transform 0.32s var(--m3-spring-soft);
+}
+
+.m3-page-leave-active {
+  transition:
+    opacity 0.14s var(--m3-emphasized-accelerate),
+    transform 0.14s var(--m3-emphasized-accelerate);
+}
+
+.m3-page-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.992);
+}
+
+.m3-page-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.995);
+}
+
+/* 2. Expressive Dialog / Modal Spring Transition (m3-dialog) */
+.m3-dialog-enter-active {
+  transition: opacity 0.22s var(--m3-emphasized-decelerate);
+}
+
+.m3-dialog-leave-active {
+  transition: opacity 0.16s var(--m3-emphasized-accelerate);
+}
+
+.m3-dialog-enter-from,
+.m3-dialog-leave-to {
+  opacity: 0;
+}
+
+.m3-dialog-enter-active .m3-dialog-panel {
+  transition:
+    transform 0.36s var(--m3-spring),
+    opacity 0.22s var(--m3-emphasized-decelerate);
+}
+
+.m3-dialog-leave-active .m3-dialog-panel {
+  transition:
+    transform 0.16s var(--m3-emphasized-accelerate),
+    opacity 0.16s var(--m3-emphasized-accelerate);
+}
+
+.m3-dialog-enter-from .m3-dialog-panel {
+  opacity: 0;
+  transform: translateY(18px) scale(0.92);
+}
+
+.m3-dialog-leave-to .m3-dialog-panel {
+  opacity: 0;
+  transform: translateY(8px) scale(0.95);
+}
+
+/* 3. Snackbar / Toast Spring List Transition (m3-toast) */
+.m3-toast-move,
+.m3-toast-enter-active {
+  transition:
+    transform 0.36s var(--m3-spring),
+    opacity 0.24s var(--m3-emphasized-decelerate);
+}
+
+.m3-toast-leave-active {
+  transition:
+    transform 0.2s var(--m3-emphasized-accelerate),
+    opacity 0.18s var(--m3-emphasized-accelerate);
+}
+
+.m3-toast-enter-from {
+  opacity: 0;
+  transform: translateX(28px) scale(0.9);
+}
+
+.m3-toast-leave-to {
+  opacity: 0;
+  transform: translateX(24px) scale(0.92);
+}
+
+/* 4. Conditional Panel Expand / Collapse Transition (m3-expand) */
+.m3-expand-enter-active {
+  transition:
+    opacity 0.26s var(--m3-emphasized-decelerate),
+    transform 0.3s var(--m3-spring-soft);
+}
+
+.m3-expand-leave-active {
+  transition:
+    opacity 0.15s var(--m3-emphasized-accelerate),
+    transform 0.15s var(--m3-emphasized-accelerate);
+}
+
+.m3-expand-enter-from,
+.m3-expand-leave-to {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.985);
+}
+
+/* 5. Staggered Card Entrance & Ambient Keyframes */
+@keyframes m3-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.m3-stagger-item {
+  animation: m3-stagger-in 0.36s var(--m3-spring-soft) both;
+  animation-delay: calc(var(--stagger-index, 0) * 45ms);
+}
+
+@keyframes m3-blob-float {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(10px, -12px, 0) scale(1.06);
+  }
+}
+
+.m3-ambient-blob {
+  animation: m3-blob-float 9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m3-stagger-item,
+  .m3-ambient-blob {
+    animation: none !important;
+  }
+  .m3-btn,
+  .m3-card,
+  .m3-page-enter-active,
+  .m3-page-leave-active,
+  .m3-dialog-enter-active,
+  .m3-dialog-leave-active,
+  .m3-toast-enter-active,
+  .m3-toast-leave-active {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* 精致滚动条 */

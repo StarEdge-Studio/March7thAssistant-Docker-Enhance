@@ -9,13 +9,13 @@
     @click.stop="toggle"
   >
     <span
-      class="flex items-center justify-center rounded-full transition-all duration-300 group-active:scale-110"
+      class="flex items-center justify-center rounded-full transition-all duration-300 group-hover:scale-105 group-active:scale-x-125 group-active:scale-y-95"
       :style="thumbStyle"
     >
       <svg
-        v-if="modelValue"
-        class="w-3.5 h-3.5 transition-transform duration-250 scale-100"
-        :style="{ color: 'var(--m3-primary)' }"
+        class="w-3.5 h-3.5 transition-all duration-300"
+        :class="modelValue ? 'scale-100 rotate-0 opacity-100' : 'scale-0 -rotate-45 opacity-0'"
+        :style="{ color: 'var(--m3-primary)', transitionTimingFunction: 'var(--m3-spring)' }"
         fill="none"
         stroke="currentColor"
         stroke-width="3"

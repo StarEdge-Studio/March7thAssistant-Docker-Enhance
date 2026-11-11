@@ -5,28 +5,28 @@
   >
     <!-- M3E 装饰性动态色块背景 -->
     <div
-      class="w-[420px] h-[420px] rounded-full blur-3xl opacity-45 pointer-events-none absolute -top-24 -left-24"
+      class="m3-ambient-blob w-[420px] h-[420px] rounded-full blur-3xl opacity-45 pointer-events-none absolute -top-24 -left-24"
       style="background-color: var(--m3-primary-container);"
     ></div>
     <div
-      class="w-[380px] h-[380px] rounded-full blur-3xl opacity-45 pointer-events-none absolute -bottom-24 -right-24"
-      style="background-color: var(--m3-tertiary-container);"
+      class="m3-ambient-blob w-[380px] h-[380px] rounded-full blur-3xl opacity-45 pointer-events-none absolute -bottom-24 -right-24"
+      style="background-color: var(--m3-tertiary-container); animation-delay: -4.5s;"
     ></div>
 
     <div
-      class="w-full max-w-[440px] rounded-[36px] p-8 sm:p-10 shadow-xl border relative z-10 transition-all"
+      class="m3-stagger-item w-full max-w-[440px] rounded-[36px] p-8 sm:p-10 shadow-xl border relative z-10 transition-all"
       style="background-color: var(--m3-surface-container-low); border-color: color-mix(in srgb, var(--m3-outline-variant) 55%, transparent);"
     >
       <!-- 顶部 M3E 徽章与标题 -->
       <div class="text-center">
-        <div class="relative w-16 h-16 mx-auto">
+        <div class="group/badge relative w-16 h-16 mx-auto cursor-default">
           <div
-            class="w-16 h-16 rounded-[22px] rotate-12 absolute inset-0"
-            style="background-color: var(--m3-tertiary-container);"
+            class="w-16 h-16 rounded-[22px] rotate-12 group-hover/badge:rotate-18 group-hover/badge:scale-105 transition-transform duration-300 absolute inset-0"
+            style="background-color: var(--m3-tertiary-container); transition-timing-function: var(--m3-spring);"
           ></div>
           <div
-            class="relative w-16 h-16 rounded-[22px] flex items-center justify-center font-black text-3xl shadow-md"
-            style="background-color: var(--m3-primary); color: var(--m3-on-primary);"
+            class="relative w-16 h-16 rounded-[22px] group-hover/badge:rounded-[16px] group-hover/badge:-rotate-3 transition-all duration-300 flex items-center justify-center font-black text-3xl shadow-md"
+            style="background-color: var(--m3-primary); color: var(--m3-on-primary); transition-timing-function: var(--m3-spring);"
           >
             7
           </div>

@@ -51,7 +51,8 @@
       <div
         v-for="(acc, index) in store.accounts"
         :key="acc.id"
-        class="m3-card p-5 sm:p-6 flex flex-col justify-between gap-4"
+        class="m3-card m3-card-interactive m3-stagger-item p-5 sm:p-6 flex flex-col justify-between gap-4"
+        :style="{ '--stagger-index': index }"
       >
         <div class="space-y-4">
           <!-- 头部：序号、名称、启用开关 -->
@@ -237,146 +238,150 @@
     </div>
 
     <!-- 新增 / 编辑账号弹窗 (M3E 28px Dialog) -->
-    <div
-      v-if="accountModal.visible"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-      @click.self="accountModal.visible = false"
-    >
-      <form
-        class="max-w-md w-full p-7 rounded-[28px] shadow-2xl border space-y-5"
-        style="background-color: var(--m3-surface-container-high); border-color: color-mix(in srgb, var(--m3-outline-variant) 50%, transparent);"
-        @submit.prevent="submitAccountModal"
+    <Transition name="m3-dialog">
+      <div
+        v-if="accountModal.visible"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+        @click.self="accountModal.visible = false"
       >
-        <h3 class="text-lg font-extrabold tracking-tight" style="color: var(--m3-on-surface);">
-          {{ accountModal.isEdit ? '编辑账号信息' : '新增星穹铁道账号' }}
-        </h3>
+        <form
+          class="m3-dialog-panel max-w-md w-full p-7 rounded-[28px] shadow-2xl border space-y-5"
+          style="background-color: var(--m3-surface-container-high); border-color: color-mix(in srgb, var(--m3-outline-variant) 50%, transparent);"
+          @submit.prevent="submitAccountModal"
+        >
+          <h3 class="text-lg font-extrabold tracking-tight" style="color: var(--m3-on-surface);">
+            {{ accountModal.isEdit ? '编辑账号信息' : '新增星穹铁道账号' }}
+          </h3>
 
-        <div class="space-y-1.5">
-          <label class="block text-xs font-bold px-1" style="color: var(--m3-on-surface-variant);">
-            账号显示名称
-          </label>
-          <input
-            v-model="accountModal.name"
-            type="text"
-            required
-            placeholder="例如：开拓者大号 / 小号"
-            class="m3-input w-full"
-          />
-        </div>
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold px-1" style="color: var(--m3-on-surface-variant);">
+              账号显示名称
+            </label>
+            <input
+              v-model="accountModal.name"
+              type="text"
+              required
+              placeholder="例如：开拓者大号 / 小号"
+              class="m3-input w-full"
+            />
+          </div>
 
-        <div v-if="store.role === 'admin'" class="space-y-1.5">
-          <label class="block text-xs font-bold px-1" style="color: var(--m3-on-surface-variant);">
-            绑定 OIDC 用户名 (username，可选)
-          </label>
-          <input
-            v-model="accountModal.username"
-            type="text"
-            placeholder="填写 SSO 登录的 username，留空则仅管理员可见"
-            class="m3-input w-full font-mono"
-          />
-          <p class="text-[11px] px-1" style="color: var(--m3-on-surface-variant);">
-            当启用 OIDC 登录时，拥有该 username 的用户登录后将自动获得此账号的管理与配置权限。
-          </p>
-        </div>
+          <div v-if="store.role === 'admin'" class="space-y-1.5">
+            <label class="block text-xs font-bold px-1" style="color: var(--m3-on-surface-variant);">
+              绑定 OIDC 用户名 (username，可选)
+            </label>
+            <input
+              v-model="accountModal.username"
+              type="text"
+              placeholder="填写 SSO 登录的 username，留空则仅管理员可见"
+              class="m3-input w-full font-mono"
+            />
+            <p class="text-[11px] px-1" style="color: var(--m3-on-surface-variant);">
+              当启用 OIDC 登录时，拥有该 username 的用户登录后将自动获得此账号的管理与配置权限。
+            </p>
+          </div>
 
-        <div class="pt-2 flex justify-end gap-2.5">
-          <button
-            type="button"
-            class="m3-btn m3-btn-tonal px-5 py-2.5 text-xs"
-            @click="accountModal.visible = false"
-          >
-            取消
-          </button>
-          <button
-            type="submit"
-            :disabled="accountModal.saving"
-            class="m3-btn m3-btn-filled px-6 py-2.5 text-xs disabled:opacity-55"
-          >
-            {{ accountModal.saving ? '保存中...' : '保存' }}
-          </button>
-        </div>
-      </form>
-    </div>
+          <div class="pt-2 flex justify-end gap-2.5">
+            <button
+              type="button"
+              class="m3-btn m3-btn-tonal px-5 py-2.5 text-xs"
+              @click="accountModal.visible = false"
+            >
+              取消
+            </button>
+            <button
+              type="submit"
+              :disabled="accountModal.saving"
+              class="m3-btn m3-btn-filled px-6 py-2.5 text-xs disabled:opacity-55"
+            >
+              {{ accountModal.saving ? '保存中...' : '保存' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </Transition>
 
     <!-- 扫码登录向导弹窗 (M3E 32px Dialog) -->
-    <div
-      v-if="qrModal.visible"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-xs"
-    >
+    <Transition name="m3-dialog">
       <div
-        class="max-w-md w-full p-7 rounded-[32px] shadow-2xl border text-center space-y-4"
-        style="background-color: var(--m3-surface-container-high); border-color: color-mix(in srgb, var(--m3-outline-variant) 50%, transparent);"
+        v-if="qrModal.visible"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-xs"
       >
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-extrabold tracking-tight" style="color: var(--m3-on-surface);">
-            云·星穹铁道扫码登录 · {{ qrModal.accountName }}
-          </h3>
-          <button
-            type="button"
-            class="m3-btn m3-btn-tonal w-8 h-8 text-xs"
-            @click="closeQrModal"
-          >
-            ✕
-          </button>
-        </div>
-
         <div
-          class="p-3.5 rounded-[18px] text-xs font-bold"
-          :style="qrStatusStyle(qrModal.status)"
+          class="m3-dialog-panel max-w-md w-full p-7 rounded-[32px] shadow-2xl border text-center space-y-4"
+          style="background-color: var(--m3-surface-container-high); border-color: color-mix(in srgb, var(--m3-outline-variant) 50%, transparent);"
         >
-          {{ qrModal.message }}
-        </div>
-
-        <div
-          class="mx-auto w-56 h-56 rounded-[24px] border flex items-center justify-center overflow-hidden"
-          style="background-color: var(--m3-surface-container-lowest); border-color: var(--m3-outline-variant);"
-        >
-          <img
-            v-if="qrModal.hasQr && qrModal.imageUrl"
-            :src="qrModal.imageUrl"
-            alt="登录二维码"
-            class="w-full h-full object-contain p-2 bg-white"
-          />
-          <div v-else-if="qrModal.status === 'success'" class="flex flex-col items-center gap-2" style="color: var(--m3-primary);">
-            <span class="text-4xl">✓</span>
-            <span class="text-xs font-bold">登录凭证已保存</span>
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-extrabold tracking-tight" style="color: var(--m3-on-surface);">
+              云·星穹铁道扫码登录 · {{ qrModal.accountName }}
+            </h3>
+            <button
+              type="button"
+              class="m3-btn m3-btn-tonal w-8 h-8 text-xs"
+              @click="closeQrModal"
+            >
+              ✕
+            </button>
           </div>
-          <div v-else-if="qrModal.status === 'failed'" class="flex flex-col items-center gap-2 px-4" style="color: var(--m3-error);">
-            <span class="text-3xl">!</span>
-            <span class="text-xs">加载失败，可点击下方重试</span>
-          </div>
-          <div v-else class="flex flex-col items-center gap-2.5" style="color: var(--m3-on-surface-variant);">
-            <div
-              class="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin"
-              style="border-color: var(--m3-primary); border-top-color: transparent;"
-            ></div>
-            <span class="text-xs">正在准备二维码...</span>
-          </div>
-        </div>
 
-        <p class="text-[11px]" style="color: var(--m3-on-surface-variant);">
-          请打开手机「米游社 App」扫描上方二维码，并在手机上点击确认。
-        </p>
-
-        <div class="pt-2 flex justify-center gap-3">
-          <button
-            v-if="qrModal.status === 'failed'"
-            type="button"
-            class="m3-btn m3-btn-filled px-5 py-2.5 text-xs"
-            @click="startQrSession(qrModal.accountId)"
+          <div
+            class="p-3.5 rounded-[18px] text-xs font-bold transition-colors duration-300"
+            :style="qrStatusStyle(qrModal.status)"
           >
-            重新获取二维码
-          </button>
-          <button
-            type="button"
-            class="m3-btn m3-btn-tonal px-5 py-2.5 text-xs"
-            @click="closeQrModal"
+            {{ qrModal.message }}
+          </div>
+
+          <div
+            class="mx-auto w-56 h-56 rounded-[24px] border flex items-center justify-center overflow-hidden"
+            style="background-color: var(--m3-surface-container-lowest); border-color: var(--m3-outline-variant);"
           >
-            {{ qrModal.status === 'success' ? '完成并关闭' : '取消并关闭浏览器' }}
-          </button>
+            <img
+              v-if="qrModal.hasQr && qrModal.imageUrl"
+              :src="qrModal.imageUrl"
+              alt="登录二维码"
+              class="w-full h-full object-contain p-2 bg-white"
+            />
+            <div v-else-if="qrModal.status === 'success'" class="flex flex-col items-center gap-2" style="color: var(--m3-primary);">
+              <span class="text-4xl">✓</span>
+              <span class="text-xs font-bold">登录凭证已保存</span>
+            </div>
+            <div v-else-if="qrModal.status === 'failed'" class="flex flex-col items-center gap-2 px-4" style="color: var(--m3-error);">
+              <span class="text-3xl">!</span>
+              <span class="text-xs">加载失败，可点击下方重试</span>
+            </div>
+            <div v-else class="flex flex-col items-center gap-2.5" style="color: var(--m3-on-surface-variant);">
+              <div
+                class="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin"
+                style="border-color: var(--m3-primary); border-top-color: transparent;"
+              ></div>
+              <span class="text-xs">正在准备二维码...</span>
+            </div>
+          </div>
+
+          <p class="text-[11px]" style="color: var(--m3-on-surface-variant);">
+            请打开手机「米游社 App」扫描上方二维码，并在手机上点击确认。
+          </p>
+
+          <div class="pt-2 flex justify-center gap-3">
+            <button
+              v-if="qrModal.status === 'failed'"
+              type="button"
+              class="m3-btn m3-btn-filled px-5 py-2.5 text-xs"
+              @click="startQrSession(qrModal.accountId)"
+            >
+              重新获取二维码
+            </button>
+            <button
+              type="button"
+              class="m3-btn m3-btn-tonal px-5 py-2.5 text-xs"
+              @click="closeQrModal"
+            >
+              {{ qrModal.status === 'success' ? '完成并关闭' : '取消并关闭浏览器' }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>
 

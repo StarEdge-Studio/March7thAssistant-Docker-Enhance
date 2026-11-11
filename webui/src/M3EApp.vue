@@ -4,11 +4,15 @@
     style="background-color: var(--m3-surface-container); color: var(--m3-on-surface);"
   >
     <!-- M3E 全局 Snackbar / Toast 通知层 -->
-    <div class="fixed top-4 right-4 z-[100] flex flex-col gap-2.5 max-w-sm w-[calc(100vw-2rem)] pointer-events-none">
+    <TransitionGroup
+      tag="div"
+      name="m3-toast"
+      class="fixed top-4 right-4 z-[100] flex flex-col gap-2.5 max-w-sm w-[calc(100vw-2rem)] pointer-events-none"
+    >
       <div
         v-for="t in store.toasts"
         :key="t.id"
-        class="pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-[20px] shadow-xl border text-sm font-medium transition-all duration-300"
+        class="pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-[20px] shadow-xl border text-sm font-medium"
         :style="toastStyle(t.type)"
       >
         <span
@@ -17,47 +21,53 @@
         ></span>
         <span class="flex-1 break-words">{{ t.message }}</span>
       </div>
-    </div>
+    </TransitionGroup>
 
-    <!-- M3E 全局确认对话框 (28px Extra-Large Corner Radius) -->
-    <div
-      v-if="store.confirmDialog.visible"
-      class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
-      @click.self="resolveConfirmModal(false)"
-    >
+    <!-- M3E 全局确认对话框 (28px Extra-Large Corner Radius + Spring Entrance) -->
+    <Transition name="m3-dialog">
       <div
-        class="max-w-md w-full p-7 rounded-[28px] shadow-2xl border transition-all"
-        style="background-color: var(--m3-surface-container-high); border-color: color-mix(in srgb, var(--m3-outline-variant) 50%, transparent);"
+        v-if="store.confirmDialog.visible"
+        class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+        @click.self="resolveConfirmModal(false)"
       >
-        <h3 class="text-xl font-bold tracking-tight" style="color: var(--m3-on-surface);">
-          {{ store.confirmDialog.title }}
-        </h3>
-        <p class="mt-3 text-sm leading-relaxed whitespace-pre-line" style="color: var(--m3-on-surface-variant);">
-          {{ store.confirmDialog.message }}
-        </p>
-        <div class="mt-7 flex justify-end gap-2.5">
-          <button
-            type="button"
-            class="m3-btn m3-btn-tonal px-5 py-2.5 text-sm"
-            @click="resolveConfirmModal(false)"
-          >
-            {{ store.confirmDialog.cancelText }}
-          </button>
-          <button
-            type="button"
-            class="m3-btn px-6 py-2.5 text-sm"
-            :class="store.confirmDialog.danger ? 'm3-btn-error' : 'm3-btn-filled'"
-            @click="resolveConfirmModal(true)"
-          >
-            {{ store.confirmDialog.confirmText }}
-          </button>
+        <div
+          class="m3-dialog-panel max-w-md w-full p-7 rounded-[28px] shadow-2xl border"
+          style="background-color: var(--m3-surface-container-high); border-color: color-mix(in srgb, var(--m3-outline-variant) 50%, transparent);"
+        >
+          <h3 class="text-xl font-bold tracking-tight" style="color: var(--m3-on-surface);">
+            {{ store.confirmDialog.title }}
+          </h3>
+          <p class="mt-3 text-sm leading-relaxed whitespace-pre-line" style="color: var(--m3-on-surface-variant);">
+            {{ store.confirmDialog.message }}
+          </p>
+          <div class="mt-7 flex justify-end gap-2.5">
+            <button
+              type="button"
+              class="m3-btn m3-btn-tonal px-5 py-2.5 text-sm"
+              @click="resolveConfirmModal(false)"
+            >
+              {{ store.confirmDialog.cancelText }}
+            </button>
+            <button
+              type="button"
+              class="m3-btn px-6 py-2.5 text-sm"
+              :class="store.confirmDialog.danger ? 'm3-btn-error' : 'm3-btn-filled'"
+              @click="resolveConfirmModal(true)"
+            >
+              {{ store.confirmDialog.confirmText }}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
 
     <!-- 登录页或无权限页独立全屏渲染 -->
     <template v-if="isStandaloneRoute">
-      <router-view class="flex-1" />
+      <router-view v-slot="{ Component, route: curRoute }">
+        <Transition name="m3-page" mode="out-in">
+          <component :is="Component" :key="curRoute.path" class="flex-1" />
+        </Transition>
+      </router-view>
     </template>
 
     <!-- M3E 自适应主框架 (Navigation Drawer + Framed Surface Viewport) -->
@@ -65,15 +75,15 @@
       <!-- 桌面端 M3E Navigation Drawer -->
       <aside class="hidden md:flex md:w-[268px] md:flex-col md:fixed md:inset-y-0 px-3 py-4 z-30 select-none">
         <!-- 品牌标识头 -->
-        <div class="px-4 py-3 flex items-center gap-3.5">
+        <div class="group/brand px-4 py-3 flex items-center gap-3.5">
           <div class="relative shrink-0">
             <div
-              class="w-11 h-11 rounded-[16px] rotate-6 absolute inset-0 opacity-60"
-              style="background-color: var(--m3-tertiary-container);"
+              class="w-11 h-11 rounded-[16px] rotate-6 group-hover/brand:rotate-12 group-hover/brand:scale-105 transition-transform duration-300 absolute inset-0 opacity-60"
+              style="background-color: var(--m3-tertiary-container); transition-timing-function: var(--m3-spring);"
             ></div>
             <div
-              class="relative w-11 h-11 rounded-[16px] flex items-center justify-center font-black text-xl shadow-xs"
-              style="background-color: var(--m3-primary); color: var(--m3-on-primary);"
+              class="relative w-11 h-11 rounded-[16px] group-hover/brand:rounded-[13px] group-hover/brand:-rotate-3 transition-all duration-300 flex items-center justify-center font-black text-xl shadow-xs"
+              style="background-color: var(--m3-primary); color: var(--m3-on-primary); transition-timing-function: var(--m3-spring);"
             >
               7
             </div>
@@ -102,29 +112,32 @@
             v-for="item in navItems"
             :key="item.to"
             :to="item.to"
-            class="group flex items-center justify-between h-14 px-4 rounded-full text-sm transition-all duration-300"
+            class="group flex items-center justify-between h-14 px-4 rounded-[28px] active:rounded-[16px] active:scale-[0.98] text-sm transition-all duration-300"
             :style="isActiveRoute(item.to)
               ? {
                   backgroundColor: 'var(--m3-secondary-container)',
                   color: 'var(--m3-on-secondary-container)',
                   fontWeight: '700',
+                  transitionTimingFunction: 'var(--m3-spring-soft)',
                 }
               : {
                   color: 'var(--m3-on-surface-variant)',
                   fontWeight: '500',
+                  transitionTimingFunction: 'var(--m3-spring-soft)',
                 }"
           >
             <div class="flex items-center gap-3.5">
               <span
-                class="w-6 h-6 flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
-                :class="isActiveRoute(item.to) ? 'scale-105' : ''"
+                class="w-6 h-6 flex items-center justify-center transition-transform duration-300 group-hover:scale-115 group-hover:-rotate-6"
+                :class="isActiveRoute(item.to) ? 'scale-110' : ''"
+                style="transition-timing-function: var(--m3-spring);"
                 v-html="item.icon"
               ></span>
-              <span class="tracking-wide">{{ item.label }}</span>
+              <span class="tracking-wide transition-transform duration-300 group-hover:translate-x-0.5">{{ item.label }}</span>
             </div>
             <span
               v-if="item.badge"
-              class="px-2.5 py-0.5 text-[11px] rounded-full font-bold"
+              class="px-2.5 py-0.5 text-[11px] rounded-full font-bold transition-transform duration-300 group-hover:scale-105"
               :style="item.isRunningBadge
                 ? { backgroundColor: 'var(--m3-tertiary-container)', color: 'var(--m3-on-tertiary-container)' }
                 : { backgroundColor: 'var(--m3-primary-container)', color: 'var(--m3-on-primary-container)' }"
@@ -248,7 +261,11 @@
           style="background-color: var(--m3-surface); border-color: color-mix(in srgb, var(--m3-outline-variant) 40%, transparent);"
         >
           <div class="max-w-7xl mx-auto">
-            <router-view />
+            <router-view v-slot="{ Component, route: curRoute }">
+              <Transition name="m3-page" mode="out-in">
+                <component :is="Component" :key="curRoute.path" />
+              </Transition>
+            </router-view>
           </div>
         </div>
       </main>
@@ -263,10 +280,10 @@
           v-for="item in navItems"
           :key="item.to"
           :to="item.to"
-          class="flex flex-col items-center justify-center gap-1 py-1"
+          class="group flex flex-col items-center justify-center gap-1 py-1 active:scale-95 transition-transform duration-200"
         >
           <div
-            class="h-8 flex items-center justify-center rounded-full transition-all duration-300"
+            class="h-8 flex items-center justify-center rounded-[16px] group-active:rounded-[10px] transition-all duration-300"
             :style="isActiveRoute(item.to)
               ? {
                   width: '64px',
@@ -278,12 +295,18 @@
                   width: '36px',
                   backgroundColor: 'transparent',
                   color: 'var(--m3-on-surface-variant)',
+                  transitionTimingFunction: 'var(--m3-spring)',
                 }"
           >
-            <span class="w-5 h-5 flex items-center justify-center" v-html="item.icon"></span>
+            <span
+              class="w-5 h-5 flex items-center justify-center transition-transform duration-300"
+              :class="isActiveRoute(item.to) ? 'scale-110 -translate-y-0.5' : 'group-hover:scale-105'"
+              style="transition-timing-function: var(--m3-spring);"
+              v-html="item.icon"
+            ></span>
           </div>
           <span
-            class="text-[11px] tracking-tight transition-all"
+            class="text-[11px] tracking-tight transition-all duration-200"
             :style="isActiveRoute(item.to)
               ? { color: 'var(--m3-on-surface)', fontWeight: '700' }
               : { color: 'var(--m3-on-surface-variant)', fontWeight: '500' }"

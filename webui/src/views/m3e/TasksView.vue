@@ -33,10 +33,10 @@
         >
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-250"
+            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-[18px] active:rounded-[10px] active:scale-95 text-xs font-bold transition-all duration-300"
             :style="editMode === 'simple'
-              ? { backgroundColor: 'var(--m3-secondary-container)', color: 'var(--m3-on-secondary-container)' }
-              : { color: 'var(--m3-on-surface-variant)' }"
+              ? { backgroundColor: 'var(--m3-secondary-container)', color: 'var(--m3-on-secondary-container)', transitionTimingFunction: 'var(--m3-emphasized)' }
+              : { color: 'var(--m3-on-surface-variant)', transitionTimingFunction: 'var(--m3-emphasized)' }"
             @click="switchMode('simple')"
           >
             <svg v-if="editMode === 'simple'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
@@ -46,10 +46,10 @@
           </button>
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-250"
+            class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-[18px] active:rounded-[10px] active:scale-95 text-xs font-bold transition-all duration-300"
             :style="editMode === 'advanced'
-              ? { backgroundColor: 'var(--m3-secondary-container)', color: 'var(--m3-on-secondary-container)' }
-              : { color: 'var(--m3-on-surface-variant)' }"
+              ? { backgroundColor: 'var(--m3-secondary-container)', color: 'var(--m3-on-secondary-container)', transitionTimingFunction: 'var(--m3-emphasized)' }
+              : { color: 'var(--m3-on-surface-variant)', transitionTimingFunction: 'var(--m3-emphasized)' }"
             @click="switchMode('advanced')"
           >
             <svg v-if="editMode === 'advanced'" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
@@ -105,23 +105,24 @@
     <!-- ==================== 简洁模式 (M3E Expressive Cards) ==================== -->
     <div v-else-if="editMode === 'simple'" class="space-y-3.5">
       <div
-        v-for="group in formGroups"
+        v-for="(group, groupIndex) in formGroups"
         :key="group.name"
-        class="m3-card overflow-hidden"
+        class="m3-card m3-stagger-item overflow-hidden"
+        :style="{ '--stagger-index': groupIndex }"
       >
         <!-- 顶层分组折叠头 -->
         <button
           type="button"
-          class="w-full px-5 sm:px-6 py-4 flex items-center justify-between text-left transition-colors"
+          class="group/header w-full px-5 sm:px-6 py-4 flex items-center justify-between text-left transition-colors"
           @click="toggleGroup(group.name)"
         >
-          <span class="text-sm sm:text-base font-extrabold tracking-tight" style="color: var(--m3-on-surface);">
+          <span class="text-sm sm:text-base font-extrabold tracking-tight transition-transform duration-250 group-hover/header:translate-x-0.5" style="color: var(--m3-on-surface);">
             {{ group.title }}
           </span>
           <div
-            class="w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-300"
+            class="w-8 h-8 rounded-[16px] group-hover/header:scale-110 group-active/header:rounded-[10px] group-active/header:scale-95 flex items-center justify-center transition-all duration-300"
             :class="isGroupOpen(group.name) ? 'rotate-180' : ''"
-            style="background-color: var(--m3-surface-container-highest); color: var(--m3-on-surface-variant);"
+            style="background-color: var(--m3-surface-container-highest); color: var(--m3-on-surface-variant); transition-timing-function: var(--m3-emphasized);"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -130,11 +131,12 @@
         </button>
 
         <!-- 分组内容体 -->
-        <div
-          v-show="isGroupOpen(group.name)"
-          class="px-4 sm:px-6 pb-6 pt-2 border-t space-y-4"
-          style="border-color: color-mix(in srgb, var(--m3-outline-variant) 40%, transparent);"
-        >
+        <Transition name="m3-expand">
+          <div
+            v-show="isGroupOpen(group.name)"
+            class="px-4 sm:px-6 pb-6 pt-2 border-t space-y-4"
+            style="border-color: color-mix(in srgb, var(--m3-outline-variant) 40%, transparent);"
+          >
           <!-- 1. 体力与副本 -->
           <template v-if="group.name === 'power'">
             <div class="text-xs italic px-1" style="color: var(--m3-on-surface-variant);">
@@ -849,14 +851,15 @@
               </div>
             </div>
           </template>
-        </div>
+          </div>
+        </Transition>
       </div>
     </div>
 
     <!-- ==================== 高级模式（桌面端专属 YAML 编辑器） ==================== -->
     <div
       v-else
-      class="hidden md:flex flex-col bg-[#121117] text-slate-100 rounded-[28px] border overflow-hidden shadow-xl h-[calc(100vh-13rem)] min-h-[520px]"
+      class="m3-stagger-item hidden md:flex flex-col bg-[#121117] text-slate-100 rounded-[28px] border overflow-hidden shadow-xl h-[calc(100vh-13rem)] min-h-[520px]"
       style="border-color: color-mix(in srgb, var(--m3-outline-variant) 45%, transparent);"
     >
       <div class="px-5 py-3 bg-[#1b1922] border-b border-white/10 flex items-center justify-between gap-4">

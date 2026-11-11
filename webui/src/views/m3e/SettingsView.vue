@@ -25,7 +25,7 @@
     </div>
 
     <!-- 1. 每日定时任务 -->
-    <div class="m3-card p-5 sm:p-6 space-y-4">
+    <div class="m3-card m3-card-interactive m3-stagger-item p-5 sm:p-6 space-y-4" style="--stagger-index: 0;">
       <div class="flex items-center justify-between gap-4">
         <div>
           <h3 class="text-sm sm:text-base font-extrabold" style="color: var(--m3-on-surface);">每日自动运行队列</h3>
@@ -36,22 +36,24 @@
         <M3Switch v-model="form.daily_run_enabled" />
       </div>
 
-      <div
-        v-if="form.daily_run_enabled"
-        class="pt-4 border-t flex items-center gap-3"
-        style="border-color: color-mix(in srgb, var(--m3-outline-variant) 40%, transparent);"
-      >
-        <label class="text-xs font-bold" style="color: var(--m3-on-surface);">每日触发时间 (24小时制):</label>
-        <input
-          v-model="form.daily_run_time"
-          type="time"
-          class="m3-input font-mono !text-sm"
-        />
-      </div>
+      <Transition name="m3-expand">
+        <div
+          v-if="form.daily_run_enabled"
+          class="pt-4 border-t flex items-center gap-3"
+          style="border-color: color-mix(in srgb, var(--m3-outline-variant) 40%, transparent);"
+        >
+          <label class="text-xs font-bold" style="color: var(--m3-on-surface);">每日触发时间 (24小时制):</label>
+          <input
+            v-model="form.daily_run_time"
+            type="time"
+            class="m3-input font-mono !text-sm"
+          />
+        </div>
+      </Transition>
     </div>
 
     <!-- 2. 外网连通性预检 -->
-    <div class="m3-card p-5 sm:p-6 space-y-4">
+    <div class="m3-card m3-card-interactive m3-stagger-item p-5 sm:p-6 space-y-4" style="--stagger-index: 1;">
       <div class="flex items-center justify-between gap-4">
         <div>
           <h3 class="text-sm sm:text-base font-extrabold" style="color: var(--m3-on-surface);">运行前网络连通性检查</h3>
@@ -62,40 +64,42 @@
         <M3Switch v-model="form.check_internet" />
       </div>
 
-      <div
-        v-if="form.check_internet"
-        class="pt-4 border-t grid grid-cols-1 sm:grid-cols-2 gap-4"
-        style="border-color: color-mix(in srgb, var(--m3-outline-variant) 40%, transparent);"
-      >
-        <div class="space-y-1.5">
-          <label class="block text-xs font-bold" style="color: var(--m3-on-surface-variant);">
-            失败后重试等待间隔（秒）
-          </label>
-          <input
-            v-model.number="form.check_internet_Wait"
-            type="number"
-            min="5"
-            max="3600"
-            class="m3-input w-full"
-          />
+      <Transition name="m3-expand">
+        <div
+          v-if="form.check_internet"
+          class="pt-4 border-t grid grid-cols-1 sm:grid-cols-2 gap-4"
+          style="border-color: color-mix(in srgb, var(--m3-outline-variant) 40%, transparent);"
+        >
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold" style="color: var(--m3-on-surface-variant);">
+              失败后重试等待间隔（秒）
+            </label>
+            <input
+              v-model.number="form.check_internet_Wait"
+              type="number"
+              min="5"
+              max="3600"
+              class="m3-input w-full"
+            />
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold" style="color: var(--m3-on-surface-variant);">
+              最大重试次数
+            </label>
+            <input
+              v-model.number="form.check_internet_MaxRetries"
+              type="number"
+              min="1"
+              max="30"
+              class="m3-input w-full"
+            />
+          </div>
         </div>
-        <div class="space-y-1.5">
-          <label class="block text-xs font-bold" style="color: var(--m3-on-surface-variant);">
-            最大重试次数
-          </label>
-          <input
-            v-model.number="form.check_internet_MaxRetries"
-            type="number"
-            min="1"
-            max="30"
-            class="m3-input w-full"
-          />
-        </div>
-      </div>
+      </Transition>
     </div>
 
     <!-- 3. 调试模拟模式 -->
-    <div class="m3-card p-5 sm:p-6 flex items-center justify-between gap-4">
+    <div class="m3-card m3-card-interactive m3-stagger-item p-5 sm:p-6 flex items-center justify-between gap-4" style="--stagger-index: 2;">
       <div>
         <h3 class="text-sm sm:text-base font-extrabold" style="color: var(--m3-on-surface);">
           调试模拟运行模式 (Debug Mock)
@@ -108,7 +112,7 @@
     </div>
 
     <!-- 4. 当前认证与前端主题状态说明 -->
-    <div class="m3-card p-5 sm:p-6 space-y-3">
+    <div class="m3-card m3-stagger-item p-5 sm:p-6 space-y-3" style="--stagger-index: 3;">
       <h3 class="text-sm sm:text-base font-extrabold" style="color: var(--m3-on-surface);">
         系统运行环境与认证模式
       </h3>

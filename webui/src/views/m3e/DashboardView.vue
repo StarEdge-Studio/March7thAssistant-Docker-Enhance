@@ -7,17 +7,18 @@
     >
       <!-- 有机动态装饰背景 -->
       <div
-        class="w-64 h-64 rounded-full blur-3xl opacity-35 pointer-events-none absolute -top-20 -right-12"
+        class="m3-ambient-blob w-64 h-64 rounded-full blur-3xl opacity-35 pointer-events-none absolute -top-20 -right-12 transition-colors duration-500"
         :style="{ backgroundColor: store.scheduler.is_running ? 'var(--m3-tertiary-container)' : 'var(--m3-primary-container)' }"
       ></div>
 
       <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div class="flex items-start sm:items-center gap-4">
           <div
-            class="w-14 h-14 rounded-[22px] flex items-center justify-center shrink-0 shadow-xs transition-all duration-300"
+            class="w-14 h-14 flex items-center justify-center shrink-0 shadow-xs transition-all duration-500"
+            :class="store.scheduler.is_running ? 'rounded-[28px] scale-105' : 'rounded-[20px]'"
             :style="store.scheduler.is_running
-              ? { backgroundColor: 'var(--m3-tertiary-container)', color: 'var(--m3-on-tertiary-container)' }
-              : { backgroundColor: 'var(--m3-primary-container)', color: 'var(--m3-on-primary-container)' }"
+              ? { backgroundColor: 'var(--m3-tertiary-container)', color: 'var(--m3-on-tertiary-container)', transitionTimingFunction: 'var(--m3-spring)' }
+              : { backgroundColor: 'var(--m3-primary-container)', color: 'var(--m3-on-primary-container)', transitionTimingFunction: 'var(--m3-spring)' }"
           >
             <svg v-if="store.scheduler.is_running" class="w-7 h-7 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
@@ -174,10 +175,10 @@
             v-for="item in historyList"
             :key="item.run_id"
             type="button"
-            class="w-full text-left px-4 py-3.5 rounded-[20px] transition-all flex items-start justify-between gap-2"
+            class="w-full text-left px-4 py-3.5 rounded-[20px] hover:rounded-[16px] active:rounded-[12px] active:scale-[0.985] transition-all duration-250 flex items-start justify-between gap-2"
             :style="selectedLogFile === item.log_file
-              ? { backgroundColor: 'var(--m3-secondary-container)', color: 'var(--m3-on-secondary-container)' }
-              : { backgroundColor: 'transparent', color: 'var(--m3-on-surface)' }"
+              ? { backgroundColor: 'var(--m3-secondary-container)', color: 'var(--m3-on-secondary-container)', transitionTimingFunction: 'var(--m3-spring-soft)' }
+              : { backgroundColor: 'transparent', color: 'var(--m3-on-surface)', transitionTimingFunction: 'var(--m3-spring-soft)' }"
             @click="selectHistoryLog(item)"
           >
             <div class="min-w-0">
