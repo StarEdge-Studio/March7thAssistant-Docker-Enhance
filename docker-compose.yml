@@ -2,7 +2,7 @@ services:
   march7thassistant:
     container_name: m7a-enhance
     build: .
-    # image: ghcr.io/shing-yu/march7thassistant-docker-enhance-v2:latest
+    # image: ghcr.io/staredge-studio/march7thassistant-docker-enhance-v2:latest
     ports:
       - "8080:8080"
     volumes:
