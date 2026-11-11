@@ -36,17 +36,23 @@
               </h2>
               <span
                 v-if="store.scheduler.settings?.daily_run_enabled"
-                class="px-3 py-1 rounded-full text-xs font-bold"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
                 style="background-color: var(--m3-secondary-container); color: var(--m3-on-secondary-container);"
               >
-                ⏰ 每日 {{ store.scheduler.settings.daily_run_time }} 定时执行
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <span>每日 {{ store.scheduler.settings.daily_run_time }} 定时执行</span>
               </span>
               <span
                 v-if="store.scheduler.settings?.debug_mode"
-                class="px-3 py-1 rounded-full text-xs font-bold"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
                 style="background-color: var(--m3-tertiary-container); color: var(--m3-on-tertiary-container);"
               >
-                🐞 调试模拟模式
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+                </svg>
+                <span>调试模拟模式</span>
               </span>
             </div>
             <p class="mt-1 text-xs sm:text-sm" style="color: var(--m3-on-surface-variant);">
@@ -238,7 +244,10 @@
               title="下载原始日志文件"
               @click="downloadCurrentLog"
             >
-              ⬇ 下载
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              <span>下载</span>
             </button>
           </div>
         </div>
@@ -310,7 +319,12 @@
           @click="resumeAutoScroll"
         >
           <span>已暂停自动滚动（正在浏览历史行）</span>
-          <span class="underline">↓ 回到最新底部</span>
+          <span class="inline-flex items-center gap-1 underline">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+            </svg>
+            <span>回到最新底部</span>
+          </span>
         </div>
       </div>
     </div>

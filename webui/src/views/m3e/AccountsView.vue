@@ -25,7 +25,10 @@
         class="m3-btn m3-btn-filled px-5 py-3 text-sm shrink-0 shadow-xs"
         @click="openCreateModal"
       >
-        <span>＋ 新增游戏账号</span>
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        <span>新增游戏账号</span>
       </button>
     </div>
 
@@ -75,7 +78,9 @@
                     title="修改账号名称或绑定用户"
                     @click="openEditModal(acc)"
                   >
-                    ✎
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                    </svg>
                   </button>
                 </div>
                 <p class="text-[11px] font-mono mt-0.5" style="color: var(--m3-on-surface-variant);">
@@ -94,7 +99,9 @@
                   title="上移顺序"
                   @click="moveAccount(index, -1)"
                 >
-                  ↑
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+                  </svg>
                 </button>
                 <button
                   type="button"
@@ -103,7 +110,9 @@
                   title="下移顺序"
                   @click="moveAccount(index, 1)"
                 >
-                  ↓
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3" />
+                  </svg>
                 </button>
               </template>
 
@@ -206,14 +215,21 @@
               class="m3-btn m3-btn-filled px-4 py-2 text-xs"
               @click="openQrModal(acc)"
             >
-              📱 扫码登录
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+              </svg>
+              <span>扫码登录</span>
             </button>
             <button
               type="button"
               class="m3-btn m3-btn-tonal px-4 py-2 text-xs"
               @click="goToAccountConfig(acc.id)"
             >
-              ⚙ 独立配置
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+              </svg>
+              <span>独立配置</span>
             </button>
             <button
               v-if="canManualRun()"
@@ -222,7 +238,10 @@
               class="m3-btn m3-btn-tertiary px-4 py-2 text-xs disabled:opacity-40"
               @click="runSingleAccount(acc)"
             >
-              ▶ 单独运行
+              <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M6.3 2.84A1.5 1.5 0 0 0 4 4.11v11.78a1.5 1.5 0 0 0 2.3 1.27l9.344-5.891a1.5 1.5 0 0 0 0-2.538L6.3 2.841Z" />
+              </svg>
+              <span>单独运行</span>
             </button>
           </div>
 
@@ -321,7 +340,9 @@
               class="m3-btn m3-btn-tonal w-8 h-8 text-xs"
               @click="closeQrModal"
             >
-              ✕
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
@@ -343,11 +364,15 @@
               class="w-full h-full object-contain p-2 bg-white"
             />
             <div v-else-if="qrModal.status === 'success'" class="flex flex-col items-center gap-2" style="color: var(--m3-primary);">
-              <span class="text-4xl">✓</span>
+              <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
               <span class="text-xs font-bold">登录凭证已保存</span>
             </div>
             <div v-else-if="qrModal.status === 'failed'" class="flex flex-col items-center gap-2 px-4" style="color: var(--m3-error);">
-              <span class="text-3xl">!</span>
+              <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
               <span class="text-xs">加载失败，可点击下方重试</span>
             </div>
             <div v-else class="flex flex-col items-center gap-2.5" style="color: var(--m3-on-surface-variant);">
