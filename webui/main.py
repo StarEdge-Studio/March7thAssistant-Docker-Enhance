@@ -21,6 +21,9 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from webui.backend.account_manager import DATA_DIR, account_manager
 from webui.backend.auth import (
@@ -45,6 +48,36 @@ from webui.backend.scheduler import LOGS_DIR, scheduler
 
 app = FastAPI(title="March7thAssistant Docker Enhance WebUI")
 app.add_middleware(GZipMiddleware, minimum_size=500)
+
+
+class CDNCacheControlMiddleware(BaseHTTPMiddleware):
+    """
+    CDN 与浏览器缓存控制中间件：
+    1. /api/*：严格禁止任何公共与私有持久缓存，避免 CDN 错误缓存用户身份与敏感业务数据。
+    2. /assets/*：Vite 构建生成的带 hash 静态资源，设置 1 年强缓存与 immutable。
+    3. / 与 *.html：永不强缓存，确保用户始终能加载最新的 index.html、动态注入的主题配置及最新 assets hash。
+    4. 其他静态资源：默认设置合理协商或短期缓存。
+    """
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        path = request.url.path
+
+        if path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        elif path.startswith("/assets/"):
+            if request.method in ("GET", "HEAD") and response.status_code == 200:
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        elif path == "/" or path.endswith(".html") or response.headers.get("content-type", "").startswith("text/html"):
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+
+        return response
+
+
+app.add_middleware(CDNCacheControlMiddleware)
 
 # 启动后台孤儿/僵尸进程回收守护线程
 start_background_zombie_reaper(interval_sec=10.0)
@@ -676,17 +709,25 @@ if os.path.exists(STATIC_DIR):
             raise HTTPException(status_code=404, detail="API endpoint not found")
         candidate = os.path.abspath(os.path.join(STATIC_DIR, full_path))
         if candidate.startswith(STATIC_DIR) and os.path.isfile(candidate) and os.path.basename(candidate) != "index.html":
-            return FileResponse(candidate)
+            if full_path.startswith("assets/"):
+                return FileResponse(candidate, headers={"Cache-Control": "public, max-age=31536000, immutable"})
+            return FileResponse(candidate, headers={"Cache-Control": "public, max-age=3600, must-revalidate"})
+
         index_path = os.path.join(STATIC_DIR, "index.html")
+        html_headers = {
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
         try:
             with open(index_path, "r", encoding="utf-8") as f:
                 html_content = f.read()
             theme_script = f'<script>window.__M7A_UI_THEME__ = "{get_ui_theme()}";</script>'
             if "</head>" in html_content:
                 html_content = html_content.replace("</head>", f"  {theme_script}\n</head>", 1)
-            return HTMLResponse(content=html_content)
+            return HTMLResponse(content=html_content, headers=html_headers)
         except Exception:
-            return FileResponse(index_path)
+            return FileResponse(index_path, headers=html_headers)
 
 
 if __name__ == "__main__":
