@@ -52,9 +52,9 @@
         </div>
 
         <!-- 操作控制区 -->
-        <div class="flex flex-wrap items-center gap-2.5">
+        <div v-if="canManualRun() || store.scheduler.is_running" class="flex flex-wrap items-center gap-2.5">
           <select
-            v-if="store.accounts.length > 1 || store.role === 'admin'"
+            v-if="canManualRun() && (store.accounts.length > 1 || store.role === 'admin')"
             v-model="selectedRunAccount"
             :disabled="store.scheduler.is_running"
             class="px-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -66,7 +66,7 @@
           </select>
 
           <button
-            v-if="!store.scheduler.is_running"
+            v-if="!store.scheduler.is_running && canManualRun()"
             type="button"
             :disabled="startingRun"
             class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-60 shadow-sm shadow-indigo-500/20 flex items-center gap-1.5 transition"
@@ -79,7 +79,7 @@
           </button>
 
           <button
-            v-else
+            v-else-if="store.scheduler.is_running && (store.role === 'admin' || (canManualRun() && store.accountIds.includes(store.scheduler.current_account_id)))"
             type="button"
             :disabled="stoppingRun"
             class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-60 shadow-sm flex items-center gap-1.5 transition"
@@ -302,7 +302,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { apiFetch, confirmModal, notify, refreshStatus, store } from '../state.js'
+import { apiFetch, canManualRun, confirmModal, notify, refreshStatus, store } from '../state.js'
 
 const mobileTab = ref('log')
 const selectedRunAccount = ref('')

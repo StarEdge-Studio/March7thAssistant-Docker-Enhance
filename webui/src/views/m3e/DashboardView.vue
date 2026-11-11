@@ -64,9 +64,9 @@
         </div>
 
         <!-- M3E FAB 风格操作控制区 -->
-        <div class="flex flex-wrap items-center gap-3">
+        <div v-if="canManualRun() || store.scheduler.is_running" class="flex flex-wrap items-center gap-3">
           <select
-            v-if="store.accounts.length > 1 || store.role === 'admin'"
+            v-if="canManualRun() && (store.accounts.length > 1 || store.role === 'admin')"
             v-model="selectedRunAccount"
             :disabled="store.scheduler.is_running"
             class="m3-input !rounded-full !px-4 !py-2.5 font-semibold"
@@ -78,7 +78,7 @@
           </select>
 
           <button
-            v-if="!store.scheduler.is_running"
+            v-if="!store.scheduler.is_running && canManualRun()"
             type="button"
             :disabled="startingRun"
             class="m3-btn m3-btn-filled px-6 py-3 text-sm shadow-sm disabled:opacity-55"
@@ -91,7 +91,7 @@
           </button>
 
           <button
-            v-else
+            v-else-if="store.scheduler.is_running && (store.role === 'admin' || (canManualRun() && store.accountIds.includes(store.scheduler.current_account_id)))"
             type="button"
             :disabled="stoppingRun"
             class="m3-btn m3-btn-error px-6 py-3 text-sm shadow-sm disabled:opacity-55"
@@ -319,7 +319,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { apiFetch, confirmModal, notify, refreshStatus, store } from '../../state.js'
+import { apiFetch, canManualRun, confirmModal, notify, refreshStatus, store } from '../../state.js'
 
 const mobileTab = ref('log')
 const selectedRunAccount = ref('')

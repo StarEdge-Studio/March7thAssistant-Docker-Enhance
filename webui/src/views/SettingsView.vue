@@ -81,7 +81,22 @@
       </div>
     </div>
 
-    <!-- 3. 调试模拟模式 -->
+    <!-- 3. 用户手动运行权限 -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between gap-4">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">允许用户手动运行自己账号</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          关闭后普通用户侧将隐藏「立即运行」与「单独运行」按钮，仅由每日定时队列或管理员触发执行
+        </p>
+      </div>
+      <input
+        v-model="form.allow_user_manual_run"
+        type="checkbox"
+        class="w-5 h-5 accent-indigo-600 rounded cursor-pointer"
+      />
+    </div>
+
+    <!-- 4. 调试模拟模式 -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between gap-4">
       <div>
         <h3 class="text-sm font-bold text-slate-900 dark:text-white">调试模拟运行模式 (Debug Mock)</h3>
@@ -96,7 +111,7 @@
       />
     </div>
 
-    <!-- 4. 当前认证系统状态说明 -->
+    <!-- 5. 当前认证系统状态说明 -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 space-y-2.5">
       <h3 class="text-sm font-bold text-slate-900 dark:text-white">身份认证系统状态</h3>
       <div class="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 leading-relaxed">
@@ -125,6 +140,7 @@ const form = reactive({
   check_internet: false,
   check_internet_Wait: 60,
   check_internet_MaxRetries: 3,
+  allow_user_manual_run: true,
   debug_mode: false,
 })
 

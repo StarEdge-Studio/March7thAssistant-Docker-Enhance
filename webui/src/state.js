@@ -35,6 +35,7 @@ export const store = reactive({
       check_internet: false,
       check_internet_Wait: 60,
       check_internet_MaxRetries: 3,
+      allow_user_manual_run: true,
       debug_mode: false,
     },
   },
@@ -68,6 +69,10 @@ export function applyTheme() {
 export function toggleTheme() {
   store.darkMode = !store.darkMode
   applyTheme()
+}
+
+export function canManualRun() {
+  return store.role === 'admin' || store.scheduler.settings?.allow_user_manual_run !== false
 }
 
 let toastSeq = 0

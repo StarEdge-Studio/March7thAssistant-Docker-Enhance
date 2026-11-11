@@ -52,6 +52,7 @@ class Scheduler:
             "check_internet": False,
             "check_internet_Wait": 60,
             "check_internet_MaxRetries": 3,
+            "allow_user_manual_run": True,
             "debug_mode": False,
         }
         if os.path.exists(SETTINGS_FILE):
@@ -79,6 +80,7 @@ class Scheduler:
             "check_internet",
             "check_internet_Wait",
             "check_internet_MaxRetries",
+            "allow_user_manual_run",
             "debug_mode",
         }
         with self._lock:

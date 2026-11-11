@@ -199,6 +199,7 @@
               ⚙ 独立配置
             </button>
             <button
+              v-if="canManualRun()"
               type="button"
               :disabled="store.scheduler.is_running"
               class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 disabled:opacity-40 transition"
@@ -363,7 +364,7 @@
 <script setup>
 import { onUnmounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { apiFetch, confirmModal, notify, refreshStatus, store } from '../state.js'
+import { apiFetch, canManualRun, confirmModal, notify, refreshStatus, store } from '../state.js'
 
 const router = useRouter()
 

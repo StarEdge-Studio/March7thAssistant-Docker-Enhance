@@ -216,6 +216,7 @@
               ⚙ 独立配置
             </button>
             <button
+              v-if="canManualRun()"
               type="button"
               :disabled="store.scheduler.is_running"
               class="m3-btn m3-btn-tertiary px-4 py-2 text-xs disabled:opacity-40"
@@ -389,7 +390,7 @@
 import { onUnmounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import M3Switch from '../../components/m3e/M3Switch.vue'
-import { apiFetch, confirmModal, notify, refreshStatus, store } from '../../state.js'
+import { apiFetch, canManualRun, confirmModal, notify, refreshStatus, store } from '../../state.js'
 
 const router = useRouter()
 

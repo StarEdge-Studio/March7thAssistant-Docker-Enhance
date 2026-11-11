@@ -196,6 +196,8 @@ def api_start_run(
 ):
     target_account_id = req.account_id if req else None
     if ctx.role != "admin":
+        if not scheduler.settings.get("allow_user_manual_run", True):
+            raise HTTPException(status_code=403, detail="管理员已关闭用户手动运行权限")
         if not target_account_id:
             target_account_id = ctx.primary_account_id
         if not target_account_id:
