@@ -128,7 +128,11 @@ class Scheduler:
                 "settings": dict(self.settings),
             }
 
-    def start_run(self, account_id: Optional[str] = None) -> tuple[bool, str]:
+    def start_run(
+        self,
+        account_id: Optional[str] = None,
+        allowed_account_ids: Optional[List[str]] = None,
+    ) -> tuple[bool, str]:
         with self._lock:
             if self.is_running:
                 return False, "当前已有任务正在运行中，请等待完成或先点击停止"
@@ -137,7 +141,7 @@ class Scheduler:
 
         t = threading.Thread(
             target=self._execute_queue,
-            args=(account_id,),
+            args=(account_id, allowed_account_ids),
             name="m7a-runner",
             daemon=True,
         )
@@ -168,11 +172,18 @@ class Scheduler:
                 continue
         return False
 
-    def _execute_queue(self, target_account_id: Optional[str] = None) -> None:
+    def _execute_queue(
+        self,
+        target_account_id: Optional[str] = None,
+        allowed_account_ids: Optional[List[str]] = None,
+    ) -> None:
         try:
             accounts = account_manager.get_accounts()
             if target_account_id:
                 queue = [a for a in accounts if a["id"] == target_account_id]
+            elif allowed_account_ids is not None:
+                allowed_set = set(allowed_account_ids)
+                queue = [a for a in accounts if a["id"] in allowed_set and a.get("enabled", True)]
             else:
                 queue = [a for a in accounts if a.get("enabled", True)]
 

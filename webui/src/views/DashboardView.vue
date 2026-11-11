@@ -59,7 +59,9 @@
             :disabled="store.scheduler.is_running"
             class="px-3 py-2 rounded-xl text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            <option v-if="store.role === 'admin'" value="">全部已启用账号 ({{ enabledAccountsCount }})</option>
+            <option value="">
+              {{ store.role === 'admin' ? `全部已启用账号 (${enabledAccountsCount})` : `我的全部已启用账号 (${enabledAccountsCount})` }}
+            </option>
             <option v-for="acc in store.accounts" :key="acc.id" :value="acc.id">
               仅运行：{{ acc.name }}
             </option>
@@ -586,7 +588,7 @@ watch(
 let pollTimer = null
 onMounted(async () => {
   await refreshStatus()
-  if (store.role !== 'admin' && store.primaryAccountId) {
+  if (store.role !== 'admin' && store.accounts.length === 1 && store.primaryAccountId) {
     selectedRunAccount.value = store.primaryAccountId
   }
   await fetchHistory()

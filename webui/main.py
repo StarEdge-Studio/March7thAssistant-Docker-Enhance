@@ -195,16 +195,23 @@ def api_start_run(
     ctx: AuthContext = Depends(require_authorized),
 ):
     target_account_id = req.account_id if req else None
+    allowed_account_ids: Optional[List[str]] = None
     if ctx.role != "admin":
         if not scheduler.settings.get("allow_user_manual_run", True):
             raise HTTPException(status_code=403, detail="管理员已关闭用户手动运行权限")
-        if not target_account_id:
-            target_account_id = ctx.primary_account_id
-        if not target_account_id:
+        if not ctx.account_ids:
             raise HTTPException(status_code=403, detail="当前未绑定任何可用账号")
-        ensure_account_access(ctx, target_account_id)
+        if target_account_id:
+            ensure_account_access(ctx, target_account_id)
+        elif len(ctx.account_ids) == 1:
+            target_account_id = ctx.primary_account_id
+        else:
+            allowed_account_ids = list(ctx.account_ids)
 
-    ok, msg = scheduler.start_run(account_id=target_account_id)
+    ok, msg = scheduler.start_run(
+        account_id=target_account_id,
+        allowed_account_ids=allowed_account_ids,
+    )
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
     return {"status": "ok", "message": msg}
