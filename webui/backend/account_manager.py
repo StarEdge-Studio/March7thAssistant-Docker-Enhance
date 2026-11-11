@@ -1,8 +1,11 @@
+import datetime
 import io
 import json
 import os
+import secrets
 import shutil
 import threading
+import time
 import uuid
 from copy import deepcopy
 from typing import Any, Dict, List, Optional
@@ -10,9 +13,11 @@ from ruamel.yaml import YAML
 
 DATA_DIR = os.path.abspath(os.environ.get("WEBUI_DATA_DIR", "webui/data"))
 ACCOUNTS_FILE = os.path.join(DATA_DIR, "accounts.json")
+INVITES_FILE = os.path.join(DATA_DIR, "invites.json")
 PROFILES_DIR = os.path.join(DATA_DIR, "profiles")
 CONFIGS_DIR = os.path.join(DATA_DIR, "configs")
 RUNTIME_DIR = os.path.join(DATA_DIR, "runtime")
+INVITE_TTL_SECONDS = 7 * 86400  # 固定 7 天有效期
 EXAMPLE_CONFIG_PATH = os.path.abspath("assets/config/config.example.yaml")
 WEBUI_EXAMPLE_CONFIG_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../config.webui.example.yaml")
@@ -72,6 +77,7 @@ class AccountManager:
         self._lock = threading.RLock()
         self._ensure_dirs()
         self.accounts: List[Dict[str, Any]] = self._load_accounts()
+        self.invites: List[Dict[str, Any]] = self._load_invites()
         self._ensure_all_account_files()
 
     def _ensure_dirs(self) -> None:
@@ -79,6 +85,9 @@ class AccountManager:
             os.makedirs(d, exist_ok=True)
         if not os.path.exists(ACCOUNTS_FILE):
             with open(ACCOUNTS_FILE, "w", encoding="utf-8") as f:
+                json.dump([], f, ensure_ascii=False, indent=2)
+        if not os.path.exists(INVITES_FILE):
+            with open(INVITES_FILE, "w", encoding="utf-8") as f:
                 json.dump([], f, ensure_ascii=False, indent=2)
 
     def _load_accounts(self) -> List[Dict[str, Any]]:
@@ -127,6 +136,164 @@ class AccountManager:
     def save_accounts(self) -> None:
         with self._lock:
             self._save_accounts_unlocked()
+
+    def _load_invites(self) -> List[Dict[str, Any]]:
+        try:
+            with open(INVITES_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, list):
+                return []
+            return data
+        except Exception:
+            return []
+
+    def _save_invites_unlocked(self, invites_list: Optional[List[Dict[str, Any]]] = None) -> None:
+        target = invites_list if invites_list is not None else self.invites
+        tmp_file = INVITES_FILE + ".tmp"
+        with open(tmp_file, "w", encoding="utf-8") as f:
+            json.dump(target, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_file, INVITES_FILE)
+
+    @staticmethod
+    def _fmt_ts(ts: Optional[int]) -> str:
+        if not ts:
+            return ""
+        try:
+            return datetime.datetime.fromtimestamp(int(ts)).strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            return ""
+
+    def _format_invite_unlocked(self, inv: Dict[str, Any]) -> Dict[str, Any]:
+        acc_id = inv.get("account_id", "")
+        acc = next((a for a in self.accounts if a["id"] == acc_id), None)
+        now = int(time.time())
+        expires_at = int(inv.get("expires_at") or 0)
+        used = bool(inv.get("used", False))
+
+        if acc is None:
+            status = "invalid"
+        elif used:
+            status = "used"
+        elif now > expires_at:
+            status = "expired"
+        else:
+            status = "active"
+
+        return {
+            "code": inv.get("code", ""),
+            "account_id": acc_id,
+            "account_name": acc["name"] if acc else (inv.get("account_name") or "已删除账号"),
+            "created_at": int(inv.get("created_at") or 0),
+            "created_at_str": self._fmt_ts(inv.get("created_at")),
+            "expires_at": expires_at,
+            "expires_at_str": self._fmt_ts(expires_at),
+            "used": used,
+            "used_by": inv.get("used_by") or "",
+            "used_at": inv.get("used_at") or "",
+            "status": status,
+        }
+
+    def create_invite(self, account_id: str) -> Optional[Dict[str, Any]]:
+        with self._lock:
+            acc = next((a for a in self.accounts if a["id"] == account_id), None)
+            if not acc:
+                return None
+            now = int(time.time())
+            code = secrets.token_urlsafe(16)
+            new_inv = {
+                "code": code,
+                "account_id": account_id,
+                "account_name": acc["name"],
+                "created_at": now,
+                "expires_at": now + INVITE_TTL_SECONDS,
+                "used": False,
+                "used_by": "",
+                "used_at": "",
+            }
+            self.invites.insert(0, new_inv)
+            self._save_invites_unlocked()
+            return self._format_invite_unlocked(new_inv)
+
+    def list_invites(self) -> List[Dict[str, Any]]:
+        with self._lock:
+            return [self._format_invite_unlocked(inv) for inv in self.invites]
+
+    def get_invite(self, code: str) -> Optional[Dict[str, Any]]:
+        if not code:
+            return None
+        with self._lock:
+            inv = next((i for i in self.invites if i.get("code") == code), None)
+            if not inv:
+                return None
+            return self._format_invite_unlocked(inv)
+
+    def refresh_invite(self, code: str) -> Optional[Dict[str, Any]]:
+        if not code:
+            return None
+        with self._lock:
+            inv = next((i for i in self.invites if i.get("code") == code), None)
+            if not inv:
+                return None
+            now = int(time.time())
+            new_code = secrets.token_urlsafe(16)
+            inv["code"] = new_code
+            inv["created_at"] = now
+            inv["expires_at"] = now + INVITE_TTL_SECONDS
+            inv["used"] = False
+            inv["used_by"] = ""
+            inv["used_at"] = ""
+            self._save_invites_unlocked()
+            return self._format_invite_unlocked(inv)
+
+    def delete_invite(self, code: str) -> bool:
+        if not code:
+            return False
+        with self._lock:
+            idx = next((i for i, inv in enumerate(self.invites) if inv.get("code") == code), None)
+            if idx is None:
+                return False
+            self.invites.pop(idx)
+            self._save_invites_unlocked()
+            return True
+
+    def claim_invite(self, code: str, username: str = "") -> Dict[str, Any]:
+        with self._lock:
+            inv = next((i for i in self.invites if i.get("code") == code), None)
+            if not inv:
+                raise ValueError("邀请链接不存在或已被删除")
+            acc = next((a for a in self.accounts if a["id"] == inv.get("account_id")), None)
+            if not acc:
+                raise ValueError("该邀请链接关联的游戏账号已被删除")
+            now = int(time.time())
+            if now > int(inv.get("expires_at") or 0):
+                raise ValueError("该邀请链接已过期，请联系管理员重新生成邀请链接")
+            clean_user = (username or "").strip()
+            if inv.get("used"):
+                # 若同一用户在有效期内重复触发绑定（例如返回继续扫码），允许幂等通过
+                existing_user = (inv.get("used_by") or "").strip().lower()
+                if clean_user and existing_user == clean_user.lower():
+                    return {
+                        "invite": self._format_invite_unlocked(inv),
+                        "account": deepcopy(acc),
+                    }
+                raise ValueError("该邀请链接已被使用")
+
+            if clean_user:
+                acc["username"] = clean_user
+                inv["used_by"] = clean_user
+            else:
+                inv["used_by"] = "Token 密钥"
+
+            inv["used"] = True
+            inv["used_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+            self._save_accounts_unlocked()
+            self._save_invites_unlocked()
+            return {
+                "invite": self._format_invite_unlocked(inv),
+                "account": deepcopy(acc),
+            }
 
     def get_profile_dir(self, account_id: str) -> str:
         return os.path.abspath(os.path.join(PROFILES_DIR, account_id))
@@ -330,6 +497,11 @@ class AccountManager:
             for idx, acc in enumerate(self.accounts):
                 acc["order"] = idx
             self._save_accounts_unlocked()
+
+            before_len = len(self.invites)
+            self.invites = [inv for inv in self.invites if inv.get("account_id") != account_id]
+            if len(self.invites) != before_len:
+                self._save_invites_unlocked()
 
             profile_dir = self.get_profile_dir(account_id)
             if os.path.exists(profile_dir):

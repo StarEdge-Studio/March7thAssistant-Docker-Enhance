@@ -136,8 +136,14 @@ async function handleOidcCallbackIfNeeded() {
     window.history.replaceState({}, document.title, window.location.pathname + window.location.hash)
     setSession(authData)
 
+    const pendingInvite = authData.invite_code || sessionStorage.getItem('m7a_pending_invite_code') || ''
+    sessionStorage.removeItem('m7a_pending_invite_code')
+
     if (authData.role === 'unauthorized') {
       router.replace({ name: 'unauthorized' })
+    } else if (pendingInvite) {
+      notify('身份绑定成功，请继续扫码登录游戏账号', 'success')
+      router.replace({ name: 'invite', params: { code: pendingInvite }, query: { step: 'qr' } })
     } else {
       notify(`欢迎回来，${authData.username}`, 'success')
       router.replace({ name: 'dashboard' })

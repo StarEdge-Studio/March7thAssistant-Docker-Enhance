@@ -11,6 +11,7 @@ import SimpleDashboardView from './views/DashboardView.vue'
 import SimpleAccountsView from './views/AccountsView.vue'
 import SimpleTasksView from './views/TasksView.vue'
 import SimpleSettingsView from './views/SettingsView.vue'
+import SimpleInviteView from './views/InviteView.vue'
 
 // M3E (Material 3 Expressive) 视图
 import M3ELoginView from './views/m3e/LoginView.vue'
@@ -19,6 +20,7 @@ import M3EDashboardView from './views/m3e/DashboardView.vue'
 import M3EAccountsView from './views/m3e/AccountsView.vue'
 import M3ETasksView from './views/m3e/TasksView.vue'
 import M3ESettingsView from './views/m3e/SettingsView.vue'
+import M3EInviteView from './views/m3e/InviteView.vue'
 
 applyTheme()
 
@@ -36,6 +38,12 @@ const routes = [
     path: '/login',
     name: 'login',
     component: createThemedRouteComponent(M3ELoginView, SimpleLoginView),
+    meta: { public: true },
+  },
+  {
+    path: '/invite/:code',
+    name: 'invite',
+    component: createThemedRouteComponent(M3EInviteView, SimpleInviteView),
     meta: { public: true },
   },
   {
@@ -88,6 +96,9 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (to.meta.public) {
+    if (to.name === 'invite' && !hasOidcCallback) {
+      return next()
+    }
     if (store.token && store.role && !hasOidcCallback) {
       if (store.role === 'unauthorized') return next({ name: 'unauthorized' })
       return next({ name: 'dashboard' })

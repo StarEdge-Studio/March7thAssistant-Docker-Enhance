@@ -75,6 +75,41 @@ export function canManualRun() {
   return store.role === 'admin' || store.scheduler.settings?.allow_user_manual_run !== false
 }
 
+/**
+ * 复制文本到剪贴板。
+ * 优先使用 Clipboard API；在非 HTTPS（如通过局域网 IP 直接访问）环境下回退到 execCommand。
+ */
+export async function copyText(text) {
+  if (!text) return false
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    // fall through to legacy fallback
+  }
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.setAttribute('readonly', '')
+    ta.style.position = 'fixed'
+    ta.style.top = '-9999px'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok
+  } catch {
+    return false
+  }
+}
+
+export function buildInviteUrl(code) {
+  return `${window.location.origin}${window.location.pathname}#/invite/${code}`
+}
+
 let toastSeq = 0
 export function notify(message, type = 'info', duration = 3200) {
   const id = ++toastSeq

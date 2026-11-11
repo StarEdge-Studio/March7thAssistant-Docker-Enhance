@@ -195,7 +195,7 @@ def _cleanup_expired_pkce_states() -> None:
         _pkce_states.pop(k, None)
 
 
-def build_oidc_authorize_url(redirect_uri: str) -> Dict[str, str]:
+def build_oidc_authorize_url(redirect_uri: str, invite_code: Optional[str] = None) -> Dict[str, str]:
     oidc = get_oidc_settings()
     if not oidc["enabled"]:
         raise HTTPException(status_code=400, detail="当前未启用 OIDC 认证模式")
@@ -218,6 +218,7 @@ def build_oidc_authorize_url(redirect_uri: str) -> Dict[str, str]:
             "code_verifier": code_verifier,
             "nonce": nonce,
             "redirect_uri": redirect_uri,
+            "invite_code": (invite_code or "").strip(),
             "created_at": time.time(),
         }
 
@@ -400,6 +401,15 @@ def exchange_oidc_code(code: str, state: str, redirect_uri: Optional[str] = None
     display_name = _extract_display_name(claims, fallback=username)
     avatar = _extract_avatar(claims)
 
+    invite_code = (state_data.get("invite_code") or "").strip()
+    invited_account_id: Optional[str] = None
+    if invite_code:
+        try:
+            claim_res = account_manager.claim_invite(invite_code, username=username)
+            invited_account_id = claim_res["account"]["id"]
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+
     ctx = resolve_oidc_context(username, display_name=display_name, avatar=avatar)
     session_token = create_session_token(
         {
@@ -419,7 +429,8 @@ def exchange_oidc_code(code: str, state: str, redirect_uri: Optional[str] = None
         "display_name": ctx.display_name,
         "avatar": ctx.avatar,
         "account_ids": ctx.account_ids,
-        "account_id": ctx.primary_account_id,
+        "account_id": invited_account_id or ctx.primary_account_id,
+        "invite_code": invite_code,
     }
 
 

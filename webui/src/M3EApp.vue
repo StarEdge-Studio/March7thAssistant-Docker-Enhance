@@ -362,7 +362,7 @@ const userAvatarText = computed(() => {
 })
 
 const isStandaloneRoute = computed(() => {
-  return route.name === 'login' || route.name === 'unauthorized'
+  return route.name === 'login' || route.name === 'unauthorized' || route.name === 'invite'
 })
 
 function isActiveRoute(prefix) {

@@ -19,17 +19,29 @@
         </p>
       </div>
 
-      <button
-        v-if="store.role === 'admin'"
-        type="button"
-        class="m3-btn m3-btn-filled px-5 py-3 text-sm shrink-0 shadow-xs"
-        @click="openCreateModal"
-      >
-        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        <span>新增游戏账号</span>
-      </button>
+      <div v-if="store.role === 'admin'" class="flex flex-wrap items-center gap-2.5 shrink-0">
+        <button
+          type="button"
+          class="m3-btn m3-btn-tonal px-4 py-3 text-sm"
+          @click="openInviteManagerModal"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+          </svg>
+          <span>邀请链接</span>
+        </button>
+
+        <button
+          type="button"
+          class="m3-btn m3-btn-filled px-5 py-3 text-sm shadow-xs"
+          @click="openCreateModal"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <span>新增游戏账号</span>
+        </button>
+      </div>
     </div>
 
     <!-- 空状态 -->
@@ -286,7 +298,7 @@
             />
           </div>
 
-          <div v-if="store.role === 'admin'" class="space-y-1.5">
+          <div v-if="store.role === 'admin' && !(!accountModal.isEdit && accountModal.generateInvite)" class="space-y-1.5">
             <label class="block text-xs font-bold px-1" style="color: var(--m3-on-surface-variant);">
               绑定 OIDC 用户名 (username，可选)
             </label>
@@ -299,6 +311,21 @@
             <p class="text-[11px] px-1" style="color: var(--m3-on-surface-variant);">
               当启用 OIDC 登录时，拥有该 username 的用户登录后将自动获得此账号的管理与配置权限。
             </p>
+          </div>
+
+          <!-- 生成邀请链接开关 (仅新增) -->
+          <div
+            v-if="store.role === 'admin' && !accountModal.isEdit"
+            class="flex items-center justify-between gap-3 p-3.5 rounded-[20px]"
+            style="background-color: var(--m3-surface-container-highest);"
+          >
+            <div class="min-w-0">
+              <p class="text-sm font-bold" style="color: var(--m3-on-surface);">生成邀请链接</p>
+              <p class="text-[11px] mt-0.5" style="color: var(--m3-on-surface-variant);">
+                生成有效期 7 天的邀请链接，由用户自行登录绑定并扫码登录游戏账号。
+              </p>
+            </div>
+            <M3Switch v-model="accountModal.generateInvite" />
           </div>
 
           <div class="pt-2 flex justify-end gap-2.5">
@@ -314,10 +341,161 @@
               :disabled="accountModal.saving"
               class="m3-btn m3-btn-filled px-6 py-2.5 text-xs disabled:opacity-55"
             >
-              {{ accountModal.saving ? '保存中...' : '保存' }}
+              {{ accountModal.saving ? '保存中...' : (!accountModal.isEdit && accountModal.generateInvite ? '保存并复制' : '保存') }}
             </button>
           </div>
         </form>
+      </div>
+    </Transition>
+
+    <!-- 邀请链接管理弹窗 -->
+    <Transition name="m3-dialog">
+      <div
+        v-if="inviteManager.visible"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+        @click.self="inviteManager.visible = false"
+      >
+        <div
+          class="m3-dialog-panel max-w-2xl w-full max-h-[85vh] flex flex-col p-6 sm:p-7 rounded-[28px] shadow-2xl border gap-4"
+          style="background-color: var(--m3-surface-container-high); border-color: color-mix(in srgb, var(--m3-outline-variant) 50%, transparent);"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-extrabold tracking-tight" style="color: var(--m3-on-surface);">邀请链接管理</h3>
+              <p class="text-[11px] mt-0.5" style="color: var(--m3-on-surface-variant);">
+                邀请链接有效期固定为 7 天，用户通过链接即可自助绑定并扫码登录对应游戏账号。
+              </p>
+            </div>
+            <button
+              type="button"
+              class="m3-btn m3-btn-tonal w-8 h-8 text-xs shrink-0"
+              @click="inviteManager.visible = false"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- 为已有账号生成新邀请 -->
+          <div
+            v-if="store.accounts.length > 0"
+            class="flex flex-col sm:flex-row sm:items-center gap-2.5 p-3 rounded-[20px]"
+            style="background-color: var(--m3-surface-container-highest);"
+          >
+            <select v-model="inviteManager.newAccountId" class="m3-input flex-1 text-sm">
+              <option value="" disabled>选择要邀请绑定的游戏账号</option>
+              <option v-for="acc in store.accounts" :key="acc.id" :value="acc.id">
+                {{ acc.name }}{{ acc.username ? `（已绑定 ${acc.username}）` : '' }}
+              </option>
+            </select>
+            <button
+              type="button"
+              :disabled="!inviteManager.newAccountId || inviteManager.creating"
+              class="m3-btn m3-btn-filled px-4 py-2.5 text-xs shrink-0 disabled:opacity-50"
+              @click="createInviteForAccount"
+            >
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span>{{ inviteManager.creating ? '生成中...' : '生成并复制' }}</span>
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto space-y-2.5 pr-1 -mr-1">
+            <div
+              v-if="inviteManager.loading && inviteManager.list.length === 0"
+              class="py-10 flex flex-col items-center gap-2.5"
+              style="color: var(--m3-on-surface-variant);"
+            >
+              <div
+                class="w-7 h-7 border-3 border-t-transparent rounded-full animate-spin"
+                style="border-color: var(--m3-primary); border-top-color: transparent;"
+              ></div>
+              <span class="text-xs">正在加载邀请链接...</span>
+            </div>
+
+            <div
+              v-else-if="inviteManager.list.length === 0"
+              class="py-10 text-center text-xs"
+              style="color: var(--m3-on-surface-variant);"
+            >
+              暂无邀请链接
+            </div>
+
+            <template v-else>
+            <div
+              v-for="(inv, index) in inviteManager.list"
+              :key="inv.code"
+              class="m3-stagger-item p-4 rounded-[20px] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              :style="{ '--stagger-index': index, backgroundColor: 'var(--m3-surface-container-low)' }"
+            >
+              <div class="min-w-0 space-y-1.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-extrabold text-sm truncate" style="color: var(--m3-on-surface);">
+                    {{ inv.account_name }}
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold"
+                    :style="inviteStatusStyle(inv.status)"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                    {{ inviteStatusLabel(inv.status) }}
+                  </span>
+                </div>
+                <p class="text-[11px] font-mono truncate" style="color: var(--m3-on-surface-variant);">
+                  {{ inv.code }}
+                </p>
+                <p class="text-[11px]" style="color: var(--m3-on-surface-variant);">
+                  <template v-if="inv.status === 'used'">
+                    已由 <span class="font-bold" style="color: var(--m3-primary);">{{ inv.used_by || '未知用户' }}</span> 于 {{ inv.used_at }} 使用
+                  </template>
+                  <template v-else>
+                    {{ inv.status === 'expired' ? '已于' : '有效期至' }} {{ inv.expires_at_str }}
+                  </template>
+                </p>
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  :disabled="inv.status !== 'active'"
+                  class="m3-btn m3-btn-tonal px-3 py-1.5 text-xs disabled:opacity-40"
+                  title="复制链接"
+                  @click="copyInviteLink(inv.code)"
+                >
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                  </svg>
+                  <span>复制</span>
+                </button>
+                <button
+                  type="button"
+                  :disabled="inv.status === 'invalid'"
+                  class="m3-btn m3-btn-tonal px-3 py-1.5 text-xs disabled:opacity-40"
+                  title="生成新的邀请链接（有效期 7 天）"
+                  @click="refreshInvite(inv)"
+                >
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                  <span>刷新链接</span>
+                </button>
+                <button
+                  type="button"
+                  class="m3-btn m3-btn-error w-8 h-8 text-xs"
+                  title="删除邀请链接"
+                  @click="deleteInvite(inv)"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            </template>
+          </div>
+        </div>
       </div>
     </Transition>
 
@@ -357,24 +535,44 @@
             class="mx-auto w-56 h-56 rounded-[24px] border flex items-center justify-center overflow-hidden"
             style="background-color: var(--m3-surface-container-lowest); border-color: var(--m3-outline-variant);"
           >
-            <img
-              v-if="qrModal.hasQr && qrModal.imageUrl"
-              :src="qrModal.imageUrl"
-              alt="登录二维码"
-              class="w-full h-full object-contain p-2 bg-white"
-            />
-            <div v-else-if="qrModal.status === 'success'" class="flex flex-col items-center gap-2" style="color: var(--m3-primary);">
-              <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
-              <span class="text-xs font-bold">登录凭证已保存</span>
+            <!-- 扫码成功或登录成功：隐藏二维码并显示绿色对号与提示 -->
+            <div
+              v-if="qrModal.status === 'scanned' || qrModal.status === 'success'"
+              class="flex flex-col items-center gap-3 px-4 text-center animate-fade-in"
+              style="color: var(--m3-success);"
+            >
+              <div
+                class="w-16 h-16 rounded-[22px] flex items-center justify-center shadow-xs"
+                style="background-color: var(--m3-success-container); color: var(--m3-on-success-container);"
+              >
+                <svg class="w-9 h-9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                </svg>
+              </div>
+              <div class="space-y-0.5">
+                <span class="text-sm font-extrabold block" style="color: var(--m3-on-surface);">
+                  {{ qrModal.status === 'success' ? '登录成功' : '扫码成功' }}
+                </span>
+                <span class="text-xs" style="color: var(--m3-on-surface-variant);">
+                  {{ qrModal.status === 'success' ? '登录凭证已保存' : '请在手机端点击「确认登录」' }}
+                </span>
+              </div>
             </div>
+
             <div v-else-if="qrModal.status === 'failed'" class="flex flex-col items-center gap-2 px-4" style="color: var(--m3-error);">
               <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
               </svg>
               <span class="text-xs">加载失败，可点击下方重试</span>
             </div>
+
+            <img
+              v-else-if="qrModal.hasQr && qrModal.imageUrl"
+              :src="qrModal.imageUrl"
+              alt="登录二维码"
+              class="w-full h-full object-contain p-2 bg-white"
+            />
+
             <div v-else class="flex flex-col items-center gap-2.5" style="color: var(--m3-on-surface-variant);">
               <div
                 class="w-8 h-8 border-3 border-t-transparent rounded-full animate-spin"
@@ -385,7 +583,7 @@
           </div>
 
           <p class="text-[11px]" style="color: var(--m3-on-surface-variant);">
-            请打开手机「米游社 App」扫描上方二维码，并在手机上点击确认。
+            {{ qrModal.status === 'scanned' ? '已成功识别二维码，请在手机米游社上点击「确认登录」。' : '请打开手机「米游社 App」扫描上方二维码，并在手机上点击确认。' }}
           </p>
 
           <div class="pt-2 flex justify-center gap-3">
@@ -415,7 +613,7 @@
 import { onUnmounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import M3Switch from '../../components/m3e/M3Switch.vue'
-import { apiFetch, canManualRun, confirmModal, notify, refreshStatus, store } from '../../state.js'
+import { apiFetch, buildInviteUrl, canManualRun, confirmModal, copyText, notify, refreshStatus, store } from '../../state.js'
 
 const router = useRouter()
 
@@ -425,7 +623,16 @@ const accountModal = reactive({
   accountId: '',
   name: '',
   username: '',
+  generateInvite: false,
   saving: false,
+})
+
+const inviteManager = reactive({
+  visible: false,
+  loading: false,
+  creating: false,
+  newAccountId: '',
+  list: [],
 })
 
 const qrModal = reactive({
@@ -465,6 +672,7 @@ function openCreateModal() {
   accountModal.accountId = ''
   accountModal.name = ''
   accountModal.username = ''
+  accountModal.generateInvite = false
   accountModal.visible = true
 }
 
@@ -473,6 +681,7 @@ function openEditModal(acc) {
   accountModal.accountId = acc.id
   accountModal.name = acc.name || ''
   accountModal.username = acc.username || ''
+  accountModal.generateInvite = false
   accountModal.visible = true
 }
 
@@ -490,14 +699,24 @@ async function submitAccountModal() {
       })
       notify('账号信息已更新', 'success')
     } else {
-      await apiFetch('/api/accounts', {
+      const withInvite = accountModal.generateInvite
+      const res = await apiFetch('/api/accounts', {
         method: 'POST',
         body: JSON.stringify({
           name: accountModal.name.trim(),
-          username: accountModal.username.trim(),
+          username: withInvite ? '' : accountModal.username.trim(),
+          generate_invite: withInvite,
         }),
       })
-      notify('新账号已创建并生成独立配置', 'success')
+      if (withInvite && res?.invite?.code) {
+        const ok = await copyText(buildInviteUrl(res.invite.code))
+        notify(
+          ok ? '账号已创建，邀请链接（7 天有效）已复制到剪贴板' : '账号已创建，但复制失败，请在「邀请链接」中手动复制',
+          ok ? 'success' : 'warning',
+        )
+      } else {
+        notify('新账号已创建并生成独立配置', 'success')
+      }
     }
     accountModal.visible = false
     await refreshStatus()
@@ -505,6 +724,113 @@ async function submitAccountModal() {
     notify(e.message || '保存账号失败', 'error')
   } finally {
     accountModal.saving = false
+  }
+}
+
+// ==================== 邀请链接管理 ====================
+
+function inviteStatusLabel(status) {
+  const map = {
+    active: '待使用',
+    used: '已使用',
+    expired: '已过期',
+    invalid: '账号已删除',
+  }
+  return map[status] || status
+}
+
+function inviteStatusStyle(status) {
+  if (status === 'active') {
+    return { backgroundColor: 'var(--m3-primary-container)', color: 'var(--m3-on-primary-container)' }
+  }
+  if (status === 'used') {
+    return { backgroundColor: 'var(--m3-success-container)', color: 'var(--m3-on-success-container)' }
+  }
+  if (status === 'expired') {
+    return { backgroundColor: 'var(--m3-tertiary-container)', color: 'var(--m3-on-tertiary-container)' }
+  }
+  return { backgroundColor: 'var(--m3-error-container)', color: 'var(--m3-on-error-container)' }
+}
+
+async function loadInvites() {
+  inviteManager.loading = true
+  try {
+    const res = await apiFetch('/api/invites')
+    inviteManager.list = Array.isArray(res) ? res : []
+  } catch (e) {
+    notify(e.message || '加载邀请链接失败', 'error')
+  } finally {
+    inviteManager.loading = false
+  }
+}
+
+async function openInviteManagerModal() {
+  inviteManager.visible = true
+  inviteManager.newAccountId = ''
+  await loadInvites()
+}
+
+async function copyInviteLink(code) {
+  const ok = await copyText(buildInviteUrl(code))
+  notify(ok ? '邀请链接已复制到剪贴板' : '复制失败，请检查浏览器剪贴板权限', ok ? 'success' : 'warning')
+}
+
+async function createInviteForAccount() {
+  if (!inviteManager.newAccountId) return
+  inviteManager.creating = true
+  try {
+    const inv = await apiFetch('/api/invites', {
+      method: 'POST',
+      body: JSON.stringify({ account_id: inviteManager.newAccountId }),
+    })
+    if (inv?.code) await copyInviteLink(inv.code)
+    inviteManager.newAccountId = ''
+    await loadInvites()
+  } catch (e) {
+    notify(e.message || '生成邀请链接失败', 'error')
+  } finally {
+    inviteManager.creating = false
+  }
+}
+
+async function refreshInvite(inv) {
+  const msg = inv.status === 'used'
+    ? `该邀请链接已被「${inv.used_by || '未知用户'}」使用。刷新后将生成一个有效期 7 天的全新链接，旧链接将立即失效，确定继续吗？`
+    : `确定要为账号「${inv.account_name}」刷新邀请链接吗？旧链接将立即失效，并生成一个有效期 7 天的全新链接。`
+  const ok = await confirmModal({
+    title: '刷新邀请链接',
+    message: msg,
+    confirmText: '确认刷新',
+  })
+  if (!ok) return
+  try {
+    const res = await apiFetch(`/api/invites/${encodeURIComponent(inv.code)}/refresh`, { method: 'POST' })
+    if (res?.code) {
+      const copied = await copyText(buildInviteUrl(res.code))
+      notify(copied ? '新邀请链接已生成并复制到剪贴板（7 天有效）' : '已生成新邀请链接（7 天有效）', 'success')
+    } else {
+      notify('新邀请链接已生成（7 天有效）', 'success')
+    }
+    await loadInvites()
+  } catch (e) {
+    notify(e.message || '刷新链接失败', 'error')
+  }
+}
+
+async function deleteInvite(inv) {
+  const ok = await confirmModal({
+    title: '删除邀请链接',
+    message: `确定要删除账号「${inv.account_name}」的这条邀请链接吗？删除后该链接将立即失效。`,
+    confirmText: '删除',
+    danger: true,
+  })
+  if (!ok) return
+  try {
+    await apiFetch(`/api/invites/${encodeURIComponent(inv.code)}`, { method: 'DELETE' })
+    notify('邀请链接已删除', 'info')
+    await loadInvites()
+  } catch (e) {
+    notify(e.message || '删除邀请链接失败', 'error')
   }
 }
 

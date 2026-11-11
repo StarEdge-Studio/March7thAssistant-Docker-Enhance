@@ -65,6 +65,11 @@ class OIDCCallbackRequest(BaseModel):
 class AccountCreateRequest(BaseModel):
     name: str
     username: Optional[str] = ""
+    generate_invite: Optional[bool] = False
+
+
+class InviteCreateRequest(BaseModel):
+    account_id: str
 
 
 class AccountUpdateRequest(BaseModel):
@@ -117,8 +122,11 @@ def api_auth_config():
 
 
 @app.get("/api/auth/oidc/authorize")
-def api_oidc_authorize(redirect_uri: str = Query(...)):
-    return build_oidc_authorize_url(redirect_uri)
+def api_oidc_authorize(
+    redirect_uri: str = Query(...),
+    invite_code: Optional[str] = Query(default=None),
+):
+    return build_oidc_authorize_url(redirect_uri, invite_code=invite_code)
 
 
 @app.post("/api/auth/oidc/callback")
@@ -245,7 +253,90 @@ def api_create_account(
     req: AccountCreateRequest,
     ctx: AuthContext = Depends(require_admin),
 ):
-    return account_manager.add_account(name=req.name, username=req.username or "")
+    effective_username = "" if req.generate_invite else (req.username or "")
+    acc = account_manager.add_account(name=req.name, username=effective_username)
+    if req.generate_invite:
+        inv = account_manager.create_invite(acc["id"])
+        acc["invite"] = inv
+    return acc
+
+
+# ==================== 邀请链接管理与认领接口 ====================
+
+@app.get("/api/invites")
+def api_list_invites(ctx: AuthContext = Depends(require_admin)):
+    return account_manager.list_invites()
+
+
+@app.post("/api/invites")
+def api_create_invite(
+    req: InviteCreateRequest,
+    ctx: AuthContext = Depends(require_admin),
+):
+    inv = account_manager.create_invite(req.account_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="未找到对应的游戏账号")
+    return inv
+
+
+@app.post("/api/invites/{code}/refresh")
+def api_refresh_invite(
+    code: str,
+    ctx: AuthContext = Depends(require_admin),
+):
+    inv = account_manager.refresh_invite(code)
+    if not inv:
+        raise HTTPException(status_code=404, detail="未找到该邀请链接")
+    return inv
+
+
+@app.delete("/api/invites/{code}")
+def api_delete_invite(
+    code: str,
+    ctx: AuthContext = Depends(require_admin),
+):
+    if not account_manager.delete_invite(code):
+        raise HTTPException(status_code=404, detail="未找到该邀请链接")
+    return {"status": "ok"}
+
+
+@app.get("/api/invites/{code}")
+def api_get_invite_public(code: str):
+    inv = account_manager.get_invite(code)
+    if not inv:
+        raise HTTPException(status_code=404, detail="邀请链接不存在或已被删除")
+    oidc = get_oidc_settings()
+    return {
+        "code": inv["code"],
+        "account_id": inv["account_id"],
+        "account_name": inv["account_name"],
+        "status": inv["status"],
+        "expires_at": inv["expires_at"],
+        "expires_at_str": inv["expires_at_str"],
+        "used": inv["used"],
+        "auth_mode": "oidc" if oidc["enabled"] else "token",
+        "auth_brand": oidc["brand"] if oidc["enabled"] else "",
+    }
+
+
+@app.post("/api/invites/{code}/claim")
+def api_claim_invite(code: str):
+    oidc = get_oidc_settings()
+    if oidc["enabled"]:
+        raise HTTPException(status_code=400, detail="当前启用了 OIDC 模式，请通过 OIDC 登录完成绑定")
+    try:
+        claim_res = account_manager.claim_invite(code, username="")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+    acc = claim_res["account"]
+    login_data = login_with_token(acc["secret_key"])
+    return {
+        **login_data,
+        "secret_key": acc["secret_key"],
+        "account_name": acc["name"],
+        "invite": claim_res["invite"],
+    }
 
 
 @app.put("/api/accounts/reorder")
