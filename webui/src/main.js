@@ -2,7 +2,7 @@ import { createApp, defineComponent, h } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
 import './style.css'
-import { applyTheme, fetchCurrentUser, loadAuthConfig, store } from './state.js'
+import { applyTheme, fetchCurrentUser, loadAuthConfig, refreshStatus, store } from './state.js'
 
 // Simple (经典轻量简洁版) 视图
 import SimpleLoginView from './views/LoginView.vue'
@@ -93,6 +93,9 @@ router.beforeEach(async (to, from, next) => {
 
   if (store.token && !store.role) {
     await fetchCurrentUser()
+    if (store.role && store.role !== 'unauthorized') {
+      await refreshStatus()
+    }
   }
 
   if (to.meta.public) {

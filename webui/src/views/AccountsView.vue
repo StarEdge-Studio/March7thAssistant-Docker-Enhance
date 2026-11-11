@@ -512,7 +512,7 @@
 </template>
 
 <script setup>
-import { onUnmounted, reactive } from 'vue'
+import { onMounted, onUnmounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiFetch, buildInviteUrl, canManualRun, confirmModal, copyText, notify, refreshStatus, store } from '../state.js'
 
@@ -886,6 +886,10 @@ async function closeQrModal() {
     await refreshStatus()
   }
 }
+
+onMounted(async () => {
+  await refreshStatus()
+})
 
 onUnmounted(() => {
   if (qrPollTimer) clearInterval(qrPollTimer)
