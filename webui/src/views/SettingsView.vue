@@ -96,7 +96,31 @@
       />
     </div>
 
-    <!-- 4. 调试模拟模式 -->
+    <!-- 4. 全局日志设置 -->
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">全局日志设置</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          控制小助手执行任务时的日志记录等级，可跟随账号配置或全局统一设定
+        </p>
+      </div>
+      <div class="inline-flex rounded-xl p-1 bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 shrink-0">
+        <button
+          v-for="opt in logLevelOptions"
+          :key="opt.value"
+          type="button"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition"
+          :class="form.global_log_level === opt.value
+            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-2xs'
+            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+          @click="form.global_log_level = opt.value"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. 调试模拟模式 -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 flex items-center justify-between gap-4">
       <div>
         <h3 class="text-sm font-bold text-slate-900 dark:text-white">调试模拟运行模式 (Debug Mock)</h3>
@@ -142,7 +166,14 @@ const form = reactive({
   check_internet_MaxRetries: 3,
   allow_user_manual_run: true,
   debug_mode: false,
+  global_log_level: 'follow',
 })
+
+const logLevelOptions = [
+  { label: '跟随账号配置', value: 'follow' },
+  { label: '仅INFO', value: 'info' },
+  { label: '详细', value: 'debug' },
+]
 
 async function loadSettings() {
   try {

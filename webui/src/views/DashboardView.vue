@@ -205,6 +205,32 @@
             >
               {{ lv.label }}
             </button>
+
+            <!-- 分割线 -->
+            <div class="h-4 w-px bg-slate-700 mx-0.5"></div>
+
+            <!-- DEBUG 独立切换开关（作显著视觉区分） -->
+            <button
+              type="button"
+              class="px-2 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition border"
+              :class="showDebug
+                ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-xs'
+                : 'bg-slate-800 text-slate-400 hover:text-slate-200 border-transparent'"
+              :title="showDebug ? 'DEBUG 调试日志已开启（全部视图中可见）' : '点击开启 DEBUG 调试日志（默认隐藏）'"
+              @click="showDebug = !showDebug"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full transition-all duration-200"
+                :class="showDebug ? 'bg-cyan-400' : 'bg-slate-500'"
+              ></span>
+              <span>DEBUG</span>
+              <span
+                class="text-[9px] px-1 py-0.2 rounded font-mono font-bold"
+                :class="showDebug ? 'bg-cyan-500/25 text-cyan-200' : 'bg-slate-700 text-slate-400'"
+              >
+                {{ showDebug ? 'ON' : 'OFF' }}
+              </span>
+            </button>
           </div>
 
           <div class="flex items-center gap-2 flex-1 sm:flex-initial justify-end">
@@ -329,8 +355,13 @@ const levelOptions = [
   { label: 'INFO', value: 'INFO', activeClass: 'bg-emerald-600 text-white' },
   { label: 'WARN', value: 'WARNING', activeClass: 'bg-amber-600 text-white' },
   { label: 'ERROR', value: 'ERROR', activeClass: 'bg-rose-600 text-white' },
-  { label: 'DEBUG', value: 'DEBUG', activeClass: 'bg-slate-600 text-white' },
 ]
+
+// DEBUG 级别独立开关，默认关闭；开启状态下全部 (ALL) 里才会显示 debug
+const showDebug = ref(localStorage.getItem('m7a_show_debug') === 'true')
+watch(showDebug, (val) => {
+  localStorage.setItem('m7a_show_debug', String(val))
+})
 
 const enabledAccountsCount = computed(() => {
   return store.accounts.filter((a) => a.enabled).length
@@ -339,9 +370,18 @@ const enabledAccountsCount = computed(() => {
 const filteredLogEntries = computed(() => {
   const kw = searchKeyword.value.trim().toLowerCase()
   return logEntries.value.filter((item) => {
-    if (activeLevel.value !== 'ALL' && !item.isStage && item.level !== activeLevel.value) {
+    // 阶段分割横幅保留
+    if (item.isStage) return true
+
+    // 全部模式下，仅在开启 DEBUG 开关时才显示 DEBUG 日志，默认隐藏
+    if (activeLevel.value === 'ALL') {
+      if (!showDebug.value && item.level === 'DEBUG') {
+        return false
+      }
+    } else if (item.level !== activeLevel.value) {
       return false
     }
+
     if (kw && !item.raw.toLowerCase().includes(kw)) {
       return false
     }

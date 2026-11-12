@@ -111,8 +111,34 @@
       <M3Switch v-model="form.allow_user_manual_run" />
     </div>
 
-    <!-- 4. 调试模拟模式 -->
-    <div class="m3-card m3-card-interactive m3-stagger-item p-5 sm:p-6 flex items-center justify-between gap-4" style="--stagger-index: 3;">
+    <!-- 4. 全局日志设置 -->
+    <div class="m3-card m3-card-interactive m3-stagger-item p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4" style="--stagger-index: 3;">
+      <div class="space-y-0.5">
+        <h3 class="text-sm sm:text-base font-extrabold" style="color: var(--m3-on-surface);">
+          全局日志设置
+        </h3>
+        <p class="text-xs" style="color: var(--m3-on-surface-variant);">
+          控制小助手执行任务时的日志记录等级，可跟随账号配置或全局统一设定
+        </p>
+      </div>
+      <div class="inline-flex rounded-full p-1 border shrink-0" style="background-color: var(--m3-surface-container-high); border-color: var(--m3-outline-variant);">
+        <button
+          v-for="opt in logLevelOptions"
+          :key="opt.value"
+          type="button"
+          class="px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-200"
+          :style="form.global_log_level === opt.value
+            ? { backgroundColor: 'var(--m3-primary)', color: 'var(--m3-on-primary)' }
+            : { color: 'var(--m3-on-surface-variant)' }"
+          @click="form.global_log_level = opt.value"
+        >
+          {{ opt.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. 调试模拟模式 -->
+    <div class="m3-card m3-card-interactive m3-stagger-item p-5 sm:p-6 flex items-center justify-between gap-4" style="--stagger-index: 4;">
       <div>
         <h3 class="text-sm sm:text-base font-extrabold" style="color: var(--m3-on-surface);">
           调试模拟运行模式 (Debug Mock)
@@ -124,8 +150,8 @@
       <M3Switch v-model="form.debug_mode" />
     </div>
 
-    <!-- 5. 当前认证与前端主题状态说明 -->
-    <div class="m3-card m3-stagger-item p-5 sm:p-6 space-y-3" style="--stagger-index: 4;">
+    <!-- 6. 当前认证与前端主题状态说明 -->
+    <div class="m3-card m3-stagger-item p-5 sm:p-6 space-y-3" style="--stagger-index: 5;">
       <h3 class="text-sm sm:text-base font-extrabold" style="color: var(--m3-on-surface);">
         系统运行环境与认证模式
       </h3>
@@ -171,7 +197,14 @@ const form = reactive({
   check_internet_MaxRetries: 3,
   allow_user_manual_run: true,
   debug_mode: false,
+  global_log_level: 'follow',
 })
+
+const logLevelOptions = [
+  { label: '跟随账号配置', value: 'follow' },
+  { label: '仅INFO', value: 'info' },
+  { label: '详细', value: 'debug' },
+]
 
 async function loadSettings() {
   try {

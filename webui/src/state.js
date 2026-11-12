@@ -37,6 +37,7 @@ export const store = reactive({
       check_internet_MaxRetries: 3,
       allow_user_manual_run: true,
       debug_mode: false,
+      global_log_level: 'follow',
     },
   },
   accounts: [],

@@ -54,6 +54,7 @@ class Scheduler:
             "check_internet_MaxRetries": 3,
             "allow_user_manual_run": True,
             "debug_mode": False,
+            "global_log_level": "follow",  # "follow" (跟随账号配置) | "info" (仅INFO) | "debug" (详细)
         }
         if os.path.exists(SETTINGS_FILE):
             try:
@@ -82,6 +83,7 @@ class Scheduler:
             "check_internet_MaxRetries",
             "allow_user_manual_run",
             "debug_mode",
+            "global_log_level",
         }
         with self._lock:
             for k, v in new_settings.items():
@@ -301,6 +303,15 @@ class Scheduler:
         env["MARCH7TH_AFTER_FINISH"] = "Exit"
         env["MARCH7TH_NON_INTERACTIVE"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
+
+        # 全局日志设置覆盖处理：follow (跟随账号配置) | info (仅INFO) | debug (详细)
+        global_log_level = str(self.settings.get("global_log_level", "follow")).lower()
+        if global_log_level == "info":
+            env["MARCH7TH_LOG_LEVEL"] = "INFO"
+        elif global_log_level in ("debug", "verbose"):
+            env["MARCH7TH_LOG_LEVEL"] = "DEBUG"
+        else:
+            env.pop("MARCH7TH_LOG_LEVEL", None)
 
         debug_mode = bool(self.settings.get("debug_mode", False))
         final_status = "error"
