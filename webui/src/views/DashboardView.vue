@@ -148,40 +148,46 @@
         </div>
 
         <div v-else class="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/70">
-          <button
-            v-for="item in historyList"
-            :key="item.run_id"
-            type="button"
-            class="w-full text-left px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-start justify-between gap-2"
-            :class="selectedLogFile === item.log_file ? 'bg-indigo-50/70 dark:bg-indigo-500/10 border-l-4 border-indigo-500' : ''"
-            @click="selectHistoryLog(item)"
-          >
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 truncate">
-                  {{ item.account_name || item.account_id }}
-                </span>
-              </div>
-              <div class="mt-1 text-[11px] text-slate-400 dark:text-slate-500 font-mono">
-                {{ item.start_time }}
-              </div>
-              <div v-if="item.end_time" class="text-[11px] text-slate-400 dark:text-slate-500">
-                耗时: {{ formatDuration(item.start_time, item.end_time) }}
-              </div>
-            </div>
-
-            <span
-              class="px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0"
-              :class="{
-                'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300': item.status === 'success',
-                'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300': item.status === 'error',
-                'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300': item.status === 'stopped',
-                'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 animate-pulse': item.status === 'running',
-              }"
+          <template v-for="(item, index) in historyList" :key="item.run_id">
+            <div
+              v-if="showHistoryDateSeparator(index)"
+              class="px-4 py-1.5 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 bg-slate-50/80 dark:bg-slate-800/40"
             >
-              {{ statusText(item.status) }}
-            </span>
-          </button>
+              {{ historyDateLabel(item.start_time) }}
+            </div>
+            <button
+              type="button"
+              class="w-full text-left px-4 py-3 transition hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-start justify-between gap-2"
+              :class="selectedLogFile === item.log_file ? 'bg-indigo-50/70 dark:bg-indigo-500/10 border-l-4 border-indigo-500' : ''"
+              @click="selectHistoryLog(item)"
+            >
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold text-xs sm:text-sm text-slate-800 dark:text-slate-200 truncate">
+                    {{ item.account_name || item.account_id }}
+                  </span>
+                </div>
+                <div class="mt-1 text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+                  {{ item.start_time }}
+                </div>
+                <div v-if="item.end_time" class="text-[11px] text-slate-400 dark:text-slate-500">
+                  耗时: {{ formatDuration(item.start_time, item.end_time) }}
+                </div>
+              </div>
+
+              <span
+                class="px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0"
+                :class="{
+                  'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300': item.status === 'success',
+                  'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300': item.status === 'error',
+                  'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300': item.status === 'stopped',
+                  'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 animate-pulse': item.status === 'running',
+                }"
+              >
+                {{ statusText(item.status) }}
+              </span>
+            </button>
+          </template>
         </div>
       </div>
 
@@ -397,6 +403,19 @@ function statusText(st) {
     stopped: '已终止',
   }
   return map[st] || st || '未知'
+}
+
+function historyDateKey(startTime) {
+  return String(startTime || '').slice(0, 10)
+}
+
+function historyDateLabel(startTime) {
+  return historyDateKey(startTime) || '未知日期'
+}
+
+function showHistoryDateSeparator(index) {
+  if (index === 0) return true
+  return historyDateKey(historyList.value[index - 1]?.start_time) !== historyDateKey(historyList.value[index]?.start_time)
 }
 
 function formatDuration(startStr, endStr) {

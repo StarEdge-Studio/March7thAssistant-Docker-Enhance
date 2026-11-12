@@ -179,35 +179,42 @@
         </div>
 
         <div v-else class="flex-1 overflow-y-auto p-2.5 space-y-1.5">
-          <button
-            v-for="item in historyList"
-            :key="item.run_id"
-            type="button"
-            class="w-full text-left px-4 py-3.5 rounded-[20px] hover:rounded-[16px] active:rounded-[12px] active:scale-[0.985] transition-all duration-250 flex items-start justify-between gap-2"
-            :style="selectedLogFile === item.log_file
-              ? { backgroundColor: 'var(--m3-secondary-container)', color: 'var(--m3-on-secondary-container)', transitionTimingFunction: 'var(--m3-spring-soft)' }
-              : { backgroundColor: 'transparent', color: 'var(--m3-on-surface)', transitionTimingFunction: 'var(--m3-spring-soft)' }"
-            @click="selectHistoryLog(item)"
-          >
-            <div class="min-w-0">
-              <div class="font-bold text-xs sm:text-sm truncate">
-                {{ item.account_name || item.account_id }}
-              </div>
-              <div class="mt-1 text-[11px] font-mono opacity-75">
-                {{ item.start_time }}
-              </div>
-              <div v-if="item.end_time" class="text-[11px] opacity-75">
-                耗时: {{ formatDuration(item.start_time, item.end_time) }}
-              </div>
-            </div>
-
-            <span
-              class="px-2.5 py-0.5 rounded-full text-[11px] font-bold shrink-0"
-              :style="statusChipStyle(item.status)"
+          <template v-for="(item, index) in historyList" :key="item.run_id">
+            <div
+              v-if="showHistoryDateSeparator(index)"
+              class="px-3 pt-2 pb-1 text-[11px] font-bold"
+              style="color: var(--m3-primary);"
             >
-              {{ statusText(item.status) }}
-            </span>
-          </button>
+              {{ historyDateLabel(item.start_time) }}
+            </div>
+            <button
+              type="button"
+              class="w-full text-left px-4 py-3.5 rounded-[20px] hover:rounded-[16px] active:rounded-[12px] active:scale-[0.985] transition-all duration-250 flex items-start justify-between gap-2"
+              :style="selectedLogFile === item.log_file
+                ? { backgroundColor: 'var(--m3-secondary-container)', color: 'var(--m3-on-secondary-container)', transitionTimingFunction: 'var(--m3-spring-soft)' }
+                : { backgroundColor: 'transparent', color: 'var(--m3-on-surface)', transitionTimingFunction: 'var(--m3-spring-soft)' }"
+              @click="selectHistoryLog(item)"
+            >
+              <div class="min-w-0">
+                <div class="font-bold text-xs sm:text-sm truncate">
+                  {{ item.account_name || item.account_id }}
+                </div>
+                <div class="mt-1 text-[11px] font-mono opacity-75">
+                  {{ item.start_time }}
+                </div>
+                <div v-if="item.end_time" class="text-[11px] opacity-75">
+                  耗时: {{ formatDuration(item.start_time, item.end_time) }}
+                </div>
+              </div>
+
+              <span
+                class="px-2.5 py-0.5 rounded-full text-[11px] font-bold shrink-0"
+                :style="statusChipStyle(item.status)"
+              >
+                {{ statusText(item.status) }}
+              </span>
+            </button>
+          </template>
         </div>
       </div>
 
@@ -441,6 +448,19 @@ function statusChipStyle(st) {
     return { backgroundColor: 'var(--m3-tertiary-container)', color: 'var(--m3-on-tertiary-container)' }
   }
   return { backgroundColor: 'var(--m3-surface-container-highest)', color: 'var(--m3-on-surface-variant)' }
+}
+
+function historyDateKey(startTime) {
+  return String(startTime || '').slice(0, 10)
+}
+
+function historyDateLabel(startTime) {
+  return historyDateKey(startTime) || '未知日期'
+}
+
+function showHistoryDateSeparator(index) {
+  if (index === 0) return true
+  return historyDateKey(historyList.value[index - 1]?.start_time) !== historyDateKey(historyList.value[index]?.start_time)
 }
 
 function formatDuration(startStr, endStr) {
