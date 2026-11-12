@@ -335,14 +335,14 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
-import { apiFetch, canManualRun, confirmModal, notify, refreshStatus, store } from '../../state.js'
+import { apiFetch, canManualRun, confirmModal, fetchHistory as globalFetchHistory, notify, refreshStatus, store } from '../../state.js'
 
 const mobileTab = ref('log')
 const selectedRunAccount = ref('')
 const startingRun = ref(false)
 const stoppingRun = ref(false)
 
-const historyList = ref([])
+const historyList = ref([...(store.history || [])])
 const selectedLogFile = ref('')
 const logEntries = ref([])
 const logOffset = ref(0)
@@ -520,7 +520,7 @@ function resumeAutoScroll() {
 
 async function fetchHistory() {
   try {
-    const list = await apiFetch('/api/history')
+    const list = await globalFetchHistory()
     historyList.value = Array.isArray(list) ? list : []
     if (!selectedLogFile.value) {
       if (store.scheduler.current_log_file) {
@@ -630,11 +630,25 @@ watch(
 
 let pollTimer = null
 onMounted(async () => {
-  await refreshStatus()
+  // 1. 若已有缓存历史且尚未选定日志，立即自动选定最近的日志文件，提前渲染，避免界面等待
+  if (!selectedLogFile.value) {
+    if (store.scheduler.current_log_file) {
+      selectLogFile(store.scheduler.current_log_file)
+    } else if (historyList.value.length > 0) {
+      selectLogFile(historyList.value[0].log_file)
+    }
+  }
+
+  // 2. 并发拉取状态与最新历史记录（不串行阻塞）
+  await Promise.allSettled([
+    refreshStatus(),
+    fetchHistory(),
+  ])
+
   if (store.role !== 'admin' && store.accounts.length === 1 && store.primaryAccountId) {
     selectedRunAccount.value = store.primaryAccountId
   }
-  await fetchHistory()
+
   pollTimer = setInterval(async () => {
     await pollLogChunk(false)
     if (store.scheduler.is_running) {

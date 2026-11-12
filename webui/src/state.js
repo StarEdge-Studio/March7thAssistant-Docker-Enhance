@@ -40,6 +40,8 @@ export const store = reactive({
     },
   },
   accounts: [],
+  history: [],
+  historyLoaded: false,
 
   // 轻量全局 Toast 通知
   toasts: [],
@@ -172,6 +174,8 @@ export function clearSession() {
   store.avatar = ''
   store.accountIds = []
   store.primaryAccountId = null
+  store.history = []
+  store.historyLoaded = false
   localStorage.removeItem('m7a_session_token')
 }
 
@@ -264,11 +268,27 @@ export async function refreshStatus() {
     if (Array.isArray(data.accounts)) {
       store.accounts = data.accounts
     }
+    // 状态拉取成功后，若历史尚未加载过，静默在后台预热运行历史，避免路由切换时出现等待延迟
+    if (!store.historyLoaded) {
+      fetchHistory().catch(() => {})
+    }
     return data
   } catch (e) {
     if (e.status === 403 && store.authMode === 'oidc') {
       store.role = 'unauthorized'
     }
     return null
+  }
+}
+
+export async function fetchHistory() {
+  if (!store.token || !store.role || store.role === 'unauthorized') return store.history
+  try {
+    const list = await apiFetch('/api/history')
+    store.history = Array.isArray(list) ? list : []
+    store.historyLoaded = true
+    return store.history
+  } catch {
+    return store.history
   }
 }
