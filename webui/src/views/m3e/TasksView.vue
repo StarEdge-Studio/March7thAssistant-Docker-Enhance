@@ -139,10 +139,6 @@
           >
           <!-- 1. 体力与副本 -->
           <template v-if="group.name === 'power'">
-            <div class="text-xs italic px-1" style="color: var(--m3-on-surface-variant);">
-              优先级由上向下递减
-            </div>
-
             <!-- (1) 培养目标（最上方，高优高亮色块） -->
             <div
               class="rounded-[24px] border overflow-hidden transition-all"
@@ -155,12 +151,6 @@
               >
                 <div class="flex flex-wrap items-center gap-2.5">
                   <span class="text-sm font-extrabold" style="color: var(--m3-on-surface);">培养目标</span>
-                  <span
-                    class="px-2.5 py-0.5 rounded-full text-[11px] font-bold"
-                    style="background-color: var(--m3-primary); color: var(--m3-on-primary);"
-                  >
-                    最高优先级
-                  </span>
                 </div>
                 <svg
                   class="w-4 h-4 transition-transform duration-300"
@@ -181,7 +171,7 @@
                 style="border-color: color-mix(in srgb, var(--m3-primary) 20%, transparent);"
               >
                 <div class="text-xs font-bold italic" style="color: var(--m3-primary);">
-                  如果启用培养目标，其优先级高于下方设置的副本
+                  如果启用培养目标，其优先级高于下方清体力设置
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -451,7 +441,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5">
                   <span class="text-sm font-extrabold" style="color: var(--m3-on-surface);">体力计划</span>
                   <span class="text-[11px] font-normal" style="color: var(--m3-on-surface-variant);">
-                    执行后将根据进度自动扣减次数或移除，并将变动自动保存回配置文件
+                    执行后将根据进度自动扣减次数或移除，并将变动自动保存回配置文件（最高优先级）
                   </span>
                 </div>
                 <svg

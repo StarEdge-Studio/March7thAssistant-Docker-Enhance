@@ -121,10 +121,6 @@
         >
           <!-- 1. 体力与副本 -->
           <template v-if="group.name === 'power'">
-            <div class="text-xs text-slate-500 dark:text-slate-400 italic px-0.5">
-              优先级由上向下递减
-            </div>
-
             <!-- (1) 培养目标（最上方，明确标注优先级高于下方配置） -->
             <div class="rounded-xl border border-indigo-200/80 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-950/20 overflow-hidden">
               <button
@@ -134,9 +130,6 @@
               >
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="text-sm font-bold text-indigo-950 dark:text-indigo-200">培养目标</span>
-                  <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300">
-                    最高优先级
-                  </span>
                 </div>
                 <svg
                   class="w-4 h-4 text-slate-400 transition-transform duration-200"
@@ -152,7 +145,7 @@
 
               <div v-show="isPowerPanelOpen('buildTarget')" class="px-4 pb-4 pt-2 border-t border-indigo-100 dark:border-indigo-800/40 space-y-3">
                 <div class="text-xs font-medium text-indigo-700 dark:text-indigo-300 italic">
-                  如果启用培养目标，其优先级高于下方设置的副本
+                  如果启用培养目标，其优先级高于下方清体力设置
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -402,7 +395,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                   <span class="text-sm font-bold text-slate-800 dark:text-slate-100">体力计划</span>
                   <span class="text-[11px] text-slate-400 dark:text-slate-500 font-normal">
-                    执行后将根据进度自动扣减次数或移除，并将变动自动保存回配置文件
+                    执行后将根据进度自动扣减次数或移除，并将变动自动保存回配置文件（最高优先级）
                   </span>
                 </div>
                 <svg
