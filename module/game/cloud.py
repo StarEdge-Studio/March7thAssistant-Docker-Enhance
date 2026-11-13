@@ -1999,12 +1999,25 @@ class CloudGameController(GameControllerBase):
                     driver.execute_cdp_cmd("Browser.close", {})
                     close_sent = True
                 except Exception as cdp_exc:
-                    self.log_debug(f"CDP Browser.close 失败，尝试 Command.CLOSE: {cdp_exc}")
-                    try:
-                        driver.execute(Command.CLOSE)
+                    err_msg = str(cdp_exc).lower()
+                    if any(marker in err_msg for marker in (
+                        "target frame detached",
+                        "not connected to devtools",
+                        "unable to receive message from renderer",
+                        "unable to send message to renderer",
+                        "session deleted as the browser has closed the connection",
+                        "target window already closed",
+                        "invalid session id",
+                    )):
+                        # Browser.close 会立即关闭 DevTools 连接，触发断连/目标分离异常说明关闭指令已生效
                         close_sent = True
-                    except Exception as close_exc:
-                        self.log_debug(f"关闭浏览器窗口失败，将清理进程: {close_exc}")
+                    else:
+                        self.log_debug(f"CDP Browser.close 失败，尝试 Command.CLOSE: {cdp_exc}")
+                        try:
+                            driver.execute(Command.CLOSE)
+                            close_sent = True
+                        except Exception as close_exc:
+                            self.log_debug(f"关闭浏览器窗口失败，将清理进程: {close_exc}")
 
                 if tracked_browsers:
                     # 等待浏览器优雅退出并完成 Local State / Preferences 落盘
