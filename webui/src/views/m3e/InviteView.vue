@@ -311,6 +311,10 @@
           <span>立即前往任务配置</span>
         </button>
       </div>
+
+      <p class="pt-1 text-center text-xs font-bold leading-relaxed" style="color: var(--m3-error);">
+        管理员将能完全控制您的游戏账号，请确保您完全信任对方
+      </p>
     </div>
   </div>
 </template>

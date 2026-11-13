@@ -191,6 +191,10 @@
           立即前往任务配置
         </button>
       </div>
+
+      <p class="pt-1 text-center text-xs font-semibold leading-relaxed text-rose-600 dark:text-rose-400">
+        管理员将能完全控制您的游戏账号，请确保您完全信任对方
+      </p>
     </div>
   </div>
 </template>

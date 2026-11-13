@@ -57,6 +57,9 @@
       </div>
     </div>
 
+    <!-- 首次进入使用须知与防骗提示（强制倒计时阅读） -->
+    <SimpleNoticeModal :is-standalone="isStandaloneRoute" />
+
     <!-- 登录页或无权限页独立全屏渲染 -->
     <template v-if="isStandaloneRoute">
       <router-view class="flex-1" />
@@ -229,6 +232,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import SimpleNoticeModal from './components/SimpleNoticeModal.vue'
 import {
   clearSession,
   notify,

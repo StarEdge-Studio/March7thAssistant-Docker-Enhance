@@ -61,6 +61,9 @@
       </div>
     </Transition>
 
+    <!-- 首次进入使用须知与防骗提示（强制倒计时阅读） -->
+    <M3NoticeModal :is-standalone="isStandaloneRoute" />
+
     <!-- 登录页或无权限页独立全屏渲染 -->
     <template v-if="isStandaloneRoute">
       <router-view v-slot="{ Component, route: curRoute }">
@@ -333,6 +336,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import M3NoticeModal from './components/m3e/M3NoticeModal.vue'
 import {
   clearSession,
   notify,
