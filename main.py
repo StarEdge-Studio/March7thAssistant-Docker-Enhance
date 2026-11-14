@@ -256,7 +256,12 @@ requires_admin = not adb_check_only
 
 if sys.platform == 'win32':
     from utils.admin import is_user_admin
-    if requires_admin and not is_user_admin():
+    from utils.console import is_gui_started as _is_gui, is_docker_started as _is_docker
+    
+    _is_cloud_or_webui = os.environ.get("MARCH7TH_CLOUD_GAME_ENABLE", "").lower() in ("true", "1") or os.environ.get("MARCH7TH_WEBUI_STARTED", "").lower() in ("true", "1")
+    env_allows_elevation = not _is_gui() and not _is_docker() and not _is_cloud_or_webui
+
+    if env_allows_elevation and requires_admin and not is_user_admin():
         from unittest.mock import patch
 
         with patch.dict(os.environ, {"MARCH7TH_CONFIG_READONLY": "1"}):
@@ -267,13 +272,13 @@ if sys.platform == 'win32':
         requires_admin = task_is_supported(requested, cfg) and not (
             requested == "screen_test" and get_control_backend(cfg) == "adb"
         )
+
     # 带 --run-id 的是入口转交出来的管理员进程：即使没拿到管理员权限也不能再转交一次，否则会不断重复启动自己
-    if requires_admin and not is_user_admin() and not args.run_id:
+    if env_allows_elevation and requires_admin and not is_user_admin() and not args.run_id:
         # 未提权（终端、脚本或 AI Agent 通过 m7a.exe 调用，或源码运行）：把任务交给管理员进程执行，
         # 同时在当前终端跟随输出，结束后返回任务的真实退出码
         from utils.cli_entry import run_task_elevated
         sys.exit(run_task_elevated(sys.argv[1:], json_output=args.json, detach=args.detach))
-
 # 由免 UAC 计划任务启动的管理员进程：与 UAC 启动的窗口一致，最小化且不抢焦点（输出已转发到调用方的终端）
 if args.minimize_console:
     from utils.console import minimize_console_window
@@ -316,7 +321,9 @@ if desktop_twin_context:
     run_session.record["windows_session_id"] = desktop_twin_context.session.session_id
     run_session.record["windows_session_logon_time"] = desktop_twin_context.session.logon_time
 
-if sys.platform == 'win32' and requires_admin and not is_user_admin():
+_is_cloud_or_webui = os.environ.get("MARCH7TH_CLOUD_GAME_ENABLE", "").lower() in ("true", "1") or os.environ.get("MARCH7TH_WEBUI_STARTED", "").lower() in ("true", "1")
+
+if sys.platform == 'win32' and not is_gui_started() and not is_docker_started() and not _is_cloud_or_webui and requires_admin and not is_user_admin():
     # 入口转交的管理员进程却没有管理员权限（例如免 UAC 运行的计划任务被改成了不以最高权限运行）：
     # 不执行任务，把原因写进运行记录，入口会照常转告调用方
     _message = "没有获得管理员权限，任务未运行。如果开启了免 UAC 运行，请在图形界面「设置 → 杂项」中关闭后重新开启"
@@ -422,10 +429,7 @@ def ensure_exclusive_run():
 
 
 def first_run():
-    if not is_docker_started() and not cfg.get_value(base64.b64decode("YXV0b191cGRhdGU=").decode("utf-8")):
-        log.error("首次使用请先打开图形界面 March7th Launcher，阅读并确认免责声明")
-        pause_always()
-        sys.exit(EXIT_FIRST_RUN_REQUIRED)
+    return
 
 
 def run_main_actions(no_run_immediately=False):
@@ -720,6 +724,11 @@ def exit_handler():
         pause_ctl.stop()
     except Exception as e:
         log.warning(f"输入清理失败: {e}")
+    if cfg.cloud_game_enable:
+        try:
+            cloud_game.stop_game()
+        except Exception as e:
+            log.debug(f"退出时关闭云游戏浏览器异常: {e}")
     telemetry.shutdown()
     ocr.exit_ocr()
     # 清理调试叠加层
