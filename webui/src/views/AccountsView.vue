@@ -132,6 +132,29 @@
             </span>
 
             <span
+              v-if="acc.game_uid"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-mono font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"
+              title="当前绑定的星穹铁道游戏 UID"
+            >
+              UID: {{ acc.game_uid }}
+            </span>
+
+            <span
+              v-if="acc.mihoyo_aid"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+              title="当前绑定的米哈游通行证 ID (AID)"
+            >
+              通行证: {{ acc.mihoyo_aid }}
+            </span>
+
+            <span
+              v-if="getAccountBindingWarning(acc)"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-semibold bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300"
+            >
+              ⚠ {{ getAccountBindingWarning(acc) }}
+            </span>
+
+            <span
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
             >
               上次运行: {{ acc.last_run_at || '从未运行' }}
@@ -459,10 +482,24 @@
             </div>
             <div class="space-y-0.5">
               <span class="text-sm font-bold text-slate-800 dark:text-slate-100 block">
-                {{ qrModal.status === 'success' ? '登录成功' : '扫码成功' }}
+                {{
+                  qrModal.status === 'scanned'
+                    ? '扫码成功'
+                    : qrModal.alreadyLoggedIn
+                      ? '当前已登录'
+                      : '登录成功'
+                }}
               </span>
               <span class="text-xs text-slate-500 dark:text-slate-400">
-                {{ qrModal.status === 'success' ? '登录凭证已保存' : '请在手机端点击「确认登录」' }}
+                {{
+                  qrModal.status === 'scanned'
+                    ? '请在手机端点击「确认登录」'
+                    : qrModal.alreadyLoggedIn
+                      ? '如需更换账号，请清除旧会话后重扫'
+                      : qrModal.autoCloseSeconds > 0
+                        ? `登录凭证已保存，${qrModal.autoCloseSeconds} 秒后自动关闭...`
+                        : '登录凭证已保存'
+                }}
               </span>
             </div>
           </div>
@@ -486,24 +523,49 @@
         </div>
 
         <p class="text-[11px] text-slate-400 dark:text-slate-500">
-          {{ qrModal.status === 'scanned' ? '已成功识别二维码，请在手机米游社上点击「确认登录」。' : '请打开手机「米游社 App」扫描上方二维码，并在手机上点击确认。' }}
+          {{
+            qrModal.status === 'scanned'
+              ? '已成功识别二维码，请在手机米游社上点击「确认登录」。'
+              : qrModal.status === 'success' && qrModal.alreadyLoggedIn
+                ? '检测到旧浏览器会话仍处于登录状态，请点击下方「清除并重新登录」获取新二维码。'
+                : qrModal.status === 'success'
+                  ? '新登录凭证已保存，弹窗即将自动关闭。'
+                  : '请打开手机「米游社 App」扫描上方二维码，并在手机上点击确认。'
+          }}
         </p>
 
-        <div class="pt-2 flex justify-center gap-3">
+        <div class="pt-2 flex flex-wrap justify-center gap-2.5">
           <button
             v-if="qrModal.status === 'failed'"
             type="button"
             class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white"
-            @click="startQrSession(qrModal.accountId)"
+            @click="startQrSession(qrModal.accountId, true)"
           >
             重新获取二维码
+          </button>
+          <button
+            v-if="qrModal.status === 'success'"
+            type="button"
+            class="px-4 py-2 rounded-xl text-xs font-semibold transition-colors"
+            :class="qrModal.alreadyLoggedIn
+              ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm shadow-indigo-500/20'
+              : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-100'"
+            @click="startQrSession(qrModal.accountId, true)"
+          >
+            {{ qrModal.alreadyLoggedIn ? '清除并重新登录' : '切换账号重扫' }}
           </button>
           <button
             type="button"
             class="px-5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
             @click="closeQrModal"
           >
-            {{ qrModal.status === 'success' ? '完成并关闭' : '取消并关闭浏览器' }}
+            {{
+              qrModal.status === 'success'
+                ? qrModal.autoCloseSeconds > 0
+                  ? `立即关闭 (${qrModal.autoCloseSeconds}s)`
+                  : '完成并关闭'
+                : '取消并关闭浏览器'
+            }}
           </button>
         </div>
       </div>
@@ -544,9 +606,32 @@ const qrModal = reactive({
   message: '正在启动无头浏览器...',
   hasQr: false,
   imageUrl: '',
+  alreadyLoggedIn: false,
+  autoCloseSeconds: 0,
 })
 
 let qrPollTimer = null
+let qrAutoCloseTimer = null
+
+function stopQrAutoCloseTimer() {
+  if (qrAutoCloseTimer) {
+    clearInterval(qrAutoCloseTimer)
+    qrAutoCloseTimer = null
+  }
+  qrModal.autoCloseSeconds = 0
+}
+
+function startQrAutoCloseTimer(seconds = 2) {
+  stopQrAutoCloseTimer()
+  qrModal.autoCloseSeconds = seconds
+  qrAutoCloseTimer = setInterval(() => {
+    qrModal.autoCloseSeconds -= 1
+    if (qrModal.autoCloseSeconds <= 0) {
+      stopQrAutoCloseTimer()
+      closeQrModal()
+    }
+  }, 1000)
+}
 
 function statusLabel(st) {
   const map = {
@@ -556,6 +641,27 @@ function statusLabel(st) {
     stopped: '已停止',
   }
   return map[st] || st
+}
+
+function getAccountBindingWarning(acc) {
+  if (!acc) return ''
+  const aid = (acc.mihoyo_aid || '').trim()
+  const uid = (acc.game_uid || '').trim()
+  const name = (acc.name || '').trim()
+  const mCardUid = name.match(/\b(\d{9})\b/)
+  if (mCardUid && uid && mCardUid[1] !== uid) {
+    return `卡片名称 UID 与实际登录 UID (${uid}) 不一致`
+  }
+  for (const other of store.accounts || []) {
+    if (other.id === acc.id) continue
+    if (aid && (other.mihoyo_aid || '').trim() === aid) {
+      return `与「${other.name}」绑定了同一通行证`
+    }
+    if (uid && (other.game_uid || '').trim() === uid) {
+      return `与「${other.name}」绑定了同一游戏 UID`
+    }
+  }
+  return ''
 }
 
 function openCreateModal() {
@@ -824,18 +930,23 @@ async function openQrModal(acc) {
   await startQrSession(acc.id)
 }
 
-async function startQrSession(accountId) {
+async function startQrSession(accountId, resetSession = false) {
+  stopQrAutoCloseTimer()
   if (qrPollTimer) {
     clearInterval(qrPollTimer)
     qrPollTimer = null
   }
   qrModal.status = 'starting'
-  qrModal.message = '正在启动无头浏览器并加载云游戏登录框...'
+  qrModal.message = resetSession
+    ? '正在清除旧登录凭证并重新获取二维码...'
+    : '正在启动无头浏览器并加载云游戏登录框...'
   qrModal.hasQr = false
   qrModal.imageUrl = ''
+  qrModal.alreadyLoggedIn = false
 
   try {
-    await apiFetch(`/api/accounts/${accountId}/qr_login/start`, { method: 'POST' })
+    const query = resetSession ? '?reset_session=true' : ''
+    await apiFetch(`/api/accounts/${accountId}/qr_login/start${query}`, { method: 'POST' })
     qrPollTimer = setInterval(() => pollQrStatus(accountId), 2000)
   } catch (e) {
     qrModal.status = 'failed'
@@ -846,9 +957,11 @@ async function startQrSession(accountId) {
 async function pollQrStatus(accountId) {
   try {
     const res = await apiFetch(`/api/accounts/${accountId}/qr_login/status`)
+    if (!qrModal.visible || qrModal.accountId !== accountId) return
     qrModal.status = res.status || 'starting'
     qrModal.message = res.message || ''
     qrModal.hasQr = Boolean(res.has_qr)
+    qrModal.alreadyLoggedIn = Boolean(res.already_logged_in)
     if (res.has_qr) {
       qrModal.imageUrl = `/api/accounts/${accountId}/qr_login/image?token=${encodeURIComponent(store.token)}&t=${res.qr_mtime || Date.now()}`
     }
@@ -857,8 +970,16 @@ async function pollQrStatus(accountId) {
         clearInterval(qrPollTimer)
         qrPollTimer = null
       }
-      notify('扫码登录成功！凭证已保存', 'success')
-      await refreshStatus()
+      if (qrModal.alreadyLoggedIn) {
+        notify('检测到当前已有登录状态，可点击「清除并重新登录」', 'info')
+        await refreshStatus()
+      } else {
+        notify('扫码登录成功！凭证已保存', 'success')
+        await refreshStatus()
+        if (qrModal.visible && qrModal.accountId === accountId && qrModal.status === 'success' && !qrModal.alreadyLoggedIn) {
+          startQrAutoCloseTimer(2)
+        }
+      }
     } else if (res.status === 'failed') {
       if (qrPollTimer) {
         clearInterval(qrPollTimer)
@@ -871,6 +992,7 @@ async function pollQrStatus(accountId) {
 }
 
 async function closeQrModal() {
+  stopQrAutoCloseTimer()
   if (qrPollTimer) {
     clearInterval(qrPollTimer)
     qrPollTimer = null
@@ -892,6 +1014,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  stopQrAutoCloseTimer()
   if (qrPollTimer) clearInterval(qrPollTimer)
 })
 </script>

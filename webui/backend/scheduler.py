@@ -22,6 +22,7 @@ HISTORY_FILE = os.path.join(DATA_DIR, "run_history.json")
 LOGS_DIR = os.path.join(DATA_DIR, "logs")
 
 ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+GAME_UID_RE = re.compile(r"UID[:：]\s*(\d{9})")
 
 
 class Scheduler:
@@ -40,10 +41,44 @@ class Scheduler:
         self.internet_retry_info: Optional[Dict[str, Any]] = None
         self._last_scheduled_date: Optional[str] = None
 
+        self._cleanup_stale_running_states()
+
         self._timer_thread = threading.Thread(
             target=self._schedule_loop, name="m7a-scheduler", daemon=True
         )
         self._timer_thread.start()
+
+    def _cleanup_stale_running_states(self) -> None:
+        """服务启动时清理因容器重启或进程异常退出遗留的僵尸 'running' 状态。"""
+        now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with self._lock:
+            history_changed = False
+            for item in self.history:
+                if item.get("status") == "running":
+                    item["status"] = "error"
+                    if not item.get("end_time"):
+                        item["end_time"] = now_str
+                    history_changed = True
+                    log_file = item.get("log_file")
+                    if log_file:
+                        log_path = os.path.join(LOGS_DIR, os.path.basename(log_file))
+                        if os.path.exists(log_path):
+                            try:
+                                with open(log_path, "a", encoding="utf-8") as lf:
+                                    lf.write(
+                                        f"\n[WebUI] ({now_str}) 检测到容器或服务重启，上次运行未正常结束，状态已自动修正。\n"
+                                    )
+                            except OSError:
+                                pass
+            if history_changed:
+                self._save_history_unlocked()
+
+        try:
+            for acc in account_manager.get_accounts():
+                if acc.get("last_run_status") == "running":
+                    account_manager.update_account(acc["id"], last_run_status="error")
+        except Exception:
+            pass
 
     def _load_settings(self) -> Dict[str, Any]:
         default_settings = {
@@ -349,6 +384,7 @@ class Scheduler:
                     )
 
                     has_fatal_error = False
+                    detected_game_uid = ""
                     if self.current_process.stdout:
                         for raw_line in iter(self.current_process.stdout.readline, ""):
                             clean_line = ANSI_ESCAPE_RE.sub("", raw_line)
@@ -359,6 +395,11 @@ class Scheduler:
                                 or "未登录" in clean_line and "超时" in clean_line
                             ):
                                 has_fatal_error = True
+                            if not detected_game_uid:
+                                m_uid = GAME_UID_RE.search(clean_line)
+                                if m_uid:
+                                    detected_game_uid = m_uid.group(1)
+                                    account_manager.update_account(acc_id, game_uid=detected_game_uid)
 
                     self.current_process.wait()
                     rc = self.current_process.returncode

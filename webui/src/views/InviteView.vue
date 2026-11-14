@@ -115,7 +115,14 @@
       <div v-else-if="step === 'qr'" class="space-y-4 text-center">
         <div class="text-xs font-bold">请扫码登录游戏账号：{{ invite.account_name }}</div>
 
-        <div class="p-3 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
+        <div
+          class="p-3 rounded-xl text-xs font-semibold"
+          :class="{
+            'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300': ['starting', 'checking', 'fetching_qr', 'waiting_scan', 'refreshing'].includes(qrState.status),
+            'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300': ['scanned', 'success'].includes(qrState.status),
+            'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300': qrState.status === 'failed',
+          }"
+        >
           {{ qrState.message }}
         </div>
 
@@ -129,10 +136,22 @@
             </div>
             <div class="space-y-0.5">
               <span class="text-sm font-bold text-slate-800 dark:text-slate-100 block">
-                {{ qrState.status === 'success' ? '登录成功' : '扫码成功' }}
+                {{
+                  qrState.status === 'scanned'
+                    ? '扫码成功'
+                    : qrState.alreadyLoggedIn
+                      ? '当前已登录'
+                      : '登录成功'
+                }}
               </span>
               <span class="text-xs text-slate-500 dark:text-slate-400">
-                {{ qrState.status === 'success' ? '登录凭证已保存，正在跳转...' : '请在手机端点击「确认登录」' }}
+                {{
+                  qrState.status === 'scanned'
+                    ? '请在手机端点击「确认登录」'
+                    : qrState.alreadyLoggedIn
+                      ? '如需更换账号，请清除旧会话后重扫'
+                      : '登录凭证已保存，正在跳转...'
+                }}
               </span>
             </div>
           </div>
@@ -155,17 +174,41 @@
         </div>
 
         <p class="text-[11px] text-slate-500">
-          {{ qrState.status === 'scanned' ? '已成功识别二维码，请在手机米游社上点击「确认登录」。' : '请使用手机「米游社 App」扫描上方二维码并在手机端点击确认登录。' }}
+          {{
+            qrState.status === 'scanned'
+              ? '已成功识别二维码，请在手机米游社上点击「确认登录」。'
+              : qrState.status === 'success' && qrState.alreadyLoggedIn
+                ? '检测到已有登录状态。如需扫码更换其他账号，请点击「清除并重新登录」。'
+                : '请使用手机「米游社 App」扫描上方二维码并在手机端点击确认登录。'
+          }}
         </p>
 
-        <button
-          v-if="qrState.status === 'failed'"
-          type="button"
-          class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-500"
-          @click="startQrLogin"
-        >
-          重新获取二维码
-        </button>
+        <div class="flex flex-wrap justify-center gap-2.5">
+          <button
+            v-if="qrState.status === 'failed'"
+            type="button"
+            class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-500"
+            @click="startQrLogin(true)"
+          >
+            重新获取二维码
+          </button>
+          <button
+            v-if="qrState.status === 'success' && qrState.alreadyLoggedIn"
+            type="button"
+            class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-500"
+            @click="startQrLogin(true)"
+          >
+            清除并重新登录
+          </button>
+          <button
+            v-if="qrState.status === 'success' && qrState.alreadyLoggedIn"
+            type="button"
+            class="px-4 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+            @click="enterCongratsStep"
+          >
+            使用当前账号继续
+          </button>
+        </div>
       </div>
 
       <!-- 阶段 3：恭喜完成页 -->
@@ -231,6 +274,7 @@ const qrState = reactive({
   message: '正在启动无头浏览器并加载云·星穹铁道登录页...',
   hasQr: false,
   imageUrl: '',
+  alreadyLoggedIn: false,
 })
 
 let qrPollTimer = null
@@ -336,15 +380,19 @@ function stopQrPoll() {
   }
 }
 
-async function startQrLogin() {
+async function startQrLogin(resetSession = false) {
   stopQrPoll()
   qrState.status = 'starting'
-  qrState.message = '正在启动无头浏览器并加载云·星穹铁道登录页...'
+  qrState.message = resetSession
+    ? '正在清除旧登录凭证并重新获取二维码...'
+    : '正在启动无头浏览器并加载云·星穹铁道登录页...'
   qrState.hasQr = false
   qrState.imageUrl = ''
+  qrState.alreadyLoggedIn = false
 
   try {
-    await apiFetch(`/api/accounts/${invite.account_id}/qr_login/start`, {
+    const query = resetSession ? '?reset_session=true' : ''
+    await apiFetch(`/api/accounts/${invite.account_id}/qr_login/start${query}`, {
       method: 'POST',
     })
     qrPollTimer = setInterval(() => {
@@ -360,16 +408,20 @@ async function pollQrStatus() {
   if (step.value !== 'qr' || !invite.account_id) return
   try {
     const res = await apiFetch(`/api/accounts/${invite.account_id}/qr_login/status`)
+    if (step.value !== 'qr') return
     qrState.status = res.status
     qrState.message = res.message || ''
     qrState.hasQr = Boolean(res.has_qr)
+    qrState.alreadyLoggedIn = Boolean(res.already_logged_in)
     if (res.has_qr) {
       qrState.imageUrl = `/api/accounts/${invite.account_id}/qr_login/image?token=${encodeURIComponent(localStorage.getItem('m7a_session_token') || '')}&t=${Date.now()}`
     }
     if (res.status === 'success') {
       stopQrPoll()
       await refreshStatus()
-      enterCongratsStep()
+      if (!qrState.alreadyLoggedIn && step.value === 'qr') {
+        enterCongratsStep()
+      }
     } else if (res.status === 'failed') {
       stopQrPoll()
     }

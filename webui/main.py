@@ -561,6 +561,7 @@ def _cleanup_qr_process(account_id: str) -> None:
 @app.post("/api/accounts/{account_id}/qr_login/start")
 def api_start_qr_login(
     account_id: str,
+    reset_session: bool = Query(default=False),
     ctx: AuthContext = Depends(require_authorized),
 ):
     ensure_account_access(ctx, account_id)
@@ -574,6 +575,9 @@ def api_start_qr_login(
     # 停止当前其它正在进行的扫码登录进程
     for existing_id in list(_qr_processes.keys()):
         _cleanup_qr_process(existing_id)
+
+    if reset_session:
+        account_manager.clear_profile_login_data(account_id)
 
     profile_dir = account_manager.get_profile_dir(account_id)
     status_file = os.path.abspath(os.path.join(DATA_DIR, f"qr_status_{account_id}.json"))
@@ -601,7 +605,7 @@ def api_start_qr_login(
         popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
 
     proc = subprocess.Popen(
-        [sys.executable, "-u", runner_script, profile_dir, status_file, qr_image],
+        [sys.executable, "-u", runner_script, profile_dir, status_file, qr_image, account_id],
         **popen_kwargs,
     )
     with _qr_lock:
@@ -647,7 +651,14 @@ def api_get_qr_login_status(
             data["qr_mtime"] = time.time()
 
     if data.get("status") == "success":
-        account_manager.update_account(account_id, is_logged_in=True)
+        update_kwargs: Dict[str, Any] = {"is_logged_in": True}
+        if data.get("mihoyo_aid"):
+            update_kwargs["mihoyo_aid"] = str(data["mihoyo_aid"])
+        if data.get("game_uid"):
+            update_kwargs["game_uid"] = str(data["game_uid"])
+        account_manager.update_account(account_id, **update_kwargs)
+    elif data.get("status") == "failed" and data.get("purged"):
+        account_manager.update_account(account_id, is_logged_in=False, mihoyo_aid="", game_uid="")
 
     if not is_alive and data.get("status") not in ("success", "failed", "idle"):
         data["status"] = "failed"

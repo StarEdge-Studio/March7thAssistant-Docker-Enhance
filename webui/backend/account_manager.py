@@ -2,6 +2,7 @@ import datetime
 import io
 import json
 import os
+import re
 import secrets
 import shutil
 import threading
@@ -117,6 +118,22 @@ class AccountManager:
                     acc["last_run_at"] = None
                 if "last_run_status" not in acc:
                     acc["last_run_status"] = None
+                if "mihoyo_aid" not in acc or acc["mihoyo_aid"] is None:
+                    acc["mihoyo_aid"] = ""
+                    changed = True
+                if "game_uid" not in acc or acc["game_uid"] is None:
+                    acc["game_uid"] = ""
+                    changed = True
+                if (acc.get("is_logged_in") or self.check_profile_logged_in(acc["id"])) and (
+                    not acc.get("mihoyo_aid") or not acc.get("game_uid")
+                ):
+                    ident = self.extract_profile_identity(acc["id"])
+                    if ident.get("mihoyo_aid") and not acc.get("mihoyo_aid"):
+                        acc["mihoyo_aid"] = ident["mihoyo_aid"]
+                        changed = True
+                    if ident.get("game_uid") and not acc.get("game_uid"):
+                        acc["game_uid"] = ident["game_uid"]
+                        changed = True
             data.sort(key=lambda x: x.get("order", 0))
             if changed:
                 self._save_accounts_unlocked(data)
@@ -382,12 +399,154 @@ class AccountManager:
                 pass
         return False
 
+    def extract_profile_identity(self, account_id: str) -> Dict[str, str]:
+        """从浏览器 Profile 的 Local Storage (LevelDB) 中提取已登录的米哈游通行证 AID 与游戏 UID。"""
+        result = {"mihoyo_aid": "", "game_uid": ""}
+        profile_dir = self.get_profile_dir(account_id)
+        leveldb_dir = os.path.join(profile_dir, "Default", "Local Storage", "leveldb")
+        if not os.path.exists(leveldb_dir):
+            return result
+
+        aid_patterns = [
+            re.compile(rb'"accountId"\s*:\s*"([1-9]\d{4,12})"'),
+            re.compile(rb'PAYMENT_ABTEST([1-9]\d{4,12})'),
+            re.compile(rb'"app_login_session"\s*:\s*"[0-9a-fA-F-]+_([1-9]\d{4,12})_\d+"'),
+            re.compile(rb'"aid"\s*:\s*"([1-9]\d{4,12})"'),
+        ]
+        uid_patterns = [
+            re.compile(rb'"role_id"\s*:\s*"(\d{9})"'),
+            re.compile(rb'"game_uid"\s*:\s*"(\d{9})"'),
+        ]
+
+        try:
+            files = [
+                os.path.join(leveldb_dir, fn)
+                for fn in os.listdir(leveldb_dir)
+                if fn.endswith((".ldb", ".log"))
+            ]
+            files.sort(key=lambda p: os.path.getmtime(p) if os.path.exists(p) else 0, reverse=True)
+        except OSError:
+            return result
+
+        for fp in files:
+            try:
+                with open(fp, "rb") as f:
+                    raw = f.read()
+            except OSError:
+                continue
+
+            if not result["mihoyo_aid"]:
+                for pat in aid_patterns:
+                    matches = pat.findall(raw)
+                    if matches:
+                        result["mihoyo_aid"] = matches[-1].decode("ascii", errors="ignore")
+                        break
+
+            if not result["game_uid"]:
+                for pat in uid_patterns:
+                    matches = pat.findall(raw)
+                    if matches:
+                        result["game_uid"] = matches[-1].decode("ascii", errors="ignore")
+                        break
+
+            if result["mihoyo_aid"] and result["game_uid"]:
+                break
+
+        return result
+
+    def clear_profile_login_data(self, account_id: str) -> None:
+        """清理指定账号 Profile 中的登录凭证与缓存数据（用于阻断错绑/重绑账号）。"""
+        profile_dir = self.get_profile_dir(account_id)
+        default_dir = os.path.join(profile_dir, "Default")
+        if os.path.exists(default_dir):
+            for rel_target in (
+                "Cookies",
+                "Cookies-journal",
+                os.path.join("Network", "Cookies"),
+                os.path.join("Network", "Cookies-journal"),
+                "Local Storage",
+                "Session Storage",
+                "IndexedDB",
+            ):
+                target_path = os.path.join(default_dir, rel_target)
+                try:
+                    if os.path.isdir(target_path):
+                        shutil.rmtree(target_path, ignore_errors=True)
+                    elif os.path.exists(target_path):
+                        os.remove(target_path)
+                except OSError:
+                    pass
+        self._init_profile_dir(account_id)
+        self.update_account(account_id, is_logged_in=False, mihoyo_aid="", game_uid="")
+
+    def find_duplicate_account(
+        self,
+        exclude_account_id: str,
+        mihoyo_aid: Optional[str] = None,
+        game_uid: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """查找是否已有其它账号卡片绑定了相同的米哈游通行证 AID 或游戏 UID。"""
+        clean_aid = (mihoyo_aid or "").strip()
+        clean_uid = (game_uid or "").strip()
+        if not clean_aid and not clean_uid:
+            return None
+
+        with self._lock:
+            changed = False
+            for acc in self.accounts:
+                if acc["id"] == exclude_account_id:
+                    continue
+                if (acc.get("is_logged_in") or self.check_profile_logged_in(acc["id"])) and (
+                    not acc.get("mihoyo_aid") or not acc.get("game_uid")
+                ):
+                    ident = self.extract_profile_identity(acc["id"])
+                    if ident.get("mihoyo_aid") and not acc.get("mihoyo_aid"):
+                        acc["mihoyo_aid"] = ident["mihoyo_aid"]
+                        changed = True
+                    if ident.get("game_uid") and not acc.get("game_uid"):
+                        acc["game_uid"] = ident["game_uid"]
+                        changed = True
+
+                other_aid = (acc.get("mihoyo_aid") or "").strip()
+                other_uid = (acc.get("game_uid") or "").strip()
+                other_name = (acc.get("name") or "").strip()
+
+                if clean_aid and other_aid and clean_aid == other_aid:
+                    if changed:
+                        self._save_accounts_unlocked()
+                    return deepcopy(acc)
+                if clean_uid and (
+                    (other_uid and clean_uid == other_uid)
+                    or (re.fullmatch(r"\d{9}", other_name) and clean_uid == other_name)
+                ):
+                    if changed:
+                        self._save_accounts_unlocked()
+                    return deepcopy(acc)
+
+            if changed:
+                self._save_accounts_unlocked()
+        return None
+
+    def _sync_account_login_and_identity_unlocked(self, acc: Dict[str, Any]) -> bool:
+        changed = False
+        if self.check_profile_logged_in(acc["id"]) and not acc.get("is_logged_in"):
+            acc["is_logged_in"] = True
+            changed = True
+        if acc.get("is_logged_in") and (not acc.get("mihoyo_aid") or not acc.get("game_uid")):
+            ident = self.extract_profile_identity(acc["id"])
+            if ident.get("mihoyo_aid") and not acc.get("mihoyo_aid"):
+                acc["mihoyo_aid"] = ident["mihoyo_aid"]
+                changed = True
+            if ident.get("game_uid") and not acc.get("game_uid"):
+                acc["game_uid"] = ident["game_uid"]
+                changed = True
+        return changed
+
     def get_accounts(self) -> List[Dict[str, Any]]:
         with self._lock:
             changed = False
             for acc in self.accounts:
-                if self.check_profile_logged_in(acc["id"]) and not acc.get("is_logged_in"):
-                    acc["is_logged_in"] = True
+                if self._sync_account_login_and_identity_unlocked(acc):
                     changed = True
             if changed:
                 self._save_accounts_unlocked()
@@ -397,8 +556,7 @@ class AccountManager:
         with self._lock:
             for acc in self.accounts:
                 if acc["id"] == account_id:
-                    if self.check_profile_logged_in(acc["id"]) and not acc.get("is_logged_in"):
-                        acc["is_logged_in"] = True
+                    if self._sync_account_login_and_identity_unlocked(acc):
                         self._save_accounts_unlocked()
                     return deepcopy(acc)
             return None
@@ -412,12 +570,15 @@ class AccountManager:
             return []
         with self._lock:
             matched = []
+            changed = False
             for acc in sorted(self.accounts, key=lambda x: x.get("order", 0)):
                 bound = (acc.get("username") or "").strip().lower()
                 if bound and bound == target:
-                    if self.check_profile_logged_in(acc["id"]) and not acc.get("is_logged_in"):
-                        acc["is_logged_in"] = True
+                    if self._sync_account_login_and_identity_unlocked(acc):
+                        changed = True
                     matched.append(deepcopy(acc))
+            if changed:
+                self._save_accounts_unlocked()
             return matched
 
     def get_account_by_secret_key(self, secret_key: str) -> Optional[Dict[str, Any]]:
@@ -442,6 +603,8 @@ class AccountManager:
                 "enabled": True,
                 "order": len(self.accounts),
                 "is_logged_in": False,
+                "mihoyo_aid": "",
+                "game_uid": "",
                 "last_run_at": None,
                 "last_run_status": None,
             }
@@ -458,6 +621,8 @@ class AccountManager:
             "enabled",
             "order",
             "is_logged_in",
+            "mihoyo_aid",
+            "game_uid",
             "last_run_at",
             "last_run_status",
         }
@@ -466,7 +631,7 @@ class AccountManager:
                 if acc["id"] == account_id:
                     for k, v in kwargs.items():
                         if k in allowed_fields and v is not None:
-                            if k in ("name", "username") and isinstance(v, str):
+                            if k in ("name", "username", "mihoyo_aid", "game_uid") and isinstance(v, str):
                                 acc[k] = v.strip()
                             else:
                                 acc[k] = v

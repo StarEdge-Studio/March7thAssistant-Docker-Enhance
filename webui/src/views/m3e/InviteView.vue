@@ -236,10 +236,22 @@
             </div>
             <div class="space-y-0.5">
               <span class="text-sm font-extrabold block" style="color: var(--m3-on-surface);">
-                {{ qrState.status === 'success' ? '登录成功' : '扫码成功' }}
+                {{
+                  qrState.status === 'scanned'
+                    ? '扫码成功'
+                    : qrState.alreadyLoggedIn
+                      ? '当前已登录'
+                      : '登录成功'
+                }}
               </span>
               <span class="text-xs" style="color: var(--m3-on-surface-variant);">
-                {{ qrState.status === 'success' ? '登录凭证已保存，正在跳转...' : '请在手机端点击「确认登录」' }}
+                {{
+                  qrState.status === 'scanned'
+                    ? '请在手机端点击「确认登录」'
+                    : qrState.alreadyLoggedIn
+                      ? '如需更换账号，请清除旧会话后重扫'
+                      : '登录凭证已保存，正在跳转...'
+                }}
               </span>
             </div>
           </div>
@@ -268,17 +280,39 @@
         </div>
 
         <p class="text-[11px]" style="color: var(--m3-on-surface-variant);">
-          {{ qrState.status === 'scanned' ? '已成功识别二维码，请在手机米游社上点击「确认登录」。' : '请使用手机「米游社 App」扫描上方二维码并在手机端点击确认登录。' }}
+          {{
+            qrState.status === 'scanned'
+              ? '已成功识别二维码，请在手机米游社上点击「确认登录」。'
+              : qrState.status === 'success' && qrState.alreadyLoggedIn
+                ? '检测到已有登录状态。如需扫码更换其他账号，请点击「清除并重新登录」。'
+                : '请使用手机「米游社 App」扫描上方二维码并在手机端点击确认登录。'
+          }}
         </p>
 
-        <div class="pt-1 flex justify-center gap-2.5">
+        <div class="pt-1 flex flex-wrap justify-center gap-2.5">
           <button
             v-if="qrState.status === 'failed'"
             type="button"
             class="m3-btn m3-btn-filled px-5 py-2.5 text-xs"
-            @click="startQrLogin"
+            @click="startQrLogin(true)"
           >
             重新获取二维码
+          </button>
+          <button
+            v-if="qrState.status === 'success' && qrState.alreadyLoggedIn"
+            type="button"
+            class="m3-btn m3-btn-filled px-5 py-2.5 text-xs"
+            @click="startQrLogin(true)"
+          >
+            清除并重新登录
+          </button>
+          <button
+            v-if="qrState.status === 'success' && qrState.alreadyLoggedIn"
+            type="button"
+            class="m3-btn m3-btn-tonal px-5 py-2.5 text-xs"
+            @click="enterCongratsStep"
+          >
+            使用当前账号继续
           </button>
         </div>
       </div>
@@ -351,6 +385,7 @@ const qrState = reactive({
   message: '正在启动无头浏览器并加载云·星穹铁道登录页...',
   hasQr: false,
   imageUrl: '',
+  alreadyLoggedIn: false,
 })
 
 let qrPollTimer = null
@@ -475,15 +510,19 @@ function stopQrPoll() {
   }
 }
 
-async function startQrLogin() {
+async function startQrLogin(resetSession = false) {
   stopQrPoll()
   qrState.status = 'starting'
-  qrState.message = '正在启动无头浏览器并加载云·星穹铁道登录页...'
+  qrState.message = resetSession
+    ? '正在清除旧登录凭证并重新获取二维码...'
+    : '正在启动无头浏览器并加载云·星穹铁道登录页...'
   qrState.hasQr = false
   qrState.imageUrl = ''
+  qrState.alreadyLoggedIn = false
 
   try {
-    await apiFetch(`/api/accounts/${invite.account_id}/qr_login/start`, {
+    const query = resetSession ? '?reset_session=true' : ''
+    await apiFetch(`/api/accounts/${invite.account_id}/qr_login/start${query}`, {
       method: 'POST',
     })
     qrPollTimer = setInterval(() => {
@@ -499,16 +538,20 @@ async function pollQrStatus() {
   if (step.value !== 'qr' || !invite.account_id) return
   try {
     const res = await apiFetch(`/api/accounts/${invite.account_id}/qr_login/status`)
+    if (step.value !== 'qr') return
     qrState.status = res.status
     qrState.message = res.message || ''
     qrState.hasQr = Boolean(res.has_qr)
+    qrState.alreadyLoggedIn = Boolean(res.already_logged_in)
     if (res.has_qr) {
       qrState.imageUrl = `/api/accounts/${invite.account_id}/qr_login/image?token=${encodeURIComponent(localStorage.getItem('m7a_session_token') || '')}&t=${Date.now()}`
     }
     if (res.status === 'success') {
       stopQrPoll()
       await refreshStatus()
-      enterCongratsStep()
+      if (!qrState.alreadyLoggedIn && step.value === 'qr') {
+        enterCongratsStep()
+      }
     } else if (res.status === 'failed') {
       stopQrPoll()
     }
