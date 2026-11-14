@@ -1,9 +1,11 @@
 from abc import abstractmethod
 import os
+import shutil
 import time
 import subprocess
 import ctypes
 from typing import Literal, Tuple, Optional
+from PIL.Image import Image
 from utils.logger.logger import Logger
 from utils.dpi import configure_dpi_awareness
 
@@ -11,6 +13,8 @@ from utils.dpi import configure_dpi_awareness
 # Keep a module-level fallback for non-standard entry points that import game control
 # classes directly without going through app.py or main.py.
 configure_dpi_awareness()
+
+type FrameCapture = tuple[Image, tuple[int, int, int, int], float] | Literal[False]
 
 
 class GameControllerBase:
@@ -58,6 +62,10 @@ class GameControllerBase:
         """获取用于模拟鼠标和键盘操作的类"""
         ...
 
+    def capture_frame(self, crop=(0, 0, 1, 1), *, prefer_frame=True) -> FrameCapture:
+        """非窗口后端取帧。返回图像、裁剪位置和缩放系数，暂时无帧时返回 False。"""
+        raise NotImplementedError
+
     @abstractmethod
     def copy(self, text: str) -> None:
         """复制文本到剪贴板"""
@@ -98,18 +106,23 @@ class GameControllerBase:
             self.log_debug("游戏窗口未找到")
             return None
 
-    def shutdown(self, action: Literal['Exit', 'Loop', 'Shutdown', 'Sleep', 'Hibernate', 'Restart', 'Logoff', 'TurnOffDisplay', 'RunScript'], delay: int = 60) -> bool:
+    def shutdown(self, action: Literal['Exit', 'Loop', 'Shutdown', 'Sleep', 'Hibernate', 'Restart', 'Logoff', 'TurnOffDisplay', 'RunScript'],
+                 delay: int = 60, *, on_stopped=None) -> bool:
         """
         终止游戏并在指定的延迟后执行系统操作：关机、睡眠、休眠、重启、注销。
 
         参数:
             action: 要执行的系统操作。
             delay: 延迟时间，单位为秒，默认为60秒。
+            on_stopped: 游戏停止后、执行系统操作前的收尾回调。
 
         返回:
             操作成功执行返回True，否则返回False。
         """
-        self.stop_game()
+        if self.stop_game() is False:
+            return False
+        if on_stopped is not None:
+            on_stopped()
         if action not in ["Shutdown", "Sleep", "Hibernate", "Restart", "Logoff", "TurnOffDisplay", "RunScript"]:
             return True
 
@@ -136,7 +149,8 @@ class GameControllerBase:
                 SC_MONITORPOWER = 0xF170
                 ctypes.windll.user32.SendMessageW(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, 2)
             elif action == 'RunScript':
-                self.run_script()
+                if not self.run_script():
+                    return False
             self.log_info(f"执行系统操作：{action}")
             return True
         except Exception as e:
@@ -163,7 +177,8 @@ class GameControllerBase:
                 file_ext = os.path.splitext(self.script_path)[1].lower()
                 if file_ext == '.ps1':
                     # PowerShell脚本
-                    subprocess.Popen(["powershell", "-ExecutionPolicy", "Bypass", "-File", self.script_path],
+                    shell = shutil.which("pwsh.exe") or "powershell.exe"
+                    subprocess.Popen([shell, "-ExecutionPolicy", "Bypass", "-File", self.script_path],
                                      creationflags=subprocess.CREATE_NEW_CONSOLE)
                     self.log_info(f"已启动PowerShell脚本：{self.script_path}")
                 elif file_ext == '.bat':

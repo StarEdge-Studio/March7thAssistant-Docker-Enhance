@@ -19,6 +19,9 @@ def loop(monkeypatch):
     from utils.date import Date
 
     cfg = MagicMock()
+    cfg.control_backend = None
+    cfg.ui_profile = None
+    cfg.cloud_game_enable = False
     cfg.after_finish = "Loop"
     cfg.play_audio = False
     cfg.notify_merge = False
@@ -48,6 +51,7 @@ def loop(monkeypatch):
     monkeypatch.setattr(game, "notif", MagicMock())
     monkeypatch.setattr(game, "log", MagicMock())
     monkeypatch.setattr(game, "Power", MagicMock())
+    monkeypatch.setattr(game, "task_power_request", SimpleNamespace(release=lambda log: events.append("release_power")))
 
     class FrozenDatetime(datetime):
         @classmethod
@@ -62,7 +66,7 @@ def loop(monkeypatch):
 def test_wait_releases_lock_reloads_and_never_reads_power(loop):
     loop.game.after_finish_is_loop()
     assert loop.clock.sleeps == [60, 60]
-    assert loop.events == ["release", "reacquire", "reload"]
+    assert loop.events == ["release_power", "release", "reacquire", "reload"]
     loop.game.Power.get.assert_not_called()
     loop.game.get_game_controller().stop_game.assert_called_once_with()
     loop.game.ocr.exit_ocr.assert_called_once_with()
@@ -101,13 +105,14 @@ def test_main_loop_waits_then_starts_next_run(loop, trigger):
                                      wait_after_cloud_zero_duration=game.wait_after_cloud_zero_duration),
                  cfg=loop.cfg, version=MagicMock(), Daily=MagicMock(), reward=MagicMock(),
                  notif=game.notif, telemetry=MagicMock(), time=game.time,
-                 CloudGameZeroDurationError=game.CloudGameZeroDurationError)
+                 CloudGameZeroDurationError=game.CloudGameZeroDurationError,
+                 get_ui_profile=lambda cfg: SimpleNamespace(name="pc_1080"))
     exec(compile(ast.Module(body=[run], type_ignores=[]), str(source), "exec"), scope)
     with pytest.raises(EndRun):
         scope["run_main_actions"](no_run_immediately=trigger == "startup")
     assert starts == ([120] if trigger == "startup" else [0, 120])
-    assert loop.events == ["release", "reacquire", "reload"]
+    assert loop.events == ["release_power", "release", "reacquire", "reload"]
     game.Power.get.assert_not_called()
     if trigger == "finished":
         scope["Daily"].start.assert_called_once_with()
-        scope["reward"].start.assert_called_once_with()
+        scope["reward"].start.assert_not_called()

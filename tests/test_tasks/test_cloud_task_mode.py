@@ -1,14 +1,20 @@
 """直接启动任务时的云游戏模式选择与失败状态回归。"""
 import ast
 import sys
+from collections import deque
+from importlib import import_module
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
 
+from module.config.platform import ProfileAssetNotFoundError, TouchProfileInputError, get_control_backend, get_ui_profile
+from module.game.adb_transport import AdbError
+from module.localization import tr
 from utils.pause import RunStopRequested
 from utils.runs import EXIT_FAILED, EXIT_OK, exit_code_of
+from utils.tasks import AVAILABLE_TASKS, CLI_ONLY_TASKS, HOST_TASKS, PAUSABLE_TASKS, UNSUPPORTED_TASK, task_is_supported
 
 
 @pytest.fixture
@@ -16,24 +22,32 @@ def runner():
     source = Path(__file__).resolve().parents[2] / "main.py"
     tree = ast.parse(source.read_text(encoding="utf-8-sig"))
     functions = [node for node in tree.body if isinstance(node, ast.FunctionDef)
-                 and node.name in {"run_main_actions", "run_sub_task", "main", "_run_action"}]
+                 and node.name in {"run_main_actions", "run_sub_task", "run_workflow_action", "main", "_run_action"}]
     entrypoint = next(node for node in tree.body if isinstance(node, ast.If)
                       and isinstance(node.test, ast.Compare)
                       and isinstance(node.test.left, ast.Name)
                       and node.test.left.id == "__name__")
     names = ("game", "cfg", "cloud_game", "telemetry", "time", "Daily", "reward",
              "Power", "CurrencyWars", "DivergentUniverse", "Fight", "Universe",
-             "screen_test", "character_export", "challenge", "Redemption",
+             "screen_test", "character_export", "challenge", "Redemption", "adb_check",
              "first_run", "pause_ctl", "ensure_exclusive_run", "version",
-             "recover_temporary_graphics", "restore_temporary_graphics", "log")
+             "recover_temporary_graphics", "restore_temporary_graphics", "log", "publish_status", "run_session", "notif",
+             "task_power_request")
     scope = {name: MagicMock() for name in names}
+    scope["cfg"].control_backend = None
+    scope["cfg"].ui_profile = None
     scope["cfg"].cloud_game_enable = False
     scope["cfg"].after_finish = "None"
     scope["cfg"].browser_headless_enable = True
     scope["cfg"].notify_merge = False
     scope["CloudGameZeroDurationError"] = type("CloudGameZeroDurationError", (Exception,), {})
+    scope.update(get_control_backend=get_control_backend, get_ui_profile=get_ui_profile,
+                 AVAILABLE_TASKS=AVAILABLE_TASKS, CLI_ONLY_TASKS=CLI_ONLY_TASKS, HOST_TASKS=HOST_TASKS,
+                 UNSUPPORTED_TASK=UNSUPPORTED_TASK, task_is_supported=task_is_supported, tr=tr, AdbError=AdbError,
+                 ProfileAssetNotFoundError=ProfileAssetNotFoundError,
+                 TouchProfileInputError=TouchProfileInputError)
     scope["time"] = SimpleNamespace(time=lambda: 0)
-    scope["EXCLUSIVE_ACTIONS"] = {"fight", "universe", "power", "divergent"}
+    scope["EXCLUSIVE_ACTIONS"] = PAUSABLE_TASKS | {"game", "game_update", "game_pre_download", "app_update", "adb_check"}
     # 仅加载入口函数，避免导入 CLI 时触发权限检查或游戏操作。
     exec(compile(ast.Module(body=functions, type_ignores=[]), str(source), "exec"), scope)
     return SimpleNamespace(
@@ -53,9 +67,52 @@ def test_direct_task_selects_browser_mode(runner, action, headless, configured_h
 
     runner.run_sub_task(action)
 
-    runner.game.start.assert_called_once_with(headless=headless)
+    if action == "currencywars":
+        runner.game.start.assert_called_once_with(headless=headless, screen_ready=runner.CurrencyWars.game_screen_ready)
+    else:
+        runner.game.start.assert_called_once_with(headless=headless)
     assert runner.cfg.browser_headless_enable is configured_headless
     runner.cfg.set_value.assert_not_called()
+
+
+@pytest.mark.parametrize(("explicit_backend", "legacy_cloud", "runtime"), [
+    (None, False, "local_game"),
+    (None, True, "cloud_game"),
+    ("adb", True, "adb_game"),
+])
+def test_startup_telemetry_uses_selected_backend(runner, monkeypatch, explicit_backend, legacy_cloud, runtime):
+    from module.telemetry import telemetry
+
+    telemetry_module = import_module("module.telemetry.telemetry")
+    monkeypatch.setattr(telemetry_module, "_collect_startup_configuration_snapshot", dict)
+    monkeypatch.setattr(telemetry_module, "_resolve_effective_ocr_mode", lambda: "cpu")
+    monkeypatch.setattr(telemetry_module, "_resolve_effective_language", lambda: "zh_CN")
+    monkeypatch.setattr(telemetry, "_enabled", True)
+    monkeypatch.setattr(telemetry, "_queue", deque())
+    runner.telemetry.track_startup.side_effect = telemetry.track_startup
+    runner.cfg.control_backend = explicit_backend
+    runner.cfg.cloud_game_enable = legacy_cloud
+
+    runner.main(action="game")
+
+    event, = telemetry._queue
+    assert event["event"] == "app_startup"
+    assert event["properties"]["game_runtime"] == runtime
+
+
+@pytest.mark.parametrize("stop_error", (RunStopRequested, RuntimeError))
+def test_currency_wars_loop_continues_after_settled_matches_until_stopped(runner, stop_error):
+    war = runner.CurrencyWars.return_value
+    war.start.side_effect = [True, False, True, True, stop_error()]
+
+    with pytest.raises(stop_error):
+        runner.run_sub_task("currencywarsloop")
+
+    assert war.start.call_count == 5
+    assert [call.args for call in runner.telemetry.track_task_complete.call_args_list[:4]] == [
+        ("currencywarsloop", won, 0) for won in (True, False, True, True)
+    ]
+    runner.game.stop.assert_not_called()
 
 
 @pytest.mark.parametrize("cloud_game_enable", [False, True], ids=["local", "visible-cloud"])
@@ -130,6 +187,67 @@ def test_legacy_task_without_return_value_still_succeeds(runner):
     runner.game.stop.assert_called_once_with(False)
 
 
+@pytest.mark.parametrize("backend", ["local", "cloud"])
+def test_pc_daily_only_runs_training(runner, backend):
+    runner.cfg.control_backend = backend
+
+    assert runner.main(action="daily") is True
+
+    runner.Daily.run.assert_called_once_with()
+    runner.reward.start.assert_not_called()
+
+
+@pytest.mark.parametrize("backend", ["local", "adb"])
+@pytest.mark.parametrize(("action", "target"), [
+    ("daily", "tasks.touch.rewards.run_daily_training"),
+    ("routine", "tasks.touch.rewards.routine"),
+    ("power", "tasks.touch.power.run_standalone"),
+])
+def test_touch_subtasks_run_without_pc_tasks(runner, monkeypatch, backend, action, target):
+    runner.cfg.ui_profile = "touch_720"
+    runner.cfg.control_backend = backend
+    task = MagicMock(return_value=True)
+    monkeypatch.setattr(target, task)
+
+    assert runner.main(action=action) is True
+
+    runner.game.start.assert_called_once_with(headless=None)
+    task.assert_called_once_with()
+    runner.Daily.run.assert_not_called()
+    runner.Daily.routine.assert_not_called()
+    runner.Power.run.assert_not_called()
+    runner.reward.start.assert_not_called()
+    if backend == "adb":
+        runner.game.get_game_controller.assert_called_once_with("adb")
+        runner.publish_status.assert_called_once_with(runner.game.get_game_controller.return_value, runner.run_session)
+        runner.game.get_game_controller.return_value.close.assert_called_once_with()
+
+
+@pytest.mark.parametrize("action, workflow, backend", [
+    *[(action, None, "local") for action in sorted(
+        AVAILABLE_TASKS.keys() - {"main", "daily", "routine", "power", "screen_test", "game", "mobileui_update", "app_update", "notify"}
+    )],
+    (None, "测试流程", "local"),
+    ("daily", None, "cloud"),
+    ("routine", None, "cloud"),
+    ("power", None, "cloud"),
+    ("game", None, "cloud"),
+])
+def test_touch_skips_unsupported_tasks_before_starting_game(runner, action, workflow, backend):
+    runner.cfg.ui_profile = "touch_720"
+    runner.cfg.control_backend = backend
+
+    assert runner.main(action=action, workflow_name=workflow) is False
+
+    assert UNSUPPORTED_TASK in runner.log.warning.call_args.args[0]
+    assert runner.run_session.note.call_args.kwargs["reason"] == "unsupported_backend"
+    runner.ensure_exclusive_run.assert_not_called()
+    runner.game.start.assert_not_called()
+    runner.game.get_game_controller.assert_not_called()
+    runner.Daily.start.assert_not_called()
+    runner.reward.start.assert_not_called()
+
+
 @pytest.mark.parametrize("action", [None, "main"])
 def test_full_run_keeps_default_browser_mode(runner, action):
     runner.cfg.cloud_game_enable = True
@@ -163,3 +281,94 @@ def test_browser_start_failure_never_runs_task(runner):
         runner.main(action="fight")
     runner.Fight.start.assert_not_called()
     runner.game.stop.assert_not_called()
+
+
+def test_adb_cli_returns_failure_without_screenshot_or_pause(runner):
+    runner.cfg.control_backend = "adb"
+    runner.cfg.ui_profile = "touch_720"
+    runner.adb_check.run.side_effect = AdbError("disconnected", "ADB 设备断开")
+    scope = runner.main.__globals__
+    scope.update(
+        __name__="__main__", sys=sys, atexit=MagicMock(), exit_handler=MagicMock(),
+        args=SimpleNamespace(task="adb_check", workflow_name=None, no_run_immediately=False),
+        run_session=MagicMock(), RunStopRequested=RunStopRequested,
+        EXIT_FAILED=EXIT_FAILED, EXIT_OK=EXIT_OK, exit_code_of=exit_code_of,
+        release_input=MagicMock(), save_error_screenshot=MagicMock(), pause_on_error=MagicMock(),
+    )
+
+    with pytest.raises(SystemExit) as raised:
+        exec(runner.entrypoint, scope)
+
+    assert raised.value.code == EXIT_FAILED
+    scope["run_session"].note.assert_called_once_with(error=str(runner.adb_check.run.side_effect))
+    runner.game.get_game_controller.return_value.close.assert_called_once_with()
+    runner.task_power_request.acquire.assert_called_once_with(runner.log)
+    runner.task_power_request.release.assert_called_once_with(runner.log)
+    scope["run_session"].finish.assert_called_once_with(EXIT_FAILED)
+    runner.game.start.assert_not_called()
+    runner.version.start.assert_not_called()
+    runner.game.after_finish_is_loop.assert_not_called()
+    scope["save_error_screenshot"].assert_not_called()
+    scope["pause_on_error"].assert_not_called()
+
+
+
+@pytest.mark.parametrize("action", ["fight", "fight_gui", "universe", "universe_gui"])
+def test_review_adb_cli_rejects_desktop_tasks_before_game_start(runner, action):
+    runner.cfg.control_backend = "adb"
+
+    assert runner.main(action=action) is False
+    assert runner.run_session.note.call_args.kwargs["status"] == "blocked"
+    runner.game.start.assert_not_called()
+    runner.Fight.start.assert_not_called()
+    runner.Universe.start.assert_not_called()
+
+
+@pytest.mark.parametrize(("module_name", "class_name"), [
+    ("tasks.daily.fight", "Fight"),
+    ("tasks.weekly.universe", "Universe"),
+])
+@pytest.mark.parametrize("method", ["start", "gui"])
+def test_review_adb_blocks_desktop_task_preparation(monkeypatch, module_name, class_name, method):
+    from importlib import import_module
+    from unittest.mock import Mock
+
+    task_module = import_module(module_name)
+    task = getattr(task_module, class_name)
+    monkeypatch.setattr(task_module, "cfg", SimpleNamespace(control_backend="adb", cloud_game_enable=False))
+    monkeypatch.setattr(task_module, "sys", SimpleNamespace(platform="win32"))
+    check_path = Mock(side_effect=AssertionError("unexpected host task preparation"))
+    monkeypatch.setattr(task, "check_path", check_path)
+
+    with pytest.raises(AdbError) as raised:
+        getattr(task, method)()
+
+    assert raised.value.code == "desktop_task_unsupported"
+    check_path.assert_not_called()
+
+
+@pytest.mark.parametrize("result", [True, False])
+def test_adb_full_run_uses_touch_routine(runner, monkeypatch, result):
+    from tasks.touch import rewards
+
+    runner.cfg.control_backend = "adb"
+    routine = MagicMock(return_value=result)
+    monkeypatch.setattr(rewards, "routine", routine)
+    if result:
+        runner.game.stop.side_effect = SystemExit(EXIT_OK)
+        with pytest.raises(SystemExit) as raised:
+            runner.main(action="main")
+        assert raised.value.code == EXIT_OK
+    else:
+        assert runner.main(action="main") is False
+        runner.game.stop.assert_not_called()
+    routine.assert_called_once_with(full_run=True)
+    runner.Daily.start.assert_not_called()
+    runner.telemetry.track_task_complete.assert_called_once_with("main", result, 0)
+
+
+def test_adb_workflow_reports_not_executed(runner):
+    runner.cfg.control_backend = "adb"
+    assert runner.main(workflow_name="测试流程") is False
+    assert runner.run_session.note.call_args.kwargs["reason"] == "unsupported_backend"
+    runner.game.get_game_controller.assert_not_called()

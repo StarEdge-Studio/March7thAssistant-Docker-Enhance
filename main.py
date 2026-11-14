@@ -11,7 +11,7 @@ from utils.console import ensure_utf8_output
 ensure_utf8_output()
 
 from utils.dpi import configure_dpi_awareness
-from utils.tasks import AVAILABLE_TASKS
+from utils.tasks import AVAILABLE_TASKS, CLI_ONLY_TASKS, HOST_TASKS, UNSUPPORTED_TASK, task_is_supported
 
 
 configure_dpi_awareness()
@@ -39,7 +39,7 @@ def parse_args():
     positional.add_argument(
         'task',
         nargs='?',
-        choices=list(AVAILABLE_TASKS.keys()),
+        choices=[*AVAILABLE_TASKS, *CLI_ONLY_TASKS],
         metavar='TASK',
         help='要执行的任务名称（可选，不指定则执行完整运行）'
     )
@@ -151,16 +151,17 @@ def parse_args():
     # 处理 --list 参数
     if args.list:
         from module.localization import load_language
-        from utils.tasks import task_display_names
+        from utils.tasks import supported_tasks, task_display_names
 
         load_language()
+        names = task_display_names(supported_tasks(include_cli=True))
         if args.json:
             import json
-            print(json.dumps([{"id": task_id, "name": name} for task_id, name in task_display_names().items()], ensure_ascii=True))
+            print(json.dumps([{"id": task_id, "name": name} for task_id, name in names.items()], ensure_ascii=True))
             sys.exit(0)
         print("\n可用的任务列表:")
         print("-" * 40)
-        for task_id, task_name in task_display_names().items():
+        for task_id, task_name in names.items():
             print(f"  {task_id:<20} {task_name}")
         print("-" * 40)
         print("\n使用示例:")
@@ -249,17 +250,35 @@ import atexit
 import base64
 import time
 
+# ADB 自检通过设备端服务执行，无需 Windows 管理员权限。
+adb_check_only = args.task == "adb_check" and not args.workflow_name
+requires_admin = not adb_check_only
+
 if sys.platform == 'win32':
     from utils.admin import is_user_admin
     from utils.console import is_gui_started as _is_gui, is_docker_started as _is_docker
-    # 带 --run-id 的是入口转交出来的管理员进程：即使没拿到管理员权限也不能再转交一次，否则会不断重复启动自己
+    
     _is_cloud_or_webui = os.environ.get("MARCH7TH_CLOUD_GAME_ENABLE", "").lower() in ("true", "1") or os.environ.get("MARCH7TH_WEBUI_STARTED", "").lower() in ("true", "1")
-    if not _is_gui() and not _is_docker() and not _is_cloud_or_webui and not is_user_admin() and not args.run_id:
+    env_allows_elevation = not _is_gui() and not _is_docker() and not _is_cloud_or_webui
+
+    if env_allows_elevation and requires_admin and not is_user_admin():
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {"MARCH7TH_CONFIG_READONLY": "1"}):
+            from module.config import cfg
+            from module.config.platform import get_control_backend
+
+        requested = "workflow" if args.workflow_name else args.task or "main"
+        requires_admin = task_is_supported(requested, cfg) and not (
+            requested == "screen_test" and get_control_backend(cfg) == "adb"
+        )
+
+    # 带 --run-id 的是入口转交出来的管理员进程：即使没拿到管理员权限也不能再转交一次，否则会不断重复启动自己
+    if env_allows_elevation and requires_admin and not is_user_admin() and not args.run_id:
         # 未提权（终端、脚本或 AI Agent 通过 m7a.exe 调用，或源码运行）：把任务交给管理员进程执行，
         # 同时在当前终端跟随输出，结束后返回任务的真实退出码
         from utils.cli_entry import run_task_elevated
         sys.exit(run_task_elevated(sys.argv[1:], json_output=args.json, detach=args.detach))
-
 # 由免 UAC 计划任务启动的管理员进程：与 UAC 启动的窗口一致，最小化且不抢焦点（输出已转发到调用方的终端）
 if args.minimize_console:
     from utils.console import minimize_console_window
@@ -302,7 +321,9 @@ if desktop_twin_context:
     run_session.record["windows_session_id"] = desktop_twin_context.session.session_id
     run_session.record["windows_session_logon_time"] = desktop_twin_context.session.logon_time
 
-if sys.platform == 'win32' and not is_gui_started() and not is_docker_started() and not (os.environ.get("MARCH7TH_CLOUD_GAME_ENABLE", "").lower() in ("true", "1") or os.environ.get("MARCH7TH_WEBUI_STARTED", "").lower() in ("true", "1")) and not is_user_admin():
+_is_cloud_or_webui = os.environ.get("MARCH7TH_CLOUD_GAME_ENABLE", "").lower() in ("true", "1") or os.environ.get("MARCH7TH_WEBUI_STARTED", "").lower() in ("true", "1")
+
+if sys.platform == 'win32' and not is_gui_started() and not is_docker_started() and not _is_cloud_or_webui and requires_admin and not is_user_admin():
     # 入口转交的管理员进程却没有管理员权限（例如免 UAC 运行的计划任务被改成了不以最高权限运行）：
     # 不执行任务，把原因写进运行记录，入口会照常转告调用方
     _message = "没有获得管理员权限，任务未运行。如果开启了免 UAC 运行，请在图形界面「设置 → 杂项」中关闭后重新开启"
@@ -312,6 +333,7 @@ if sys.platform == 'win32' and not is_gui_started() and not is_docker_started() 
     sys.exit(EXIT_ELEVATION_FAILED)
 
 from module.config import cfg
+from module.config.platform import ProfileAssetNotFoundError, TouchProfileInputError, get_control_backend, get_ui_profile
 from module.logger import log
 import logging
 logging.getLogger("March7thAssistant").addHandler(run_session.error_log_handler())
@@ -319,7 +341,7 @@ from module.notification import notif
 from module.telemetry import telemetry
 from module.notification.notification import NotificationLevel
 
-from module.localization import load_language
+from module.localization import load_language, tr
 
 # 初始化界面语言（CLI 界面输出与后续 tr() 使用；日志按约定固定中文原文）
 load_language()
@@ -329,6 +351,9 @@ from utils.screenshot_util import save_error_screenshot
 
 import tasks.game as game
 from module.game import cloud_game
+from module.game.adb_transport import AdbError
+from module.game.adb_status import publish_status
+from tasks.game import adb_check
 from module.game.cloud import CloudGameZeroDurationError
 import tasks.reward as reward
 import tasks.challenge as challenge
@@ -352,6 +377,7 @@ from utils.pause import pause_ctl, RunStopRequested, STOP_GRACE_SECONDS
 from module.automation import auto
 from utils.tasks import PAUSABLE_TASKS
 from utils.temporary_graphics import recover_temporary_graphics, restore_temporary_graphics
+from utils.windows_power import task_power_request
 
 telemetry.init(
     enabled=cfg.get_value("telemetry_enable", True),
@@ -362,7 +388,7 @@ telemetry.init(
 telemetry.track_feature("run_invoker", run_session.record["invoker"])
 
 # 安装登记：供 AI Agent / 脚本查找本机的小助手安装位置
-if not is_docker_started():
+if not adb_check_only and not is_docker_started():
     try:
         from utils.install_registry import register_install
         register_install(cfg.version)
@@ -370,7 +396,7 @@ if not is_docker_started():
         pass
 
 # 会操控游戏或替换程序文件的任务：同一时间只允许一个在运行
-EXCLUSIVE_ACTIONS = PAUSABLE_TASKS | {"game", "game_update", "game_pre_download", "app_update"}
+EXCLUSIVE_ACTIONS = PAUSABLE_TASKS | {"game", "game_update", "game_pre_download", "app_update", "adb_check"}
 
 
 def _force_stop():
@@ -420,9 +446,18 @@ def run_main_actions(no_run_immediately=False):
         try:
             version.start()
             game.start()
-            Daily.start()
-            reward.start()
-            telemetry.track_task_complete("main", True, time.time() - main_start_time)
+            if get_ui_profile(cfg).name == "touch_720":
+                from tasks.touch import rewards
+
+                success = rewards.routine(full_run=True)
+            else:
+                success = Daily.start()
+            telemetry.track_task_complete("main", success is not False, time.time() - main_start_time)
+            if success is False:
+                notif.flush_batch()
+                if cfg.after_finish == "Exit":
+                    game.get_game_controller().stop_game()
+                return False
             game.stop(True)
         except CloudGameZeroDurationError as e:
             telemetry.track_task_complete("main", False, time.time() - main_start_time)
@@ -431,17 +466,21 @@ def run_main_actions(no_run_immediately=False):
                 raise
         except Exception:
             telemetry.track_task_complete("main", False, time.time() - main_start_time)
+            notif.flush_batch()
             raise
 
 
-def run_sub_task(action):
+def run_sub_task(action, task_override=None):
     # 不兼容无窗口模式的任务仅覆盖本次启动方式，不修改用户配置。
     visible_cloud_tasks = {"fight", "universe"}
     success = True
-    if action not in ("currencywarstemp", "divergenttemp"):
+    if action in ("currencywars", "currencywarsloop"):
+        game.start(headless=None, screen_ready=CurrencyWars.game_screen_ready)
+    elif action not in ("currencywarstemp", "divergenttemp"):
         game.start(headless=False if action in visible_cloud_tasks else None)
     else:
-        if cfg.cloud_game_enable:
+        task_power_request.acquire(log)
+        if get_control_backend(cfg) == "cloud":
             if not cloud_game.start_game_process():
                 raise ConnectionError("启动或连接浏览器失败")
         game.switch_to_game()
@@ -461,23 +500,21 @@ def run_sub_task(action):
         war = CurrencyWars()
         if mode == "loop":
             _run_loop_task_with_telemetry("currencywarsloop", war.start)
-        elif mode == "temp":
-            war.loop()
         else:
-            war.start()
+            return war.start(resume=mode == "temp")
 
     def divergent(mode=None):
         universe = DivergentUniverse()
         if mode == "loop":
             _run_loop_task_with_telemetry("divergentloop", universe.start)
         elif mode == "temp":
-            universe.loop()
+            return universe.loop()
         else:
-            universe.start()
+            return universe.start()
 
     sub_tasks = {
         "routine": Daily.routine,
-        "daily": lambda: (Daily.run(), reward.start()),
+        "daily": Daily.run,
         "power": Power.run,
         "currencywars": lambda: currencywars(),
         "currencywarsloop": lambda: currencywars("loop"),
@@ -494,9 +531,9 @@ def run_sub_task(action):
         "apocalyptic": lambda: challenge.start("apocalyptic"),
         "redemption": Redemption.start
     }
-    task = sub_tasks.get(action)
+    task = task_override or sub_tasks.get(action)
     if task:
-        if action in {"currencywarsloop", "divergentloop"}:
+        if action in ("currencywarsloop", "divergentloop"):
             task()
         else:
             telemetry.track_task_start(action)
@@ -561,6 +598,7 @@ def run_workflow_action(workflow_name: str, workflow_step_path=None):
         )
         sys.exit(1)
     ensure_exclusive_run()
+    task_power_request.acquire(log)
     # 与流程编排启动语义一致：游戏未启动或无法切换到游戏窗口时直接报错终止，
     # 避免按键/点击打进当前聚焦的其它窗口（定时任务、命令行直跑均在此收口）
     if not game.ensure_game_ready():
@@ -573,19 +611,41 @@ def run_workflow_action(workflow_name: str, workflow_step_path=None):
 
 
 def main(action=None, no_run_immediately=False, workflow_name=None, workflow_step_path=None):
-    # 包括正常返回、SystemExit、Ctrl+C、协作停止和异常，且先于外层错误暂停执行。
-    recover_temporary_graphics(log)
+    task_id = "workflow" if workflow_name else action or "main"
+    if not task_is_supported(task_id, cfg):
+        title = workflow_name or tr((AVAILABLE_TASKS | CLI_ONLY_TASKS).get(task_id, task_id))
+        message = f"{tr(UNSUPPORTED_TASK)}（{title}）"
+        run_session.note(status="blocked", reason="unsupported_backend", error=message)
+        log.warning(message)
+        return False
+
     try:
-        return _run_action(action, no_run_immediately, workflow_name, workflow_step_path)
+        # 包括正常返回、SystemExit、Ctrl+C、协作停止和异常，且先于外层错误暂停执行。
+        if get_control_backend(cfg) == "adb" and task_id not in HOST_TASKS:
+            controller = game.get_game_controller("adb")
+            with publish_status(controller, run_session):
+                try:
+                    return _run_action(action, no_run_immediately, workflow_name, workflow_step_path)
+                finally:
+                    controller.close()
+
+        recover_temporary_graphics(log)
+        try:
+            return _run_action(action, no_run_immediately, workflow_name, workflow_step_path)
+        finally:
+            restore_temporary_graphics(final=True)
     finally:
-        restore_temporary_graphics(final=True)
+        task_power_request.release(log)
 
 
 def _run_action(action=None, no_run_immediately=False, workflow_name=None, workflow_step_path=None):
+    touch = get_ui_profile(cfg).name == "touch_720"
+    touch_tasks = {"routine", "daily", "power"}
+    backend = get_control_backend(cfg)
     first_run()
     # 启动暂停控制器（仅在 GUI 注入了 MARCH7TH_CONTROL_FILE 时生效，其余场景惰性关闭）
     pause_ctl.start()
-    telemetry.track_startup()
+    telemetry.track_startup(backend)
 
     if workflow_name:
         return run_workflow_action(workflow_name, workflow_step_path)
@@ -593,12 +653,27 @@ def _run_action(action=None, no_run_immediately=False, workflow_name=None, workf
     if (action or "main") in EXCLUSIVE_ACTIONS:
         ensure_exclusive_run()
 
+    if action == "adb_check":
+        if backend != "adb":
+            raise AdbError("backend_required", tr("ADB 自检需要设置 control_backend: adb"))
+        task_power_request.acquire(log)
+        return adb_check.run(game.get_game_controller("adb"))
+
     # 完整运行
     if action is None or action == "main":
-        run_main_actions(no_run_immediately)
+        return run_main_actions(no_run_immediately)
 
     # 子任务
     elif action in ["routine", "daily", "power", "currencywars", "currencywarsloop", "currencywarstemp", "divergent", "divergentloop", "divergenttemp", "fight", "universe", "forgottenhall", "purefiction", "apocalyptic", "redemption", "screen_test", "character_export"]:
+        if touch and action in touch_tasks:
+            from tasks.touch import power, rewards
+
+            touch_actions = {
+                "daily": rewards.run_daily_training,
+                "power": power.run_standalone,
+                "routine": rewards.routine,
+            }
+            return run_sub_task(action, task_override=touch_actions[action])
         return run_sub_task(action)
 
     # 子任务 原生图形界面
@@ -635,7 +710,7 @@ def release_input(close=False):
     try:
         if close:
             auto.close_input()
-        else:
+        elif auto.input_handler is not None:
             auto.input_handler.release_all()
     except Exception as e:
         log.warning(f"输入清理失败: {e}")
@@ -698,6 +773,11 @@ if __name__ == "__main__":
             run_session.note(status=STATUS_STOPPED)
             log.warning("任务已按停止指令结束")
             sys.exit(EXIT_STOPPED)
+        except (AdbError, ProfileAssetNotFoundError, TouchProfileInputError) as e:
+            release_input()
+            run_session.note(error=str(e))
+            log.error(str(e))
+            sys.exit(EXIT_FAILED)
         except Exception as e:
             release_input()
             telemetry.track_error(type(e).__name__, str(e))

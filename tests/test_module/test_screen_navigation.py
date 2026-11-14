@@ -17,7 +17,6 @@
 """
 import importlib.util
 import sys
-import threading
 import time
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -129,8 +128,6 @@ def _load_screen_module(auto):
         "module.automation.background_input": _stub(
             "module.automation.background_input",
             InputInterrupted=_InputInterrupted, GameWindowLost=_GameWindowLost),
-        "module.config": _stub("module.config", cfg=MagicMock()),
-        "module.logger": _stub("module.logger", log=MagicMock()),
     }
     spec = importlib.util.spec_from_file_location(
         "screen_under_test", ROOT / "module" / "screen" / "screen.py"
@@ -148,13 +145,7 @@ def _build_screen(monkeypatch, back_stack, swallowed_presses=0):
 
     module = _load_screen_module(MagicMock())
     screen = module.Screen.__new__(module.Screen)
-    screen.screen_map = {}
-    screen.current_screen = None
-    screen.current_screen_threshold = 0
-    screen.wait_screen_change_time = 0.5
-    screen.lock = threading.Lock()
-    screen.logger = MagicMock()
-    screen._setup_screens_from_config(str(SCREENS_CONFIG))
+    screen.__init__(SCREENS_CONFIG, MagicMock())
 
     module.auto = _FakeAuto(screen.screen_map, game)
     return screen, game
@@ -179,6 +170,28 @@ def test_relic_bag_navigation_keeps_menu_entry_untouched(monkeypatch):
     assert game.esc_transitions == [("guide3", "menu")]
 
 
+
+
+@pytest.mark.parametrize("initial_screen", ["unknown", "guide3"])
+def test_navigation_disables_autotry_on_initial_recognition_and_retry(monkeypatch, initial_screen):
+    screen, game = _build_screen(monkeypatch, ["main", initial_screen])
+
+    if initial_screen == "guide3":
+        original = screen.perform_operations
+
+        def transition(operations):
+            original(operations)
+            game.stack.append("unknown")
+
+        monkeypatch.setattr(screen, "perform_operations", transition)
+        monkeypatch.setattr(screen, "get_timeout_operations", lambda *_: [])
+
+    with pytest.raises(RuntimeError, match="无法识别当前游戏界面"):
+        screen.change_to("bag_relicset", autotry=False)
+
+    assert game.state == "unknown"
+    # 从指南出发时，只有作为已识别路线的一次 Esc。
+    assert game.esc_transitions == ([("guide3", "main")] if initial_screen == "guide3" else [])
 
 
 def test_background_window_errors_are_not_swallowed_as_unmatched(monkeypatch):

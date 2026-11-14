@@ -1,0 +1,116 @@
+plugins {
+    id 'com.android.application' version '9.4.0'
+    id 'com.chaquo.python' version '17.2.0'
+    // 版本跟随 AGP 9.4.0 内置的 Kotlin。
+    id 'org.jetbrains.kotlin.plugin.compose' version '2.2.10'
+}
+
+def abi = providers.gradleProperty('m7a.abi').getOrElse('universal')
+def supportedAbis = ['arm64-v8a', 'x86_64']
+if (abi != 'universal' && !(abi in supportedAbis)) {
+    throw new GradleException('m7a.abi 必须是 universal、arm64-v8a 或 x86_64')
+}
+def versionCodeValue = providers.gradleProperty('m7a.versionCode').getOrElse('1').toInteger()
+if (!(versionCodeValue in 1..2_100_000_000)) {
+    throw new GradleException('m7a.versionCode 必须在 1 到 2100000000 之间')
+}
+def hostPython = providers.gradleProperty('m7a.hostPython')
+def wheelhouse = providers.gradleProperty('m7a.wheelhouse').getOrElse('build/wheelhouse')
+def repo = rootProject.file('..')
+layout.buildDirectory.set(layout.projectDirectory.dir("build/$abi"))
+def generatedAssets = layout.buildDirectory.dir('generated/project-assets')
+
+android {
+    namespace = 'org.march7th.assistant'
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 2
+        }
+    }
+    buildToolsVersion = providers.gradleProperty('m7a.buildTools').get()
+
+    defaultConfig {
+        applicationId = 'org.march7th.assistant'
+        minSdk = providers.gradleProperty('m7a.minApi').get().toInteger()
+        targetSdk = 37
+        versionCode = versionCodeValue
+        versionName = new File(repo, 'assets/config/version.txt').getText('UTF-8').trim()
+        ndk {
+            abiFilters.addAll(abi == 'universal' ? supportedAbis : [abi])
+        }
+    }
+    buildFeatures {
+        aidl = true
+        buildConfig = true
+        compose = true
+    }
+    buildTypes {
+        release {
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets.main.assets.srcDir(generatedAssets.get().asFile)
+}
+
+chaquopy {
+    defaultConfig {
+        version = '3.14'
+        if (hostPython.isPresent()) {
+            buildPython(hostPython.get())
+        }
+        extractPackages('cv2', 'rapidocr')
+        pip {
+            options('--find-links', file(wheelhouse).absolutePath, '--only-binary=:all:')
+            install('-r', 'requirements.txt')
+        }
+    }
+}
+
+dependencies {
+    implementation project(':device-service')
+    implementation 'dev.rikka.shizuku:api:13.1.5'
+    implementation 'dev.rikka.shizuku:provider:13.1.5'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+    implementation platform('androidx.compose:compose-bom:2026.09.00')
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.activity:activity-compose:1.13.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.11.0'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+def stage = tasks.register('stageProjectAssets', Zip) {
+    archiveFileName = 'project.zip'
+    destinationDirectory = generatedAssets
+    reproducibleFileOrder = true
+    preserveFileTimestamps = false
+    from(repo) {
+        include 'LICENSE', 'README.md'
+        include 'module/config/__init__.py', 'module/config/config.py', 'module/config/platform.py'
+        include 'module/game/__init__.py', 'module/game/adb*.py', 'module/game/base.py'
+        include 'module/automation/*.py'
+        exclude 'module/automation/cdp_input.py', 'module/automation/launcher_automation.py', 'module/automation/local_input.py'
+        include 'module/localization/*.py', 'module/logger/*.py', 'module/notification/*.py'
+        include 'module/ocr/*.py', 'module/screen/*.py'
+        include 'utils/color.py', 'utils/console.py', 'utils/dpi.py', 'utils/image_utils.py'
+        include 'utils/pause.py', 'utils/singleton.py', 'utils/logger/*.py', 'utils/game_options.py', 'utils/wait.py'
+        include 'utils/date.py'
+        include 'tasks/base/base.py', 'tasks/base/list_drag.py', 'tasks/base/team.py', 'tasks/base/task_steps.py'
+        include 'tasks/daily/__init__.py', 'tasks/daily/tasks.py', 'tasks/daily/training.py', 'tasks/touch/*.py'
+        include 'tasks/power/instance.py', 'tasks/power/character.py', 'tasks/power/relicset.py'
+        include 'tasks/power/battle.py', 'tasks/power/policy.py', 'tasks/power/readout.py', 'tasks/power/supplement.py'
+        include 'tasks/reward/menu_alert.py', 'tasks/reward/receipt.py'
+        include 'assets/config/config.example.yaml', 'assets/config/version.txt'
+        include 'assets/config/ocr_replacements.json', 'assets/config/task_mappings.json'
+        include 'assets/config/instance_names.json', 'assets/config/character_names.json'
+        include 'assets/locales/**/march7th.mo', 'assets/touch_720/**', 'assets/images/share/character/*.png'
+        include 'assets/images/share/menu/mail.png', 'assets/images/purefiction/battle_speed.png'
+        include 'assets/images/share/power/space_anchor/*.png'
+    }
+}
+tasks.named('preBuild') {
+    dependsOn stage
+}

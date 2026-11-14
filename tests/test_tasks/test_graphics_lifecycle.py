@@ -1,7 +1,8 @@
 import ast
+from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import ANY, Mock, call
 
 import pytest
 
@@ -38,6 +39,128 @@ def test_launch_loads_low_quality_then_restores_persisted_settings(startup):
     game.begin_temporary_graphics.assert_called_once_with(controller.game_path, game.log)
 
 
+@pytest.mark.parametrize("already_running", [False, True])
+def test_pc_local_start_uses_profile_resolution(startup, already_running):
+    game, controller, cfg = startup
+    resolution = (1920, 1080)
+    controller.switch_to_game.return_value = already_running
+
+    game.start_game()
+
+    if already_running:
+        controller.change_resolution.assert_not_called()
+        controller.check_resolution.assert_called_once_with(*resolution)
+    else:
+        controller.change_resolution.assert_called_once_with(*resolution)
+        assert controller.check_resolution.call_args_list == [call(*resolution), call(*resolution)]
+
+
+def test_start_recognizes_task_screen_before_generic_navigation(startup, monkeypatch):
+    game, controller, _ = startup
+    controller.switch_to_game.return_value = True
+    monkeypatch.setattr(game, "screen", Mock())
+    game.wait_until.side_effect = lambda condition, timeout: condition()
+    ready = Mock(return_value=True)
+
+    game.start_game(screen_ready=ready)
+
+    ready.assert_called_once_with()
+    game.screen.get_current_screen.assert_not_called()
+    controller.stop_game.assert_not_called()
+
+
+def test_task_readiness_fallback_uses_read_only_recognition_and_preserves_window(startup, monkeypatch):
+    game, controller, _ = startup
+    controller.switch_to_game.return_value = True
+    monkeypatch.setattr(game, "screen", Mock())
+    game.screen.get_current_screen.return_value = False
+    game.wait_until.side_effect = lambda condition, timeout: condition()
+
+    with pytest.raises(game.InputInterrupted, match="已保留游戏现场"):
+        game.start_game(screen_ready=lambda: False)
+
+    game.screen.get_current_screen.assert_called_once_with(autotry=False, max_retries=1)
+    controller.stop_game.assert_not_called()
+
+
+def test_task_readiness_waits_through_an_unavailable_frame(startup, monkeypatch):
+    game, controller, _ = startup
+    controller.switch_to_game.return_value = True
+    monkeypatch.setattr(game, "screen", Mock())
+    game.wait_until.side_effect = lambda condition, timeout: condition() or condition()
+    ready = Mock(side_effect=(RuntimeError("截图超时"), True))
+
+    game.start_game(screen_ready=ready)
+
+    assert ready.call_count == 2
+    game.screen.get_current_screen.assert_not_called()
+    controller.stop_game.assert_not_called()
+
+
+@pytest.mark.parametrize("background", [False, True])
+def test_touch_local_start_uses_clicks_and_native_resolution(startup, monkeypatch, background):
+    game, controller, cfg = startup
+    cfg.ui_profile = "touch_720"
+    controller.launch_touch_game.return_value = nullcontext()
+    controller.get_resolution.return_value = (1280, 720)
+    controller.switch_to_game.return_value = True
+    monkeypatch.setattr(game, "get_game_controller", Mock(return_value=controller))
+    monkeypatch.setattr(game, "screen", Mock())
+    game.screen.get_current_screen.side_effect = [False, True]
+    game.wait_until.side_effect = lambda condition, timeout: condition() or condition()
+    game.auto.input_handler = Mock(is_background=background)
+    game.auto.click_element = Mock()
+
+    game.start_game()
+
+    game.get_game_controller.assert_called_once_with("local")
+    controller.launch_touch_game.assert_called_once_with((1280, 720))
+    if background:
+        controller.switch_to_game.assert_not_called()
+        game.auto.input_handler.wait_for_window.assert_called_once_with(game.WINDOW_WAIT_SECONDS)
+    else:
+        controller.switch_to_game.assert_called_once_with()
+        game.auto.input_handler.wait_for_window.assert_not_called()
+    assert game.screen.get_current_screen.call_args_list == [call(autotry=False), call(autotry=False)]
+    assert game.auto.click_element.call_args.args[:3] == ("./assets/touch_720/images/screen/click_enter.png", "image", 0.9)
+    game.auto.press_mouse.assert_not_called()
+    game.StarRailController.assert_not_called()
+
+
+def test_explicit_cloud_start_skips_local_resolution(startup, monkeypatch):
+    game, controller, cfg = startup
+    cfg.control_backend = "cloud"
+    cfg.ui_profile = "touch_720"
+    cloud = Mock()
+    monkeypatch.setattr(game, "cloud_game", cloud)
+
+    game.start_game()
+
+    cloud.start_game_process.assert_called_once_with(headless=None)
+    game.StarRailController.assert_not_called()
+    controller.change_resolution.assert_not_called()
+    controller.check_resolution.assert_not_called()
+
+
+def test_adb_start_uses_adb_bootstrap(startup, monkeypatch):
+    game, _, cfg = startup
+    cfg.control_backend = "adb"
+    cloud = Mock()
+    adb = Mock()
+    wait_for_game = Mock()
+    monkeypatch.setattr(game, "cloud_game", cloud)
+    monkeypatch.setattr(game, "get_game_controller", Mock(return_value=adb))
+    monkeypatch.setattr(game, "wait_for_adb_game", wait_for_game)
+
+    game.start_game()
+
+    adb.start_game_process.assert_called_once_with()
+    wait_for_game.assert_called_once_with(adb, 60, recover=ANY)
+    game.StarRailController.assert_not_called()
+    cloud.start_game_process.assert_not_called()
+    game.wait_until.assert_not_called()
+
+
 @pytest.mark.parametrize("mode", ["master-off", "child-off", "already-running", "manual", "cloud"])
 def test_no_quality_change_for_excluded_launches(startup, monkeypatch, mode):
     game, controller, cfg = startup
@@ -72,14 +195,17 @@ def test_main_finally_restores_before_outer_error_handling(failure):
     tree = ast.parse(Path("main.py").read_text(encoding="utf-8"))
     node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "main")
     action = Mock(side_effect=failure)
-    restore, recover = Mock(), Mock()
+    events = Mock()
+    restore, recover = events.restore, Mock()
     namespace = {"_run_action": action, "restore_temporary_graphics": restore,
-                 "recover_temporary_graphics": recover, "log": Mock()}
+                 "recover_temporary_graphics": recover, "log": Mock(), "task_power_request": events.power}
+    namespace.update(cfg=None, get_control_backend=lambda cfg: "local", task_is_supported=lambda action, cfg: True)
     exec(compile(ast.Module(body=[node], type_ignores=[]), "main.py", "exec"), namespace)
     with pytest.raises(type(failure)):
         namespace["main"](action="daily")
     restore.assert_called_once_with(final=True)
     recover.assert_called_once()
+    assert [call[0] for call in events.mock_calls] == ["restore", "power.release"]
 
 
 def test_main_normal_return_restores():
@@ -87,7 +213,8 @@ def test_main_normal_return_restores():
     node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "main")
     restore = Mock()
     namespace = {"_run_action": Mock(return_value=True), "restore_temporary_graphics": restore,
-                 "recover_temporary_graphics": Mock(), "log": Mock()}
+                 "recover_temporary_graphics": Mock(), "log": Mock(), "task_power_request": Mock()}
+    namespace.update(cfg=None, get_control_backend=lambda cfg: "local", task_is_supported=lambda action, cfg: True)
     exec(compile(ast.Module(body=[node], type_ignores=[]), "main.py", "exec"), namespace)
     assert namespace["main"](action="daily") is True
     restore.assert_called_once_with(final=True)
@@ -109,17 +236,55 @@ def test_force_stop_restores_before_os_exit():
     assert names.index("restore") < names.index("session.finish") < names.index("exit")
 
 
-def test_stop_without_closing_game_restores_before_pause(monkeypatch):
+@pytest.mark.parametrize("backend", ["local", "adb"])
+def test_stop_releases_game_resources_before_success_pause(monkeypatch, backend):
     import tasks.game as game
     events = Mock()
-    monkeypatch.setattr(game, "cfg", SimpleNamespace(after_finish="None", play_audio=False))
+    monkeypatch.setattr(game, "cfg", SimpleNamespace(after_finish="None", play_audio=False, control_backend=backend))
+    monkeypatch.setattr(game, "get_game_controller", Mock(return_value=events.controller))
     monkeypatch.setattr(game, "ocr", Mock())
     monkeypatch.setattr(game, "restore_temporary_graphics", events.restore)
     monkeypatch.setattr(game, "pause_on_success", events.pause)
+    monkeypatch.setattr(game, "task_power_request", events.power)
     with pytest.raises(SystemExit):
         game.stop()
-    assert [call[0] for call in events.mock_calls] == ["restore", "pause"]
+    device_cleanup = ["controller.close"] if backend == "adb" else []
+    assert [call[0] for call in events.mock_calls] == [*device_cleanup, "restore", "power.release", "pause"]
     events.restore.assert_called_once_with(final=True)
+
+
+def test_stop_releases_power_before_after_finish_sleep(monkeypatch):
+    import module.game.base as base
+    import tasks.game as game
+
+    events = Mock()
+    controller = base.GameControllerBase()
+    controller.stop_game = events.stop_game
+    monkeypatch.setattr(game, "cfg", SimpleNamespace(after_finish="Sleep", play_audio=False, control_backend="local"))
+    monkeypatch.setattr(game, "get_game_controller", Mock(return_value=controller))
+    monkeypatch.setattr(game, "ocr", Mock())
+    monkeypatch.setattr(game, "restore_temporary_graphics", events.restore)
+    monkeypatch.setattr(game, "task_power_request", events.power)
+    monkeypatch.setattr(base, "time", SimpleNamespace(sleep=events.delay))
+    monkeypatch.setattr(base, "os", SimpleNamespace(system=events.system))
+
+    with pytest.raises(SystemExit):
+        game.stop()
+    assert [call[0] for call in events.mock_calls][:5] == [
+        "stop_game", "restore", "power.release", "delay", "system",
+    ]
+
+
+def test_start_requests_power_before_preparing_any_backend(monkeypatch):
+    import tasks.game as game
+
+    events = Mock()
+    monkeypatch.setattr(game, "task_power_request", events.power)
+    monkeypatch.setattr(game, "start_game", events.start_game)
+
+    game.start()
+
+    assert [call[0] for call in events.mock_calls] == ["power.acquire", "start_game"]
 
 
 def test_stop_game_restores_after_process_termination(monkeypatch):

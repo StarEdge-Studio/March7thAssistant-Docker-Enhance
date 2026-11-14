@@ -1,0 +1,40 @@
+package org.march7th.deviceservice.core;
+
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/** 服务和善后子进程共用的 PLAY_AUDIO 操作。 */
+public final class AudioAppOps {
+    private static final String OP = "PLAY_AUDIO";
+    private static final Pattern MODE = Pattern.compile(OP + ":\\s*(\\w+)");
+    private static final long COMMAND_TIMEOUT_MS = 5000;
+
+    private AudioAppOps() {
+    }
+
+    /**
+     * 当前模式。没有单独设置过的包按系统默认返回 allow。
+     * 返回 default 表示有一条显式的 default 记录：音频服务只放行 allow，这种状态下应用没有声音。
+     */
+    static String mode(String packageName) throws IOException, InterruptedException {
+        Shell.Result result = Shell.run(COMMAND_TIMEOUT_MS, "cmd", "appops", "get", packageName, OP);
+        if (!result.ok()) {
+            throw new IOException("appops get failed: " + result);
+        }
+        return parseMode(result.stdout);
+    }
+
+    static String parseMode(String output) {
+        Matcher matcher = MODE.matcher(output);
+        return matcher.find() ? matcher.group(1) : "allow";
+    }
+
+    /** 善后子进程等写入实际完成，随后才处理下一条命令或 EOF 恢复。 */
+    public static void setModeAndWait(String packageName, String mode) throws IOException, InterruptedException {
+        Shell.Result result = Shell.run(0, "cmd", "appops", "set", packageName, OP, mode);
+        if (!result.ok() || !result.stderr.trim().isEmpty()) {
+            throw new IOException("appops set failed: " + result);
+        }
+    }
+}

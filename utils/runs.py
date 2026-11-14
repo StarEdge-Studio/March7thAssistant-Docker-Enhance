@@ -276,12 +276,19 @@ def acquire_run_lock(info: dict, force: bool = False):
 def release_run_lock(run_id: str):
     """释放运行锁（只释放自己持有的）。"""
     path = _lock_path()
-    holder = _read_json(path)
-    if isinstance(holder, dict) and holder.get("run_id") == run_id:
+    # Windows 上并发读取可能短暂阻止删除。重试前重新确认持有者。
+    for attempt in range(1, _LOCK_ATTEMPTS + 1):
+        holder = _read_json(path)
+        if not isinstance(holder, dict) or holder.get("run_id") != run_id:
+            return
         try:
             os.remove(path)
+            return
+        except PermissionError:
+            if attempt < _LOCK_ATTEMPTS:
+                time.sleep(_LOCK_RETRY_DELAY)
         except OSError:
-            pass
+            return
 
 
 # ---------- 输出捕获 ----------
@@ -444,6 +451,12 @@ class RunSession:
             _atomic_write_json(run_file(self.run_id, ".json"), self.record)
         except Exception:
             pass
+
+    def update_record(self, **fields):
+        """登记本次运行的元数据，供其他进程立即读取。"""
+        if not self._finished:
+            self.record.update(fields)
+            self._save()
 
     def note(self, **fields):
         """登记收尾时要写入的字段（status / error / reason / screenshot），以 finish 时为准。"""

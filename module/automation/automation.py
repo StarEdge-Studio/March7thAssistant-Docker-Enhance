@@ -13,13 +13,26 @@ from utils.logger.logger import Logger
 from typing import Optional
 from utils.singleton import SingletonMeta
 from utils.image_utils import ImageUtils
-from utils.pause import pause_guard
+from utils.pause import pause_ctl, pause_guard
 from module.game import get_game_controller
+from module.game.adb_transport import AdbError
+from module.localization import tr
 from module.ocr import ocr
 from module.config import cfg
+from module.config.platform import TouchProfileInputError, get_control_backend, get_ui_profile
 
 
 _screenshot_retry_timeout = ContextVar("screenshot_retry_timeout", default=60.0)
+_TOUCH_UNSUPPORTED_INPUTS = (
+    "press_key", "press_key_down", "press_key_up", "secretly_press_key", "press_mouse", "mouse_scroll",
+)
+
+
+def _reject_touch_input(name):
+    def reject(*args, **kwargs):
+        raise TouchProfileInputError(name)
+
+    return reject
 
 
 @contextmanager
@@ -54,27 +67,25 @@ class Automation(metaclass=SingletonMeta):
         """
         初始化输入处理器，将输入操作如点击、移动等绑定至实例变量。
 
-        所有输入均包一层暂停卡点（`pause_guard`）：暂停期间任何键鼠输入都会停在发出之前。
+        支持的输入操作经过暂停卡点。不支持的操作立即报错。
         """
         previous = getattr(self, 'input_handler', None)
         if previous is not None and callable(getattr(previous, 'close', None)):
             previous.close()
         self.input_handler = get_game_controller().get_input_handler()
-        self.mouse_click = pause_guard(self.input_handler.mouse_click)
-        self.mouse_down = pause_guard(self.input_handler.mouse_down)
-        self.mouse_up = pause_guard(self.input_handler.mouse_up)
-        self.mouse_move = pause_guard(self.input_handler.mouse_move)
-        self.mouse_drag = pause_guard(self.input_handler.mouse_drag)
-        self.mouse_scroll = pause_guard(self.input_handler.mouse_scroll)
-        self.press_key = pause_guard(self.input_handler.press_key)
-        self.press_key_down = pause_guard(self.input_handler.press_key_down)
-        self.press_key_up = pause_guard(self.input_handler.press_key_up)
-        self.secretly_press_key = pause_guard(self.input_handler.secretly_press_key)
-        self.press_mouse = pause_guard(self.input_handler.press_mouse)
-        self.secretly_write = pause_guard(self.input_handler.secretly_write)
+
+        touch = get_ui_profile(cfg).name == "touch_720"
+        inputs = ("mouse_click", "mouse_down", "mouse_up", "mouse_move", "mouse_drag", "secretly_write")
+        for name in inputs + _TOUCH_UNSUPPORTED_INPUTS:
+            if touch and name in _TOUCH_UNSUPPORTED_INPUTS:
+                method = _reject_touch_input(name)
+            else:
+                method = pause_guard(getattr(self.input_handler, name))
+            setattr(self, name, method)
 
     def close_input(self):
-        self.input_handler.close()
+        if self.input_handler is not None:
+            self.input_handler.close()
 
     def _is_debug_enabled(self):
         """检查调试模式是否启用。"""
@@ -82,10 +93,8 @@ class Automation(metaclass=SingletonMeta):
             return False
         if not bool(cfg.get_value('debug_mode_enable', False)):
             return False
-        # 云游戏无窗口模式下没有可见画面，无需显示叠加层
-        if cfg.get_value('cloud_game_enable', False) and cfg.get_value('browser_headless_enable', False):
-            return False
-        return True
+        backend = get_control_backend(cfg)
+        return backend == 'local' or (backend == 'cloud' and not cfg.get_value('browser_headless_enable', False))
 
     def _ensure_debug_overlay(self):
         """确保调试叠加层已初始化并显示。"""
@@ -187,7 +196,10 @@ class Automation(metaclass=SingletonMeta):
         """
         start_time = time.monotonic()
         timeout = _screenshot_retry_timeout.get()
+        adb = get_control_backend(cfg) == "adb"
         while True:
+            if adb:
+                pause_ctl.checkpoint()
             handler = getattr(self, 'input_handler', None)
             background = getattr(handler, 'is_background', False) is True
             if background:
@@ -211,14 +223,18 @@ class Automation(metaclass=SingletonMeta):
                         if crop != (0, 0, 1, 1):
                             self._debug_draw_crop_region(crop)
                     return result
-                elif timeout > 0:
+                elif timeout > 0 and not adb:
                     self.logger.error("截图失败：未能获取游戏窗口画面" if background else "截图失败：没有找到游戏窗口")
+            except AdbError:
+                raise
             except Exception as e:
                 if timeout <= 0:
                     raise RuntimeError(f"截图失败：{e}") from e
                 self.logger.error(f"截图失败：{e}")
             remaining = timeout - (time.monotonic() - start_time)
             if remaining <= 0:
+                if adb:
+                    raise AdbError("frame_timeout", tr("ADB 截图超时，未取得可用的游戏画面"))
                 raise RuntimeError("截图超时")
             time.sleep(min(1, remaining))
 
@@ -251,6 +267,10 @@ class Automation(metaclass=SingletonMeta):
         :param relative: 是否返回相对位置。
         :return: 最佳匹配位置和相似度。
         """
+        profile = get_ui_profile(cfg)
+        target = profile.resolve_image_path(target)
+        if profile.name == "touch_720":
+            scale_range = None
         try:
             if cacheable and target in self.img_cache:
                 mask = self.img_cache[target]['mask']
@@ -322,6 +342,7 @@ class Automation(metaclass=SingletonMeta):
         返回:
         - 匹配的数量，或在出错时返回 None。
         """
+        target = get_ui_profile(cfg).resolve_image_path(target)
         try:
             template = ImageUtils.read_image(target, cv2.IMREAD_GRAYSCALE)
             if template is None:
@@ -336,6 +357,10 @@ class Automation(metaclass=SingletonMeta):
 
     @pause_guard
     def find_image_with_multiple_targets(self, target, threshold, scale_range, relative=False, mask_top_right_ratio=None):
+        profile = get_ui_profile(cfg)
+        target = profile.resolve_image_path(target)
+        if profile.name == "touch_720":
+            scale_range = None
         try:
             template = ImageUtils.read_image(target, cv2.IMREAD_GRAYSCALE)
             if template is None:
@@ -889,8 +914,11 @@ class Automation(metaclass=SingletonMeta):
                 if normalized_press_duration > 0:
                     if self.mouse_down(x, y) is False:
                         return False
-                    time.sleep(normalized_press_duration)
-                    result = self.mouse_up()
+                    try:
+                        time.sleep(normalized_press_duration)
+                    finally:
+                        # 已按下的按钮必须释放，即使这时收到暂停或停止。
+                        result = self.input_handler.mouse_up()
                 else:
                     result = self.mouse_click(x, y)
             elif action == "down":

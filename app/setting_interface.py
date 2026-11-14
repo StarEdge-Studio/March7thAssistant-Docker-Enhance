@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QUrl, QObject, QEvent, QPoint, QThread, Signal
+from PySide6.QtCore import Qt, QUrl, QObject, QEvent, QPoint, QThread, Signal, QSignalBlocker
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QWidget, QLabel, QFileDialog, QVBoxLayout, QStackedWidget, QSpacerItem, QScroller, QScrollerProperties, QScrollArea, QFrame, QApplication
 from qfluentwidgets import FluentIcon as FIF
@@ -9,10 +9,11 @@ from .common.icon import UiIcon, BrandIcon
 from .components.pivot import SettingPivot
 from .card.comboboxsettingcard1 import ComboBoxSettingCard1
 from .card.comboboxsettingcard2 import ComboBoxSettingCard2, ComboBoxSettingCardUpdateSource, ComboBoxSettingCardLog, ComboBoxSettingCardLanguage
-from .card.switchsettingcard1 import SwitchSettingCard1, SwitchSettingCardWithAction, TimestampSwitchSettingCard, SwitchSettingCardTeam, SwitchSettingCardImmersifier, SwitchSettingCardGardenofplenty, SwitchSettingCardEchoofwar, SwitchSettingCardHotkey, SwitchSettingCardCloudGameStatus
+from .card.switchsettingcard1 import SwitchSettingCard1, SwitchSettingCardWithAction, TimestampSwitchSettingCard, SwitchSettingCardTeam, SwitchSettingCardGardenofplenty, SwitchSettingCardEchoofwar, SwitchSettingCardHotkey, SwitchSettingCardCloudGameStatus
 from .card.autostart_setting_card import AutostartSettingCard
 from .card.uac_free_setting_card import UacFreeSettingCard
 from .card.game_path_setting_card import GamePathSettingCard
+from .card.adb_setting_cards import AdbBackendSettingCard, AdbDeviceCard, AdbEnvironmentCard, AdbStatusCard, AdbAdvancedCard
 from .card.rangesettingcard1 import RangeSettingCard1
 from .card.pushsettingcard1 import CustomPushSettingCard, DualPushSettingCard, TriplePushSettingCard, PushSettingCardAction, PushSettingCardInstance, PushSettingCardInstanceChallengeCount, PushSettingCardNotifyTemplate, PushSettingCardMirrorchyan, PushSettingCardStr, PushSettingCardEval, PushSettingCardDate, PushSettingCardKey, PushSettingCardTeam, PushSettingCardFriends, PushSettingCardTeamWithSwap, PushSettingCardPowerPlan, InstanceTeamSettingCard
 from .card.timepickersettingcard1 import TimePickerSettingCard1
@@ -21,9 +22,16 @@ from .card.messagebox_custom import MessageBoxEdit
 from .challenge_config_dialog import ChallengeConfigCard
 from .card.stationprioritysettingcard import StationPrioritySettingCard
 from module.config import cfg
+from module.config.platform import get_ui_profile
+from utils.runs import read_active_run
 from module.notification import init_notifiers
 from module.localization import tr, tn
 from module.localization.languages import AUTO_LANGUAGE, available_languages
+from tasks.weekly.currency_wars_strategy import (
+    HIGH_ANAXA,
+    STRATEGY_ID as CURRENCY_WARS_STRATEGY,
+    STRATEGY_NAMES,
+)
 from tasks.weekly.divergent_universe import DivergentUniverse
 from tasks.base.tasks import start_task
 from .tools.check_update import checkUpdate
@@ -153,6 +161,7 @@ class SettingInterface(ScrollArea):
             self.__initCard()
             self.__initLayout()
             self.__connectSignalToSlot()
+            self.__refreshBackendSettings(self.adbBackendCard.backend())
         except Exception:
             # 构造抛错时调用方还拿不到实例，必须在这里清理已建立的 Qt 父子关系。
             self.hide()
@@ -277,13 +286,13 @@ class SettingInterface(ScrollArea):
         self.useReservedTrailblazePowerEnableCard = SwitchSettingCard1(
             UiIcon.BATTERY_CHARGE,
             tr("使用后备开拓力"),
-            tr("单次上限300点，全部使用需要将“任务完成后”选项修改为“循环”，然后点击“完整运行”"),
+            tr("每个副本项最多补充一次，数量以游戏弹窗为准"),
             "use_reserved_trailblaze_power"
         )
         self.useFuelEnableCard = SwitchSettingCard1(
             UiIcon.DROP,
             tr("使用燃料"),
-            tr("单次上限5个，全部使用需要将“任务完成后”选项修改为“循环”，然后点击“完整运行”"),
+            tr("同时启用后备开拓力时，后备库存用完才使用燃料"),
             "use_fuel"
         )
         self.weeklyRelicCleanupEnableCard = ExpandableWeeklyRelicSettingCard(
@@ -298,11 +307,9 @@ class SettingInterface(ScrollArea):
             tr("按不匹配推荐角色和副属性 0 次筛选，分解已弃置及四星以下遗器"),
             "weekly_relic_smart_discard_enable",
         )
-        self.mergeImmersifierEnableCard = SwitchSettingCardImmersifier(
-            UiIcon.BEAKER,
-            tr("体力优先合成沉浸器（建议直接通过饰品提取获取位面饰品）"),
-            tr("达到指定上限后停止"),
-            "merge_immersifier"
+        self.relicBagCleanupCard = SwitchSettingCard1(
+            FIF.FILTER, tr("满包时自动分解遗器"), tr("遇到遗器满包时分解四星及以下遗器"),
+            "relic_bag_cleanup_enable",
         )
         self.instanceNameChallengeCountCard = PushSettingCardInstanceChallengeCount(
             tr('修改'),
@@ -611,31 +618,46 @@ class SettingInterface(ScrollArea):
             '',
             texts={tr('最高职级'): 'highest', tr('当前职级'): 'current', tr('最低职级'): 'lowest'}
         )
-        self.currencywarsStrategyCard = ExpandableComboBoxSettingCard(
+        self.currencywarsUnfinishedMatchCard = ComboBoxSettingCard2(
+            "currencywars_unfinished_match",
+            UiIcon.OPTIONS,
+            tr("未完成对局"),
+            "",
+            texts={tr("结算后重新开局"): "restart", tr("继续进度"): "resume"},
+        )
+        self.currencywarsStrategyCard = None
+        configured_strategy = cfg.get_value("currencywars_strategy")
+        visible_strategies = (CURRENCY_WARS_STRATEGY, HIGH_ANAXA)
+        self.currencywarsStrategySelectCard = ExpandableComboBoxSettingCard(
             "currencywars_strategy",
             UiIcon.LIST,
-            tr('货币战争策略'),
-            tr('提升晋升等级，推荐在最低职级选择默认策略。提升职级等级，推荐在最高职级选择阿格莱雅或希儿策略。'),
-            {tr('默认'): 'default', tr('阿格莱雅'): 'aglaea', tr('希儿') + tr('【测试版】'): 'seele'}
+            tr("货币战争策略"),
+            "",
+            texts={tr(STRATEGY_NAMES[value]): value for value in visible_strategies}
         )
-        self.currencywarsRemembranceTrailblazerNameCard = PushSettingCardStr(
-            tr('修改'),
-            FIF.EDIT,
-            tr('「开拓者•记忆」名称'),
-            "currencywars_remembrance_trailblazer_name",
-            empty_content=tr('未配置时，阿格莱雅/希儿策略将跳过该角色，需要填入自己游戏名称')
-        )
-        self.currencywarsStrategyRestartOnSpecialTagsCard = SwitchSettingCard1(
-            UiIcon.REFRESH,
-            tr('遇到特定词条时接受重开'),
-            tr('根据所选策略，在遇到特定词条或词条组合时允许重开'),
-            "currencywars_strategy_restart_on_special_tags"
-        )
+        if configured_strategy in STRATEGY_NAMES and configured_strategy not in visible_strategies:
+            combo = self.currencywarsStrategySelectCard.comboBox
+            combo.setCurrentIndex(-1)
+            combo.setPlaceholderText(tr("实验性"))
+        elif configured_strategy not in (*visible_strategies, "default"):
+            self.currencywarsStrategyCard = PushSettingCard(
+                tr("改用连击那刻夏（S2）"),
+                UiIcon.LIST,
+                tr("请更新货币战争策略"),
+            )
+            self.currencywarsStrategyCard.clicked.connect(self.__applyCurrencywarsStrategy)
         self.currencywarsFastModeCard = SwitchSettingCard1(
             UiIcon.ROCKET,
             tr('启用速通模式'),
-            tr("开启后，仅在首领节点尝试装备武器，只推荐在最低职级时开启"),
+            tr("仅在首领节点处理装备"),
             "currencywars_fast_mode"
+        )
+        self.currencywarsInvestmentPriorityCard = ComboBoxSettingCard2(
+            "currencywars_investment_priority",
+            UiIcon.OPTIONS,
+            tr("投资选项优先级"),
+            "",
+            texts={tr("策略优先"): "strategy", tr("图鉴优先"): "catalog"},
         )
 
         self.UniverseGroup = SettingCardGroup(tr("差分宇宙"), self.scrollWidget)
@@ -916,16 +938,7 @@ class SettingInterface(ScrollArea):
             UiIcon.PEOPLE_TEAM,
             tr("末日幻影配置"), "apocalyptic", 4
         )
-        self.CloudGameGroup = SettingCardGroup(
-            tr("云崩铁设置"),
-            self.scrollWidget
-        )
-        self.cloudGameEnableCard = SwitchSettingCard1(
-            UiIcon.CLOUD,
-            tr("使用“云·星穹铁道”"),
-            tr("开启后，将改用云·星穹铁道来执行清体力等自动化任务。无需固定窗口，可在后台运行。（模拟宇宙和锄大地仍需保持窗口全屏）"),
-            "cloud_game_enable"
-        )
+        self.GameConnectionGroup = SettingCardGroup(tr("游戏连接"), self.scrollWidget)
         self.cloudGameFullScreenCard = SwitchSettingCard1(
             FIF.FULL_SCREEN,
             tr("全屏运行"),
@@ -1023,6 +1036,12 @@ class SettingInterface(ScrollArea):
         #     None,
         #     "browser_dump_cookies_enable"
         # )
+
+        self.adbBackendCard = AdbBackendSettingCard(blocker=self.__blockBackendChange)
+        self.adbDeviceCard = AdbDeviceCard()
+        self.adbEnvironmentCard = AdbEnvironmentCard(blocker=self.__blockAdbCheck)
+        self.adbStatusCard = AdbStatusCard()
+        self.adbAdvancedCard = AdbAdvancedCard()
 
         self.ProgramGroup = SettingCardGroup(tr('程序设置'), self.scrollWidget)
         self.logLevelCard = ComboBoxSettingCardLog(
@@ -2454,14 +2473,15 @@ class SettingInterface(ScrollArea):
             self.notifyEnableGroup.append(notifyEnableCard)
 
         self.MiscGroup = SettingCardGroup(tr("杂项"), self.scrollWidget)
-        self.gameOptimizationCard = ExpandableSwitchSettingCard(
-            "game_optimization_enable", FIF.GAME, tr("启用游戏优化"),
-            tr("展开配置自动战斗、分辨率与临时画质；关闭总开关不会清除各项设置")
+        self.gameOptimizationCard = SwitchSettingCard1(
+            FIF.GAME, tr("启用游戏优化"),
+            tr("控制自动战斗检测及本地游戏的分辨率与画质调整"),
+            "game_optimization_enable",
         )
         self.autoBattleDetectEnableCard = SwitchSettingCard1(
             FIF.ROBOT,
             tr('启用自动战斗和二倍速检测'),
-            tr("游戏启动前通过修改注册表或本地存储开启自动战斗和二倍速，并在清体力、货币战争和逐光捡金场景中检测并保持自动战斗状态"),
+            tr("战斗时检测并补开自动战斗和二倍速"),
             "auto_battle_detect_enable"
         )
         self.ocrGpuAccelerationCard = ComboBoxSettingCard2(
@@ -2492,11 +2512,11 @@ class SettingInterface(ScrollArea):
             confirm=self.__confirmLowerGraphics,
         )
         def refresh_game_optimization_options(*_args):
-            enabled = self.gameOptimizationCard.getSwitchState()
+            enabled = self.gameOptimizationCard.switchButton.isChecked()
             self.autoBattleDetectEnableCard.setEnabled(enabled)
             self.autoSetResolutionEnableCard.setEnabled(enabled)
             self.autoLowerGraphicsCard.setEnabled(enabled and sys.platform == 'win32')
-        self.gameOptimizationCard.switchChanged.connect(refresh_game_optimization_options)
+        self.gameOptimizationCard.switchButton.checkedChanged.connect(refresh_game_optimization_options)
         refresh_game_optimization_options()
         self.autoSetGamePathEnableCard = SwitchSettingCard1(
             FIF.GAME,
@@ -2670,7 +2690,7 @@ class SettingInterface(ScrollArea):
             self.useReservedTrailblazePowerEnableCard,
             self.useFuelEnableCard,
             self.weeklyRelicCleanupEnableCard,
-            self.mergeImmersifierEnableCard,
+            self.relicBagCleanupCard,
             self.instanceNameChallengeCountCard
         ])
         self.weeklyRelicCleanupEnableCard.addSettingCard(self.smartRelicDiscardEnableCard)
@@ -2741,12 +2761,16 @@ class SettingInterface(ScrollArea):
         self.CurrencywarsGroup.addSettingCard(self.currencywarsTypeCard)
         self.CurrencywarsGroup.addSettingCard(self.currencywarsBonusEnableCard)
         self.CurrencywarsGroup.addSettingCard(self.currencywarsRankDifficultyCard)
-        self.CurrencywarsGroup.addSettingCard(self.currencywarsStrategyCard)
-        self.currencywarsStrategyCard.addSettingCards([
-            self.currencywarsRemembranceTrailblazerNameCard,
-            self.currencywarsStrategyRestartOnSpecialTagsCard,
-            self.currencywarsFastModeCard
+        if self.currencywarsStrategyCard is not None:
+            self.CurrencywarsGroup.addSettingCard(self.currencywarsStrategyCard)
+        self.CurrencywarsGroup.addSettingCard(self.currencywarsStrategySelectCard)
+        self.currencywarsStrategySelectCard.addSettingCards([
+            self.currencywarsInvestmentPriorityCard,
+            self.currencywarsUnfinishedMatchCard,
         ])
+        if self.currencywarsStrategyCard is not None:
+            self.currencywarsStrategySelectCard.hide()
+        self.CurrencywarsGroup.addSettingCard(self.currencywarsFastModeCard)
 
         self.UniverseGroup.addSettingCard(self.weeklyDivergentEnableCard)
         self.UniverseGroup.addSettingCard(self.weeklyDivergentTypeCard)
@@ -2805,36 +2829,31 @@ class SettingInterface(ScrollArea):
             self.ApocalypticConfigCard
         ])
 
-        self.CloudGameGroup.addSettingCard(self.cloudGameEnableCard)
-        self.CloudGameGroup.addSettingCard(self.browserTypeCard)
         self.browserTypeCard.addSettingCards([
             self.browserDownloadUseMirrorCard,
             self.browserPersistentCard,
             self.browserScaleCard,
             self.browserLaunchArgCard
         ])
-        self.CloudGameGroup.addSettingCard(self.cloudGameFullScreenCard)
-        self.CloudGameGroup.addSettingCard(self.cloudGameUsePaidTimeCard)
-        self.CloudGameGroup.addSettingCard(self.browserHeadlessCard)
         self.browserHeadlessCard.addSettingCards([self.browserHeadlessRestartCard])
-        self.CloudGameGroup.addSettingCard(self.cloudGameMaxQueueTimeCard)
-        self.CloudGameGroup.addSettingCard(self.cloudGameLoginTimeoutCard)
-        # self.CloudGameGroup.addSettingCard(self.cloudGameVideoQualityCard)
-        # self.CloudGameGroup.addSettingCard(self.cloudGameSmoothFirstCard)
-        # self.CloudGameGroup.addSettingCard(self.cloudGameShowStatusCard)
-        # self.CloudGameGroup.addSettingCard(self.browserCookiesCard)
-        # self.CloudGameGroup.addSettingCard(self.browserPersistentCard)
-        # self.CloudGameGroup.addSettingCard(self.browserScaleCard)
-        # self.CloudGameGroup.addSettingCard(self.browserLaunchArgCard)
-
-        self.ProgramGroup.addSettingCard(self.logLevelCard)
-        self.ProgramGroup.addSettingCard(self.gamePathCard)
-        self.ProgramGroup.addSettingCard(self.updateViaLauncherEnableCard)
         self.updateViaLauncherEnableCard.addSettingCards([
             self.launcherPathCard,
             self.launcherType,
             self.updateGameTimeoutCard
         ])
+        self._connectionCards = {
+            "local": (self.gamePathCard, self.autoSetGamePathEnableCard, self.updateViaLauncherEnableCard,
+                      self.autoSetResolutionEnableCard, self.autoLowerGraphicsCard,
+                      self.useBackgroundScreenshotCard, self.localControlModeCard),
+            "cloud": (self.browserTypeCard, self.cloudGameFullScreenCard, self.cloudGameUsePaidTimeCard,
+                      self.browserHeadlessCard, self.cloudGameMaxQueueTimeCard, self.cloudGameLoginTimeoutCard),
+            "adb": (self.adbDeviceCard, self.adbEnvironmentCard, self.adbStatusCard, self.adbAdvancedCard),
+        }
+        self.GameConnectionGroup.addSettingCard(self.adbBackendCard)
+        for cards in self._connectionCards.values():
+            self.GameConnectionGroup.addSettingCards(cards)
+
+        self.ProgramGroup.addSettingCard(self.logLevelCard)
         self.ProgramGroup.addSettingCard(self.startGameTimeoutCard)
         # self.ProgramGroup.addSettingCard(self.importConfigCard)
         self.ProgramGroup.addSettingCard(self.pauseAfterSuccess)
@@ -2862,15 +2881,8 @@ class SettingInterface(ScrollArea):
             self.NotifyGroup.addSettingCard(value)
 
         self.MiscGroup.addSettingCard(self.gameOptimizationCard)
-        self.gameOptimizationCard.addSettingCards([
-            self.autoBattleDetectEnableCard,
-            self.autoSetResolutionEnableCard,
-            self.autoLowerGraphicsCard,
-        ])
+        self.MiscGroup.addSettingCard(self.autoBattleDetectEnableCard)
         self.MiscGroup.addSettingCard(self.ocrGpuAccelerationCard)
-        self.MiscGroup.addSettingCard(self.autoSetGamePathEnableCard)
-        self.MiscGroup.addSettingCard(self.useBackgroundScreenshotCard)
-        self.MiscGroup.addSettingCard(self.localControlModeCard)
         if sys.platform == 'win32':
             self.MiscGroup.addSettingCard(self.autostartCard)
             self.MiscGroup.addSettingCard(self.uacFreeCard)
@@ -2893,15 +2905,6 @@ class SettingInterface(ScrollArea):
         self.AboutGroup.addSettingCard(self.languageCard)
         self.AboutGroup.addSettingCard(self.telemetryCard)
 
-        if sys.platform != 'win32':
-            self.gamePathCard.setHidden(True)
-            self.updateViaLauncherEnableCard.setHidden(True)
-            self.autoSetResolutionEnableCard.setHidden(True)
-            self.autoSetGamePathEnableCard.setHidden(True)
-            self.useBackgroundScreenshotCard.setHidden(True)
-            self.localControlModeCard.setHidden(True)
-            self.cloudGameEnableCard.setDisabled(True)  # 在配置文件中强制启用，禁止用户修改
-
         self.addSubInterface(self.PowerGroup, 'PowerInterface', tr('体力'))
         # self.addSubInterface(self.BorrowGroup, 'BorrowInterface', '支援')
         self.addSubInterface(self.DailyGroup, 'DailyInterface', tr('日常'))
@@ -2920,7 +2923,7 @@ class SettingInterface(ScrollArea):
         )
 
         self.addSubInterface(self.ProgramGroup, 'programInterface', tr('程序'))
-        self.addSubInterface(self.CloudGameGroup, "cloudGameInterface", tr('云游戏'))
+        self.addSubInterface(self.GameConnectionGroup, "gameConnectionInterface", tr('游戏连接'))
         self.addSubInterface(self.NotifyGroup, 'NotifyInterface', tr('推送'))
         self.addSubInterface(self.MiscGroup, 'KeybindingInterface', tr('杂项'))
         if sys.platform == 'win32':
@@ -2979,7 +2982,7 @@ class SettingInterface(ScrollArea):
                 card.expandAni.setCurrentTime(card.expandAni.duration())
         for index in range(self.stackedWidget.count()):
             widget = self.stackedWidget.widget(index)
-            if widget.objectName() == state['tab']:
+            if widget.objectName() == state['tab'] and not self.pivot.items[state['tab']].isHidden():
                 self.stackedWidget.setCurrentWidget(widget)
                 break
         self.stackedWidget.setFixedHeight(self.stackedWidget.currentWidget().sizeHint().height())
@@ -3029,7 +3032,7 @@ class SettingInterface(ScrollArea):
         connect_expand_state(self.rewardEnableCard)
         connect_expand_state(self.assetEnableCard)
         connect_expand_state(self.currencywarsEnableCard)
-        connect_expand_state(self.currencywarsStrategyCard)
+        connect_expand_state(self.currencywarsStrategySelectCard)
         connect_expand_state(self.fightEnableCard)
         connect_expand_state(self.fightRewardEnableCard)
         connect_expand_state(self.weeklyDivergentEnableCard)
@@ -3046,11 +3049,75 @@ class SettingInterface(ScrollArea):
         connect_expand_state(self.instanceTypeCard)
         connect_expand_state(self.weeklyRelicCleanupEnableCard)
         connect_expand_state(self.echoofwarEnableCard)
-        connect_expand_state(self.gameOptimizationCard)
         connect_expand_state(self.browserTypeCard)
         connect_expand_state(self.browserHeadlessCard)
+        for adb_card in (self.adbDeviceCard, self.adbEnvironmentCard, self.adbStatusCard, self.adbAdvancedCard):
+            connect_expand_state(adb_card)
+        self.adbBackendCard.backendChanged.connect(self.__onBackendChanged)
+        self.adbDeviceCard.serialChanged.connect(lambda _serial: self.adbAdvancedCard.refreshSerial())
+        self.adbAdvancedCard.serialChanged.connect(self.adbDeviceCard.setSelectedSerial)
         self.universeEnableCard.switchChanged.connect(self.__onUniverseEnableCardSwitchChanged)
         self.checkUpdateCard.switchButton.checkedChanged.connect(self.__onCheckUpdateCardSwitchChanged)
+
+    def __isTaskRunning(self):
+        log_interface = getattr(self.parent, 'logInterface', None)
+        try:
+            return bool(log_interface is not None and log_interface.isTaskRunning())
+        except Exception:
+            return False
+
+    def __blockBackendChange(self, _backend):
+        """任务进程会随时重读配置，运行中切换后端会让它中途换到另一台设备。"""
+        if not self.__isTaskRunning() and read_active_run() is None:
+            return False
+        InfoBar.warning(
+            title=tr('任务正在运行'),
+            content=tr('请先停止任务，再切换游戏运行位置'),
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=5000,
+            parent=self
+        )
+        return True
+
+    def __blockAdbCheck(self):
+        """环境检查要启动设备端服务，和正在运行的任务会互相抢占设备。"""
+        if not self.__isTaskRunning() and read_active_run() is None:
+            return False
+        InfoBar.warning(
+            title=tr('任务正在运行'),
+            content=tr('环境检查会占用设备，请等任务结束后再检查'),
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=5000,
+            parent=self
+        )
+        return True
+
+    def __onBackendChanged(self, backend):
+        self.__refreshBackendSettings(backend)
+        refresh = getattr(self.parent, "refreshBackendTasks", None)
+        if refresh:
+            refresh()
+
+    def __refreshBackendSettings(self, backend):
+        for mode, cards in self._connectionCards.items():
+            for card in cards:
+                card.setVisible(mode == backend and (mode != "local" or sys.platform == "win32"))
+        self.adbStatusCard.refresh()
+        touch = get_ui_profile(cfg).name == "touch_720"
+        for key in ("CurrencywarsInterface", "UniverseInterface", "FightInterface", "ImmortalGameInterface", "AccountsInterface"):
+            if key in self.pivot.items:
+                self.pivot.items[key].setVisible(not touch)
+        for card in (self.activityEnableCard, self.assetEnableCard, self.buildTargetEnableCard,
+                     self.weeklyRelicCleanupEnableCard, self.dailyMemoryOneEnableCard, self.dailyMemoryOneTeamCard,
+                     self.redemptionEnableCard, self.achievementEnableCard):
+            card.setVisible(not touch)
+        self.pivot.adjustSize()
+        current = self.stackedWidget.currentWidget()
+        self.stackedWidget.setFixedHeight(current.sizeHint().height())
 
     def __onUniverseEnableCardSwitchChanged(self, isChecked: bool):
         if self._ignoreUniverseEnableCardSwitchChanged:
@@ -3505,6 +3572,51 @@ class SettingInterface(ScrollArea):
         cfg.set_value("script_path", script_path)
         self.ScriptPathCard.setContent(script_path)
 
+    def __applyCurrencywarsStrategy(self):
+        cfg.set_value("currencywars_strategy", CURRENCY_WARS_STRATEGY)
+        self.currencywarsStrategyCard.hide()
+        self.currencywarsStrategySelectCard.show()
+
+    def __applyCurrencywarsPromotionPreset(self):
+        self.__applyCurrencywarsPreset(
+            "overclock", "lowest", CURRENCY_WARS_STRATEGY, fast=True,
+            message=tr('当前为“提升晋升等级”模式'),
+        )
+
+    def __applyCurrencywarsRankPreset(self):
+        self.__applyCurrencywarsPreset(
+            "normal", "highest", HIGH_ANAXA, fast=False,
+            message=tr('当前为“提升职级等级”模式'),
+        )
+
+    def __applyCurrencywarsPreset(self, mode, difficulty, strategy, *, fast, message):
+        choices = (
+            (self.currencywarsTypeCard, mode),
+            (self.currencywarsRankDifficultyCard, difficulty),
+            (self.currencywarsStrategySelectCard, strategy),
+        )
+        fast_card = self.currencywarsFastModeCard
+        values = {card.configname: value for card, value in choices}
+        values[fast_card.configname] = fast
+        cfg.set_values(values)
+        for card, value in choices:
+            with QSignalBlocker(card.comboBox):
+                card.comboBox.setCurrentIndex(card.comboBox.findData(value))
+        with QSignalBlocker(fast_card.switchButton):
+            fast_card.setValue(fast)
+        if self.currencywarsStrategyCard is not None:
+            self.currencywarsStrategyCard.hide()
+            self.currencywarsStrategySelectCard.show()
+        InfoBar.success(
+            title=tr('已应用快捷配置'),
+            content=message,
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self
+        )
+
     def __setComboBoxCardValue(self, card, value):
         for index in range(card.comboBox.count()):
             if card.comboBox.itemData(index) != value:
@@ -3550,36 +3662,6 @@ class SettingInterface(ScrollArea):
 
     def __applyFightRewardOnlyPreset(self):
         self.__applyFightPreset('reward', tr('仅获取特殊物品'))
-
-    def __applyCurrencywarsPromotionPreset(self):
-        self.__setComboBoxCardValue(self.currencywarsTypeCard, 'overclock')
-        self.__setComboBoxCardValue(self.currencywarsRankDifficultyCard, 'lowest')
-        self.__setComboBoxCardValue(self.currencywarsStrategyCard, 'default')
-        self.__setSwitchCardValue(self.currencywarsFastModeCard, True)
-        InfoBar.success(
-            title=tr('已应用快捷配置'),
-            content=tr('当前为“提升晋升等级”模式'),
-            orient=Qt.Orientation.Horizontal,
-            isClosable=True,
-            position=InfoBarPosition.TOP,
-            duration=2000,
-            parent=self
-        )
-
-    def __applyCurrencywarsRankPreset(self):
-        self.__setComboBoxCardValue(self.currencywarsTypeCard, 'normal')
-        self.__setComboBoxCardValue(self.currencywarsRankDifficultyCard, 'highest')
-        self.__setComboBoxCardValue(self.currencywarsStrategyCard, 'aglaea')
-        self.__setSwitchCardValue(self.currencywarsFastModeCard, False)
-        InfoBar.success(
-            title=tr('已应用快捷配置'),
-            content=tr('当前为“提升职级等级”模式'),
-            orient=Qt.Orientation.Horizontal,
-            isClosable=True,
-            position=InfoBarPosition.TOP,
-            duration=2000,
-            parent=self
-        )
 
     def __onExpandableCardStateChanged(self, is_expanding: bool):
         """可展开卡片状态改变时，调整 stackedWidget 高度以包含子卡片"""

@@ -6395,8 +6395,12 @@ msgid "通过 Epic 启动"
 msgstr "透過 Epic 啟動"
 
 #: app/card/game_path_setting_card.py:32
-msgid "请选择 Epic 渠道版 StarRail.exe，助手将通过 Epic 打开启动器并自动点击‘开始游戏’。需提前登录 Epic。"
-msgstr "請選擇 Epic 版本的 StarRail.exe，小助手會透過 Epic 開啟啟動器，並自動按下「開始遊戲」。請先登入 Epic。"
+msgid ""
+"请选择 Epic 渠道版的 StarRail.exe，并提前登录 Epic。助手会打开 HoYoPlay "
+"并点击「开始游戏」。无人值守运行前，请以管理员身份启动 Epic Games 启动器，避免 HoYoPlay 弹出 UAC 确认。"
+msgstr ""
+"請選擇 Epic 版的 StarRail.exe，並先登入 Epic。小助手會開啟 HoYoPlay "
+"並按下「開始遊戲」。無人值守執行前，請以系統管理員身分啟動 Epic Games 啟動器，避免 HoYoPlay 跳出 UAC 確認。"
 
 #: app/challenge_config_dialog.py:158
 msgid "关卡范围的起始值不能大于结束值。"
@@ -6797,3 +6801,1280 @@ msgstr "開啟分身視窗"
 #: app/tools_interface.py:126
 msgid "分身正在运行，打开窗口可查看分身画面或注销分身"
 msgstr "分身正在執行，開啟視窗可查看分身畫面或登出分身"
+
+#: module/config/platform.py:18
+msgid "触屏模式不支持 {method}，请改用触摸操作"
+msgstr "觸控模式不支援 {method}，請改用觸控操作。"
+
+#: module/config/platform.py:39
+msgid "触屏素材文件不存在：{path}"
+msgstr "觸控素材檔案不存在：{path}"
+
+#: module/config/platform.py:56
+msgid "无效的 control_backend：{value}，可选值为 local、cloud、adb"
+msgstr "無效的 control_backend：{value}，可選值為 local、cloud、adb。"
+
+#: module/config/platform.py:66
+msgid "无效的 ui_profile：{value}，可选值为 pc_1080、touch_720"
+msgstr "無效的 ui_profile：{value}，可選值為 pc_1080、touch_720。"
+
+#: module/game/__init__.py:15
+msgid "ADB 后端尚未实现"
+msgstr "ADB 後端尚未實作。"
+
+#: module/screen/screen.py:57
+msgid "界面图文件不存在：{path}"
+msgstr "介面圖檔案不存在：{path}"
+
+#: tasks/game/__init__.py:99
+msgid "启动游戏失败"
+msgstr "啟動遊戲失敗。"
+
+#: module/game/local.py:43
+msgid "请先在工具箱的触屏模式中完成第三方解锁器的风险确认"
+msgstr "請先在工具箱的觸控模式中完成第三方解鎖工具的風險確認"
+
+#: module/game/local.py:60
+msgid "未找到触屏解锁器，请先运行 mobileui_update"
+msgstr "找不到觸控解鎖工具，請先執行 mobileui_update"
+
+#: module/game/local.py:64
+msgid "未找到原始游戏分辨率，请先在游戏内保存分辨率设置"
+msgstr "找不到原始遊戲解析度，請先在遊戲內儲存解析度設定"
+
+#: module/game/local.py:90
+msgid "等待 1280×720 触屏游戏窗口超时"
+msgstr "等待 1280×720 觸控遊戲視窗逾時"
+
+#: module/game/local.py:93
+msgid "触屏解锁器启动失败，退出码为 {code}"
+msgstr "觸控解鎖工具啟動失敗，結束代碼為 {code}"
+
+#: tasks/game/__init__.py:114
+msgid "切换到游戏窗口失败"
+msgstr "無法切換至遊戲視窗"
+
+#: tasks/game/__init__.py:116
+msgid "请退出当前游戏，再启动 1280×720 触屏模式"
+msgstr "請關閉目前的遊戲，再啟動 1280×720 觸控模式"
+
+#: tasks/game/__init__.py:118
+msgid "未能进入触屏主界面，请检查游戏登录状态"
+msgstr "無法進入觸控主畫面，請檢查遊戲登入狀態"
+
+#: module/game/adb_transport.py:44
+msgid "ADB 设备或设备端服务已断开，请重新连接后再运行"
+msgstr "ADB 裝置或裝置端服務已斷開，請重新連線後再執行"
+
+#: module/game/adb_transport.py:88
+msgid "未找到 adb，请配置 adb_path 或把 Android Platform-Tools 加入 PATH"
+msgstr "未找到 adb，請配置 adb_path 或把 Android Platform-Tools 加入 PATH"
+
+#: module/game/adb_transport.py:168
+msgid "未找到指定的 ADB 设备，请检查连接和 adb_serial"
+msgstr "未找到指定的 ADB 裝置，請檢查連線和 adb_serial"
+
+#: module/game/adb_transport.py:181
+msgid "ADB 后端需要 Android 10 或更高版本"
+msgstr "ADB 後端需要 Android 10 或更高版本"
+
+#: module/game/adb_transport.py:186
+msgid "adb_device_type 必须为 auto、physical 或 emulator"
+msgstr "adb_device_type 必須為 auto、physical 或 emulator"
+
+#: module/game/adb_transport.py:197
+msgid "无法读取 Android display 0 的分辨率"
+msgstr "無法讀取 Android display 0 的解析度"
+
+#: module/game/adb_transport.py:165
+msgid "检测到多个 ADB 设备，请设置 adb_serial"
+msgstr "檢測到多個 ADB 裝置，請設定 adb_serial"
+
+#: module/game/adb_transport.py:334
+msgid "ADB 端口转发未返回有效端口"
+msgstr "ADB 埠轉發未返回有效埠"
+
+#: module/game/adb_transport.py:339
+msgid "ADB 设备端协议版本不匹配"
+msgstr "ADB 裝置端協議版本不匹配"
+
+#: module/game/adb_transport.py:341
+msgid "ADB 设备端服务版本不匹配，请检查 JAR"
+msgstr "ADB 裝置端服務版本不匹配，請檢查 JAR"
+
+#: module/game/adb_transport.py:70
+msgid "配置的 adb_path 不存在：{path}"
+msgstr "配置的 adb_path 不存在：{path}"
+
+#: module/game/adb_transport.py:170
+msgid "ADB 设备 {serial} 的状态为 {state}，请检查连接并在设备上授权 USB 调试"
+msgstr "ADB 裝置 {serial} 的狀態為 {state}，請檢查連線並在裝置上授權 USB 除錯"
+
+#: module/game/adb_transport.py:263
+msgid "ADB 设备端服务返回了无效的响应"
+msgstr "ADB 裝置端服務返回了無效的響應"
+
+#: module/game/adb_transport.py:327
+msgid "设备端服务已被占用或仍在清理，请稍后重试"
+msgstr "裝置端服務已被佔用或仍在清理，請稍後重試"
+
+#: module/game/adb_transport.py:329
+msgid "ADB 设备端服务启动超时"
+msgstr "ADB 裝置端服務啟動超時"
+
+#: module/game/adb_transport.py:115
+msgid "ADB 服务端被其他版本重启。请关闭模拟器自带的 adb，并固定使用 {path}"
+msgstr "ADB 服務端被其他版本重啟。請關閉模擬器自帶的 adb，並固定使用 {path}"
+
+#: module/game/adb_transport.py:124
+msgid "ADB 命令失败：{command}（退出码 {code}）"
+msgstr "ADB 命令失敗：{command}（退出碼 {code}）"
+
+#: module/game/adb_transport.py:268
+msgid "ADB 设备端服务错误 {code}：{message}"
+msgstr "ADB 裝置端服務錯誤 {code}：{message}"
+
+#: module/game/adb_transport.py:108
+msgid "ADB 命令超时：{command}"
+msgstr "ADB 命令超時：{command}"
+
+#: module/game/adb_transport.py:110
+msgid "无法执行 adb：{path}"
+msgstr "無法執行 adb：{path}"
+
+#: module/game/adb_transport.py:288
+msgid "无法读取设备端 JAR：{path}。请先构建 Android/device-service 或配置 adb_service_jar"
+msgstr "無法讀取裝置端 JAR：{path}。請先構建 Android/device-service 或配置 adb_service_jar"
+
+#: module/game/adb.py:118
+msgid "ADB 会话尚未启动，请先启动游戏"
+msgstr "ADB 會話尚未啟動，請先啟動遊戲"
+
+#: module/game/adb.py:363
+msgid "ADB 设备端服务返回了无效的帧"
+msgstr "ADB 裝置端服務返回了無效的幀"
+
+#: module/game/adb.py:368
+msgid "ADB 设备端服务返回了输入前的帧"
+msgstr "ADB 裝置端服務返回了輸入前的幀"
+
+#: module/game/adb.py:100
+msgid "ADB 后端需要设置 ui_profile: touch_720"
+msgstr "ADB 後端需要設定 ui_profile: touch_720"
+
+#: module/game/adb.py:103
+msgid "adb_tap_ms 必须是 1 到 10000 毫秒之间的整数"
+msgstr "adb_tap_ms 必須是 1 到 10000 毫秒之間的整數"
+
+#: module/game/adb.py:212
+msgid "Android 设备未安装国服《崩坏：星穹铁道》"
+msgstr "Android 裝置未安裝國服《崩壞：星穹鐵道》"
+
+#: module/game/adb.py:328 module/game/adb.py:291
+msgid "ADB 尚未准备游戏画面，请先启动游戏"
+msgstr "ADB 尚未準備遊戲畫面，請先啟動遊戲"
+
+#: module/game/adb.py:387
+msgid "无法解码模拟器 display 0 的截图"
+msgstr "無法解碼模擬器 display 0 的截圖"
+
+#: module/game/adb.py:308
+msgid "Android 拒绝触摸注入，请检查 USB 调试（安全设置）是否开启"
+msgstr "Android 拒絕觸控注入，請檢查 USB 除錯（安全設定）是否開啟"
+
+#: module/game/adb.py:199
+msgid "模拟器 display 0 当前为 {width}×{height}。请在模拟器设置中选择 1280×720 横屏后重试"
+msgstr "模擬器 display 0 當前為 {width}×{height}。請在模擬器設定中選擇 1280×720 橫屏後重試"
+
+#: module/game/adb.py:150
+msgid "游戏需要手动登录，请在 Android 实体屏或模拟器中完成登录后重试"
+msgstr "遊戲需要手動登入，請在 Android 實體屏或模擬器中完成登入後重試"
+
+#: module/game/adb.py:152
+msgid "Android 游戏进程已退出，请检查游戏与设备的后台设置后重试"
+msgstr "Android 遊戲程序已退出，請檢查遊戲與裝置的後臺設定後重試"
+
+#: module/game/adb.py:148
+msgid "游戏未能回到目标 Android 屏幕，请结束游戏后重试"
+msgstr "遊戲未能回到 Android 虛擬屏，請結束遊戲後重試"
+
+#: module/automation/adb_input.py:46
+msgid "ADB 设备端服务不支持文本输入，请在设备上手动输入"
+msgstr "ADB 裝置端服務不支援文本輸入，請在裝置上手動輸入"
+
+#: tasks/game/adb_check.py:61
+msgid "ADB 启动超时，请检查 Android 游戏的登录和横屏状态"
+msgstr "ADB 啟動超時，請檢查 Android 遊戲的登入和橫屏狀態"
+
+#: tasks/game/adb_check.py:89
+msgid "ADB 自检未能在输入后的画面中确认手机菜单"
+msgstr "ADB 自檢未能在輸入後的畫面中確認手機選單"
+
+#: tasks/game/adb_check.py:81
+msgid "未能点开 Android 手机菜单，请检查游戏是否处于主界面"
+msgstr "未能點開 Android 手機選單，請檢查遊戲是否處於主介面"
+
+#: tasks/game/adb_check.py:95
+msgid "ADB 路径：{path}"
+msgstr "ADB 路徑：{path}"
+
+#: tasks/game/adb_check.py:108
+msgid "使用模拟器 display 0（1280×720 横屏）"
+msgstr "使用模擬器 display 0（1280×720 橫屏）"
+
+#: tasks/game/adb_check.py:121
+msgid "ADB 自检未取得游戏画面"
+msgstr "ADB 自檢未取得遊戲畫面"
+
+#: tasks/game/adb_check.py:129
+msgid "模拟器使用 display 0，无需回迁"
+msgstr "模擬器使用 display 0，無需回遷"
+
+#: tasks/game/adb_check.py:29
+msgid "无法读取 ADB 启动所需的触屏素材：{path}"
+msgstr "無法讀取 ADB 啟動所需的觸屏素材：{path}"
+
+#: tasks/game/adb_check.py:100
+msgid "ADB 设备：{serial} · {model} · Android {version}（API {sdk}）"
+msgstr "ADB 裝置：{serial} · {model} · Android {version}（API {sdk}）"
+
+#: tasks/game/adb_check.py:105
+msgid "ADB 设备端服务版本：{version}"
+msgstr "ADB 裝置端服務版本：{version}"
+
+#: tasks/game/adb_check.py:115
+msgid "已在 display {display} 启动游戏，等待进入主界面"
+msgstr "已在 display {display} 啟動遊戲，等待進入主介面"
+
+#: tasks/game/adb_check.py:117
+msgid "游戏界面就绪，用时 {seconds:.1f} 秒"
+msgstr "遊戲介面就緒，用時 {seconds:.1f} 秒"
+
+#: tasks/game/adb_check.py:122
+msgid "取帧速率：{fps:.1f} FPS（{frames} 次取样 / {seconds:.1f} 秒，{updates} 次更新）"
+msgstr "取幀速率：{fps:.1f} FPS（{frames} 次取樣 / {seconds:.1f} 秒，{updates} 次更新）"
+
+#: tasks/game/adb_check.py:131
+msgid "本次启动未发生回迁"
+msgstr "本次啟動未發生回遷"
+
+#: tasks/game/adb_check.py:141
+msgid "已确认手机菜单，截图：{path}"
+msgstr "已確認手機選單，截圖：{path}"
+
+#: tasks/game/adb_check.py:110
+msgid "已创建 1280×720 虚拟屏，display {display}"
+msgstr "已建立 1280×720 虛擬屏，display {display}"
+
+#: tasks/game/adb_check.py:127
+msgid "已确认自动回迁 {count} 次"
+msgstr "已確認自動回遷 {count} 次"
+
+#: main.py:600
+msgid "请在 Android 设备上更新游戏"
+msgstr "請在 Android 裝置上更新遊戲"
+
+#: main.py:614
+msgid "ADB 自检需要设置 control_backend: adb"
+msgstr "ADB 自檢需要設定 control_backend: adb"
+
+#: module/automation/automation.py:237
+msgid "ADB 截图超时，未取得可用的游戏画面"
+msgstr "ADB 截圖超時，未取得可用的遊戲畫面"
+
+#: utils/tasks.py:46
+msgid "ADB 自检"
+msgstr "ADB 自檢"
+
+#: module/game/__init__.py:19
+msgid "ADB 模式不支持「{task}」，请使用本地或云游戏后端"
+msgstr "ADB 模式不支援「{task}」，請使用本機或雲遊戲後端"
+
+#: module/game/adb.py:200
+msgid ""
+"display 0 的触摸目标校验需要 Android 14 或更高版本，请设置 adb_device_type: physical 使用虚拟屏"
+msgstr ""
+"display 0 的觸控目標驗證需要 Android 14 或更新版本，請設定 adb_device_type: physical 以使用虛擬螢幕"
+
+#: app/card/adb_setting_cards.py:71
+msgid "设备后端"
+msgstr "裝置後端"
+
+#: app/card/adb_setting_cards.py:72
+msgid "选择小助手操作哪里的游戏，对下一次运行的任务生效"
+msgstr "選擇小助手操作哪裡的遊戲，對下一次執行的任務生效"
+
+#: app/card/adb_setting_cards.py:77
+msgid "本地游戏"
+msgstr "本地遊戲"
+
+#: app/card/adb_setting_cards.py:78
+msgid "云·星穹铁道"
+msgstr "雲·星穹鐵道"
+
+#: app/card/adb_setting_cards.py:79
+msgid "Android 设备（ADB）"
+msgstr "Android 裝置（ADB）"
+
+#: app/card/adb_setting_cards.py:227
+msgid "实体机"
+msgstr "實體機"
+
+#: app/card/adb_setting_cards.py:227
+msgid "模拟器"
+msgstr "模擬器"
+
+#: app/card/adb_setting_cards.py:232
+msgid "未授权 USB 调试"
+msgstr "未授權 USB 除錯"
+
+#: app/card/adb_setting_cards.py:233
+msgid "离线"
+msgstr "離線"
+
+#: app/card/adb_setting_cards.py:234
+msgid "等待授权"
+msgstr "等待授權"
+
+#: app/card/adb_setting_cards.py:235
+msgid "没有访问权限"
+msgstr "沒有訪問許可權"
+
+#: app/card/adb_setting_cards.py:241
+msgid "序列号 {serial}"
+msgstr "序列號 {serial}"
+
+#: app/card/adb_setting_cards.py:257
+msgid "Android 设备"
+msgstr "Android 裝置"
+
+#: app/card/adb_setting_cards.py:257
+msgid "自动选择"
+msgstr "自動選擇"
+
+#: app/card/adb_setting_cards.py:261
+msgid "点“刷新”查找已连接的设备"
+msgstr "點“重新整理”查詢已連線的裝置"
+
+#: app/card/adb_setting_cards.py:275
+msgid "模拟器地址，例如 {address}"
+msgstr "模擬器地址，例如 {address}"
+
+#: app/card/adb_setting_cards.py:278
+msgid "连接"
+msgstr "連線"
+
+#: app/card/adb_setting_cards.py:279
+msgid "手动连接"
+msgstr "手動連線"
+
+#: app/card/adb_setting_cards.py:280
+msgid "模拟器和无线调试需要输入地址。MuMu 默认是 127.0.0.1:16384"
+msgstr "模擬器和無線除錯需要輸入地址。MuMu 預設是 127.0.0.1:16384"
+
+#: app/card/adb_setting_cards.py:327
+msgid "正在刷新…"
+msgstr "正在重新整理…"
+
+#: app/card/adb_setting_cards.py:337
+msgid "没有发现设备"
+msgstr "沒有發現裝置"
+
+#: app/card/adb_setting_cards.py:352
+msgid "地址格式不对"
+msgstr "地址格式不對"
+
+#: app/card/adb_setting_cards.py:352
+msgid "请输入“IP:端口”，例如 {address}"
+msgstr "請輸入“IP:埠”，例如 {address}"
+
+#: app/card/adb_setting_cards.py:389
+msgid "自动选择：{name}"
+msgstr "自動選擇：{name}"
+
+#: app/card/adb_setting_cards.py:391
+msgid "自动选择（只连接了一台设备时可用）"
+msgstr "自動選擇（只連線了一臺裝置時可用）"
+
+#: app/card/adb_setting_cards.py:395
+msgid "{serial}（未连接）"
+msgstr "{serial}（未連線）"
+
+#: app/card/adb_setting_cards.py:397
+msgid "{name}（{serial}）"
+msgstr "{name}（{serial}）"
+
+#: app/card/adb_setting_cards.py:426
+msgid "只连接了一台设备时直接使用它"
+msgstr "只連線了一臺裝置時直接使用它"
+
+#: app/card/adb_setting_cards.py:440
+msgid "当前没有连接这台设备"
+msgstr "當前沒有連線這臺裝置"
+
+#: app/card/adb_setting_cards.py:472
+msgid "环境检查"
+msgstr "環境檢查"
+
+#: app/card/adb_setting_cards.py:473
+msgid "逐项检查电脑和设备能不能运行，不会启动游戏"
+msgstr "逐項檢查電腦和裝置能不能執行，不會啟動遊戲"
+
+#: app/card/adb_setting_cards.py:478
+msgid "开始检查"
+msgstr "開始檢查"
+
+#: app/card/adb_setting_cards.py:489
+msgid "还没有检查"
+msgstr "還沒有檢查"
+
+#: app/card/adb_setting_cards.py:507
+msgid "正在检查…"
+msgstr "正在檢查…"
+
+#: app/card/adb_setting_cards.py:512
+msgid "正在检查，通常几秒钟就能完成"
+msgstr "正在檢查，通常幾秒鐘就能完成"
+
+#: app/card/adb_setting_cards.py:540
+msgid "重新检查"
+msgstr "重新檢查"
+
+#: app/card/adb_setting_cards.py:543
+msgid "这一项没有检查"
+msgstr "這一項沒有檢查"
+
+#: app/card/adb_setting_cards.py:548
+msgid "检查中断：{error}"
+msgstr "檢查中斷：{error}"
+
+#: app/card/adb_setting_cards.py:550
+msgid "有 {count} 项没有通过，请按提示处理后重新检查"
+msgstr "有 {count} 項沒有通過，請按提示處理後重新檢查"
+
+#: app/card/adb_setting_cards.py:552
+msgid "可以运行，有 {count} 项需要留意"
+msgstr "可以執行，有 {count} 項需要留意"
+
+#: app/card/adb_setting_cards.py:554
+msgid "全部通过，可以运行任务"
+msgstr "全部通過，可以執行任務"
+
+#: app/card/adb_setting_cards.py:563
+msgid "没有错误"
+msgstr "沒有錯誤"
+
+#: app/card/adb_setting_cards.py:565
+msgid "运行任务后，这里会显示设备的状态"
+msgstr "執行任務後，這裡會顯示裝置的狀態"
+
+#: app/card/adb_setting_cards.py:565
+msgid "没有使用 Android 设备后端"
+msgstr "沒有使用 Android 裝置後端"
+
+#: app/card/adb_setting_cards.py:567
+msgid "未启动"
+msgstr "未啟動"
+
+#: app/card/adb_setting_cards.py:568
+msgid "未建立"
+msgstr "未建立"
+
+#: app/card/adb_setting_cards.py:569
+msgid "游戏未运行"
+msgstr "遊戲未執行"
+
+#: app/card/adb_setting_cards.py:580
+msgid "已连接 {serial}"
+msgstr "已連線 {serial}"
+
+#: app/card/adb_setting_cards.py:581
+msgid "运行中，版本 {version}"
+msgstr "執行中，版本 {version}"
+
+#: app/card/adb_setting_cards.py:584
+msgid "正在连接…"
+msgstr "正在連線…"
+
+#: app/card/adb_setting_cards.py:585
+msgid "正在启动…"
+msgstr "正在啟動…"
+
+#: app/card/adb_setting_cards.py:593
+msgid "不使用虚拟屏，直接用模拟器画面"
+msgstr "不使用虛擬屏，直接用模擬器畫面"
+
+#: app/card/adb_setting_cards.py:595
+msgid "1280×720，display {display}"
+msgstr "1280×720，display {display}"
+
+#: app/card/adb_setting_cards.py:600
+msgid "停在登录界面，等待手动登录"
+msgstr "停在登入介面，等待手動登入"
+
+#: app/card/adb_setting_cards.py:604
+msgid "在模拟器的其他窗口，正在移回"
+msgstr "在模擬器的其他視窗，正在移回"
+
+#: app/card/adb_setting_cards.py:606
+msgid "被登录界面带回了实体屏"
+msgstr "被登入介面帶回了實體屏"
+
+#: app/card/adb_setting_cards.py:606
+msgid "游戏启动时，登录界面会把游戏短暂带回手机屏幕，登录完成后小助手会自动把它移回虚拟屏。这段时间手机上出现游戏画面是正常现象，不需要操作。"
+msgstr "遊戲啟動時，登入介面會把遊戲短暫帶回手機螢幕，登入完成後小助手會自動把它移回虛擬屏。這段時間手機上出現遊戲畫面是正常現象，不需要操作。"
+
+#: app/card/adb_setting_cards.py:610
+msgid "模拟器画面"
+msgstr "模擬器畫面"
+
+#: app/card/adb_setting_cards.py:612
+msgid "虚拟屏，手机屏幕可以照常使用"
+msgstr "虛擬屏，手機螢幕可以照常使用"
+
+#: app/card/adb_setting_cards.py:616
+msgid "{fps:.1f} 帧/秒"
+msgstr "{fps:.1f} 幀/秒"
+
+#: app/card/adb_setting_cards.py:618
+msgid "暂时没有取帧"
+msgstr "暫時沒有取幀"
+
+#: app/card/adb_setting_cards.py:625
+msgid "任务正在启动"
+msgstr "任務正在啟動"
+
+#: app/card/adb_setting_cards.py:627
+msgid "任务遇到问题，请看“最近一次错误”"
+msgstr "任務遇到問題，請看“最近一次錯誤”"
+
+#: app/card/adb_setting_cards.py:629
+msgid "上次运行出错，请看“最近一次错误”"
+msgstr "上次執行出錯，請看“最近一次錯誤”"
+
+#: app/card/adb_setting_cards.py:631
+msgid "上次运行已被停止"
+msgstr "上次執行已被停止"
+
+#: app/card/adb_setting_cards.py:633
+msgid "上次运行的进程已退出"
+msgstr "上次執行的程序已退出"
+
+#: app/card/adb_setting_cards.py:635
+msgid "上次运行正常结束"
+msgstr "上次執行正常結束"
+
+#: app/card/adb_setting_cards.py:643
+msgid "运行状态"
+msgstr "執行狀態"
+
+#: app/card/adb_setting_cards.py:649
+msgid "设备连接"
+msgstr "裝置連線"
+
+#: app/card/adb_setting_cards.py:650
+msgid "设备端服务"
+msgstr "裝置端服務"
+
+#: app/card/adb_setting_cards.py:651
+msgid "虚拟屏"
+msgstr "虛擬屏"
+
+#: app/card/adb_setting_cards.py:652
+msgid "游戏所在的显示器"
+msgstr "遊戲所在的顯示器"
+
+#: app/card/adb_setting_cards.py:653
+msgid "取帧速率"
+msgstr "取幀速率"
+
+#: app/card/adb_setting_cards.py:654
+msgid "最近一次错误"
+msgstr "最近一次錯誤"
+
+#: app/card/adb_setting_cards.py:714
+msgid "高级设置"
+msgstr "高階設定"
+
+#: app/card/adb_setting_cards.py:714
+msgid "adb 路径、设备序列号、设备类型和点按时长，一般不需要修改"
+msgstr "adb 路徑、裝置序列號、裝置型別和點按時長，一般不需要修改"
+
+#: app/card/adb_setting_cards.py:718
+msgid "adb 路径"
+msgstr "adb 路徑"
+
+#: app/card/adb_setting_cards.py:719
+msgid "选择"
+msgstr "選擇"
+
+#: app/card/adb_setting_cards.py:720
+msgid "自动查找"
+msgstr "自動查詢"
+
+#: app/card/adb_setting_cards.py:725
+msgid "设备序列号"
+msgstr "裝置序列號"
+
+#: app/card/adb_setting_cards.py:730
+msgid "设备类型"
+msgstr "裝置型別"
+
+#: app/card/adb_setting_cards.py:731
+msgid "自动判断适合绝大多数设备。实体机使用独立的虚拟屏，模拟器直接使用模拟器画面（需要 Android 14）"
+msgstr "自動判斷適合絕大多數裝置。實體機使用獨立的虛擬屏，模擬器直接使用模擬器畫面（需要 Android 14）"
+
+#: app/card/adb_setting_cards.py:734
+msgid "自动判断"
+msgstr "自動判斷"
+
+#: app/card/adb_setting_cards.py:743
+msgid "点按时长（毫秒）"
+msgstr "點按時長（毫秒）"
+
+#: app/card/adb_setting_cards.py:744
+msgid "每次点击按住屏幕的时间，默认 50。点击经常没有反应时可以适当调大"
+msgstr "每次點選按住螢幕的時間，預設 50。點選經常沒有反應時可以適當調大"
+
+#: app/card/adb_setting_cards.py:768
+msgid "自动查找（先找 PATH，再找常见模拟器的安装目录）"
+msgstr "自動查詢（先找 PATH，再找常見模擬器的安裝目錄）"
+
+#: app/card/adb_setting_cards.py:780
+msgid "选择 adb"
+msgstr "選擇 adb"
+
+#: app/card/adb_setting_cards.py:786
+msgid "留空表示自动选择"
+msgstr "留空表示自動選擇"
+
+#: app/main_window.py:1026
+msgid "Android 设备不需要单独启动游戏"
+msgstr "Android 裝置不需要單獨啟動遊戲"
+
+#: app/main_window.py:1027
+msgid "运行任务时会自动在设备上启动游戏"
+msgstr "執行任務時會自動在裝置上啟動遊戲"
+
+#: app/setting_interface.py:1030
+msgid "Android 设备设置"
+msgstr "Android 裝置設定"
+
+#: app/setting_interface.py:2940
+msgid "安卓设备"
+msgstr "安卓裝置"
+
+#: app/setting_interface.py:3091
+msgid "请先停止任务，再切换设备后端"
+msgstr "請先停止任務，再切換裝置後端"
+
+#: app/setting_interface.py:3106
+msgid "环境检查会占用设备，请等任务结束后再检查"
+msgstr "環境檢查會佔用裝置，請等任務結束後再檢查"
+
+#: app/tools/adb_service.py:142
+msgid ""
+"手机上会弹出“允许 USB 调试吗？”，勾选“一律允许”后点“确定”。没有弹窗时重新插拔数据线，或在开发者选项里点“撤销 USB 调试授权”后再连接。"
+msgstr ""
+"手機上會彈出“允許 USB 除錯嗎？”，勾選“一律允許”後點“確定”。沒有彈窗時重新插拔資料線，或在開發者選項裡點“撤銷 USB 除錯授權”後再連線。"
+
+#: app/tools/adb_service.py:145
+msgid ""
+"安装 Android Platform-Tools 并把它加入 PATH，或在“高级设置”里指定 adb 的位置。装有 MuMu "
+"等模拟器时会自动使用模拟器自带的 adb。"
+msgstr ""
+"安裝 Android Platform-Tools 並把它加入 PATH，或在“高階設定”裡指定 adb 的位置。裝有 MuMu "
+"等模擬器時會自動使用模擬器自帶的 adb。"
+
+#: app/tools/adb_service.py:147
+msgid ""
+"电脑上还有另一个版本的 adb（常见于模拟器和手机助手）在抢占服务端。关闭这些程序，或在“高级设置”里把 adb 路径改成它们使用的那一个，然后重试。"
+msgstr ""
+"電腦上還有另一個版本的 adb（常見於模擬器和手機助手）在搶佔服務端。關閉這些程式，或在“高階設定”裡把 adb 路徑改成它們使用的那一個，然後重試。"
+
+#: app/tools/adb_service.py:149
+msgid "adb 没有响应。重新插拔数据线或重启模拟器后重试。"
+msgstr "adb 沒有響應。重新插拔資料線或重啟模擬器後重試。"
+
+#: app/tools/adb_service.py:150
+msgid "adb 命令执行失败。重新插拔数据线或重启模拟器后重试。"
+msgstr "adb 命令執行失敗。重新插拔資料線或重啟模擬器後重試。"
+
+#: app/tools/adb_service.py:151
+msgid ""
+"用数据线连接手机，并在开发者选项里打开“USB 调试”。模拟器请在“Android 设备”里输入地址连接，MuMu 默认是 "
+"127.0.0.1:16384。"
+msgstr ""
+"用資料線連線手機，並在開發者選項裡開啟“USB 除錯”。模擬器請在“Android 裝置”裡輸入地址連線，MuMu 預設是 "
+"127.0.0.1:16384。"
+
+#: app/tools/adb_service.py:153
+msgid "检测到多台设备，请在“Android 设备”里选择要使用的那一台。"
+msgstr "檢測到多臺裝置，請在“Android 裝置”裡選擇要使用的那一臺。"
+
+#: app/tools/adb_service.py:154
+msgid "设备已连接但还不能使用。重新插拔数据线或重启模拟器，然后点“刷新”。"
+msgstr "裝置已連線但還不能使用。重新插拔資料線或重啟模擬器，然後點“重新整理”。"
+
+#: app/tools/adb_service.py:155
+msgid "ADB 模式需要 Android 10 或更高版本，请换一台设备，或改用模拟器。"
+msgstr "ADB 模式需要 Android 10 或更高版本，請換一臺裝置，或改用模擬器。"
+
+#: app/tools/adb_service.py:156
+msgid "读不到设备的屏幕分辨率。解锁设备并保持亮屏后重试。"
+msgstr "讀不到裝置的螢幕解析度。解鎖裝置並保持亮屏後重試。"
+
+#: app/tools/adb_service.py:157
+msgid "请在“高级设置”里重新选择设备类型。"
+msgstr "請在“高階設定”裡重新選擇裝置型別。"
+
+#: app/tools/adb_service.py:158
+msgid "在模拟器设置里把分辨率改成 1280×720（横屏、240 DPI），重启模拟器后重试。"
+msgstr "在模擬器設定裡把解析度改成 1280×720（橫屏、240 DPI），重啟模擬器後重試。"
+
+#: app/tools/adb_service.py:159
+msgid "这台模拟器的 Android 版本低于 14，不能直接使用模拟器画面。请在“高级设置”里把设备类型改回“自动判断”。"
+msgstr "這臺模擬器的 Android 版本低於 14，不能直接使用模擬器畫面。請在“高階設定”裡把裝置型別改回“自動判斷”。"
+
+#: app/tools/adb_service.py:161
+msgid "在设备上安装国服《崩坏：星穹铁道》，并先手动登录一次账号。"
+msgstr "在裝置上安裝國服《崩壞：星穹鐵道》，並先手動登入一次賬號。"
+
+#: app/tools/adb_service.py:162
+msgid ""
+"缺少设备端服务文件。请重新解压完整的程序包；从源码运行时先在 Android 目录执行 gradlew :device-"
+"service:assemble。"
+msgstr ""
+"缺少裝置端服務檔案。請重新解壓完整的程式包；從原始碼執行時先在 Android 目錄執行 gradlew :device-"
+"service:assemble。"
+
+#: app/tools/adb_service.py:164
+msgid "设备正被另一个任务占用，或上一次运行还在收尾。等十几秒后重试；有任务在运行时先等它结束。"
+msgstr "裝置正被另一個任務佔用，或上一次執行還在收尾。等十幾秒後重試；有任務在執行時先等它結束。"
+
+#: app/tools/adb_service.py:166
+msgid "设备端服务没能启动。重新插拔数据线后重试，仍然失败时重启设备。"
+msgstr "裝置端服務沒能啟動。重新插拔資料線後重試，仍然失敗時重啟裝置。"
+
+#: app/tools/adb_service.py:167
+msgid "设备端服务和本程序的版本不一致，请把程序更新到最新版本后重试。"
+msgstr "裝置端服務和本程式的版本不一致，請把程式更新到最新版本後重試。"
+
+#: app/tools/adb_service.py:169
+msgid "系统拒绝了触摸注入。小米、红米手机请在开发者选项里打开“USB 调试（安全设置）”，其他品牌请打开名称相近的开关，然后重新插拔数据线。"
+msgstr "系統拒絕了觸控注入。小米、紅米手機請在開發者選項裡開啟“USB 除錯（安全設定）”，其他品牌請開啟名稱相近的開關，然後重新插拔資料線。"
+
+#: app/tools/adb_service.py:171
+msgid "在手机屏幕或模拟器窗口里完成登录，然后重新运行任务。登录界面这时留在手机屏幕上是正常现象。"
+msgstr "在手機螢幕或模擬器窗口裡完成登入，然後重新執行任務。登入介面這時留在手機螢幕上是正常現象。"
+
+#: app/tools/adb_service.py:173
+msgid "设备连接断开了。检查数据线，或确认模拟器还在运行，重新连接后再运行任务。"
+msgstr "裝置連線斷開了。檢查資料線，或確認模擬器還在執行，重新連線後再執行任務。"
+
+#: app/tools/adb_service.py:174
+msgid "游戏进程被关闭了，可能是系统清理了后台。请把游戏加入自启动和省电白名单，不要在最近任务里一键清理，然后重新运行任务。"
+msgstr "遊戲程序被關閉了，可能是系統清理了後臺。請把遊戲加入自啟動和省電白名單，不要在最近任務裡一鍵清理，然後重新執行任務。"
+
+#: app/tools/adb_service.py:176
+msgid "游戏没能回到虚拟屏。请在设备上结束游戏，然后重新运行任务。"
+msgstr "遊戲沒能回到虛擬屏。請在裝置上結束遊戲，然後重新執行任務。"
+
+#: app/tools/adb_service.py:177
+msgid "游戏没有在限定时间内进入主界面。请确认账号已登录、网络正常，必要时先在设备上手动进入一次游戏。"
+msgstr "遊戲沒有在限定時間內進入主介面。請確認賬號已登入、網路正常，必要時先在裝置上手動進入一次遊戲。"
+
+#: app/tools/adb_service.py:179
+msgid "长时间取不到新的游戏画面。请确认设备没有锁屏，然后重新运行任务。"
+msgstr "長時間取不到新的遊戲畫面。請確認裝置沒有鎖屏，然後重新執行任務。"
+
+#: app/tools/adb_service.py:180
+msgid "这个任务只能在本地或云游戏后端运行，请切换设备后端后再运行。"
+msgstr "這個任務只能在本地或雲遊戲後端執行，請切換裝置後端後再執行。"
+
+#: app/tools/adb_service.py:181
+msgid "请在 Android 设备上通过游戏自带的更新流程更新游戏。"
+msgstr "請在 Android 裝置上通過遊戲自帶的更新流程更新遊戲。"
+
+#: app/tools/adb_service.py:182
+msgid "ADB 模式不能代替你输入文字，请在设备上手动输入。"
+msgstr "ADB 模式不能代替你輸入文字，請在裝置上手動輸入。"
+
+#: app/tools/adb_service.py:183
+msgid "请在本页把设备后端重新选择为“Android 设备（ADB）”。"
+msgstr "請在本頁把裝置後端重新選擇為“Android 裝置（ADB）”。"
+
+#: app/tools/adb_service.py:184
+msgid "请在“高级设置”里把点按时长改为 1 到 10000 毫秒之间的整数。"
+msgstr "請在“高階設定”裡把點按時長改為 1 到 10000 毫秒之間的整數。"
+
+#: app/tools/adb_service.py:186
+msgid "请按提示处理后重试。仍然失败时，把日志页的内容发给开发者。"
+msgstr "請按提示處理後重試。仍然失敗時，把日誌頁的內容發給開發者。"
+
+#: app/tools/adb_service.py:193
+msgid "adb 工具"
+msgstr "adb 工具"
+
+#: app/tools/adb_service.py:194
+msgid "adb 服务端"
+msgstr "adb 服務端"
+
+#: app/tools/adb_service.py:195
+msgid "设备连接与 USB 调试授权"
+msgstr "裝置連線與 USB 除錯授權"
+
+#: app/tools/adb_service.py:196
+msgid "Android 版本"
+msgstr "Android 版本"
+
+#: app/tools/adb_service.py:197
+msgid "触摸注入权限"
+msgstr "觸控注入許可權"
+
+#: app/tools/adb_service.py:200
+msgid "游戏安装"
+msgstr "遊戲安裝"
+
+#: app/tools/adb_service.py:201
+msgid "模拟器分辨率"
+msgstr "模擬器解析度"
+
+#: app/tools/adb_service.py:229
+msgid "没能读到系统的触摸注入权限"
+msgstr "沒能讀到系統的觸控注入許可權"
+
+#: app/tools/adb_service.py:229
+msgid "可以先运行任务试试。如果提示“拒绝触摸注入”，请在开发者选项里打开“USB 调试（安全设置）”或名称相近的开关。"
+msgstr "可以先執行任務試試。如果提示“拒絕觸控注入”，請在開發者選項裡開啟“USB 除錯（安全設定）”或名稱相近的開關。"
+
+#: app/tools/adb_service.py:232
+msgid "已开启“USB 调试（安全设置）”"
+msgstr "已開啟“USB 除錯（安全設定）”"
+
+#: app/tools/adb_service.py:232
+msgid "系统允许通过 USB 调试注入触摸"
+msgstr "系統允許通過 USB 除錯注入觸控"
+
+#: app/tools/adb_service.py:235
+msgid "没有开启“USB 调试（安全设置）”，小助手无法点击游戏"
+msgstr "沒有開啟“USB 除錯（安全設定）”，小助手無法點選遊戲"
+
+#: app/tools/adb_service.py:235
+msgid ""
+"打开“设置 → 更多设置 → 开发者选项”，开启“USB 调试（安全设置）”。系统会要求登录小米账号并插入 SIM 卡，开启后重新插拔数据线。"
+msgstr ""
+"開啟“設定 → 更多設定 → 開發者選項”，開啟“USB 除錯（安全設定）”。系統會要求登入小米賬號並插入 SIM 卡，開啟後重新插拔資料線。"
+
+#: app/tools/adb_service.py:238
+msgid "系统没有允许通过 USB 调试注入触摸，小助手无法点击游戏"
+msgstr "系統沒有允許通過 USB 除錯注入觸控，小助手無法點選遊戲"
+
+#: app/tools/adb_service.py:238
+msgid "在开发者选项里打开“USB 调试（安全设置）”“禁止权限监控”或名称相近的开关，然后重新插拔数据线。"
+msgstr "在開發者選項裡開啟“USB 除錯（安全設定）”“禁止許可權監控”或名稱相近的開關，然後重新插拔資料線。"
+
+#: app/tools/adb_service.py:245
+msgid "模拟器分辨率为 1280×720"
+msgstr "模擬器解析度為 1280×720"
+
+#: app/tools/adb_service.py:246
+msgid "模拟器当前分辨率为 {width}×{height}"
+msgstr "模擬器當前解析度為 {width}×{height}"
+
+#: app/tools/adb_service.py:249
+msgid "这台模拟器会改用独立的虚拟屏运行，当前分辨率不影响使用。想直接使用模拟器画面时，再把分辨率改成 1280×720 横屏。"
+msgstr "這臺模擬器會改用獨立的虛擬屏執行，當前解析度不影響使用。想直接使用模擬器畫面時，再把解析度改成 1280×720 橫屏。"
+
+#: app/tools/adb_service.py:276
+msgid "前面的检查没有通过，这一项还没检查"
+msgstr "前面的檢查沒有通過，這一項還沒檢查"
+
+#: app/tools/adb_service.py:291
+msgid "adb 服务端刚被重启，电脑上还有其他版本的 adb 在运行"
+msgstr "adb 服務端剛被重啟，電腦上還有其他版本的 adb 在執行"
+
+#: app/tools/adb_service.py:299
+msgid "没有其他版本的 adb 抢占服务端"
+msgstr "沒有其他版本的 adb 搶佔服務端"
+
+#: app/tools/adb_service.py:306
+msgid "{name} 已连接并授权"
+msgstr "{name} 已連線並授權"
+
+#: app/tools/adb_service.py:307
+msgid "设备"
+msgstr "裝置"
+
+#: app/tools/adb_service.py:315
+msgid "{name}（{serial}）已连接并授权"
+msgstr "{name}（{serial}）已連線並授權"
+
+#: app/tools/adb_service.py:317
+msgid "Android {version}（API {sdk}）"
+msgstr "Android {version}（API {sdk}）"
+
+#: app/tools/adb_service.py:322
+msgid "已安装国服《崩坏：星穹铁道》"
+msgstr "已安裝國服《崩壞：星穹鐵道》"
+
+#: app/tools/adb_service.py:324
+msgid "设备上没有安装国服《崩坏：星穹铁道》"
+msgstr "裝置上沒有安裝國服《崩壞：星穹鐵道》"
+
+#: app/tools/adb_service.py:336
+msgid "设备端服务已启动，版本 {version}"
+msgstr "裝置端服務已啟動，版本 {version}"
+
+#: app/tools/adb_service.py:343
+msgid "直接使用模拟器画面（display 0），不需要虚拟屏"
+msgstr "直接使用模擬器畫面（display 0），不需要虛擬屏"
+
+#: app/tools/adb_service.py:345
+msgid "已建立 1280×720 虚拟屏（display {display}），检查结束后释放"
+msgstr "已建立 1280×720 虛擬屏（display {display}），檢查結束後釋放"
+
+#: tasks/touch/daily.py:220
+msgid "每日实训活跃度 {activity}/{maximum}"
+msgstr "每日實訓活躍度 {activity}/{maximum}"
+
+#: tasks/touch/rewards.py:216
+msgid "奖励检查完成，{daily_summary}"
+msgstr "獎勵檢查完成（{daily_summary}）"
+
+#: tasks/touch/power.py:534
+msgid "已完成 {count} 次挑战，剩余开拓力 {power}/300"
+msgstr "已完成 {count} 次挑戰，剩餘開拓力 {power}/300"
+
+#: tasks/touch/rewards.py:251
+msgid "；"
+msgstr "；"
+
+#: app/card/adb_setting_cards.py:71
+msgid "游戏运行位置"
+msgstr "遊戲執行位置"
+
+#: app/card/adb_setting_cards.py:78
+msgid "安卓设备（ADB）"
+msgstr "Android 裝置（ADB）"
+
+#: app/setting_interface.py:284
+msgid "每个副本项最多补充一次，数量以游戏弹窗为准"
+msgstr "每個副本項目最多補充一次，數量以遊戲視窗顯示為準"
+
+#: app/setting_interface.py:290
+msgid "同时启用后备开拓力时，后备库存用完才使用燃料"
+msgstr "同時啟用後備開拓力時，後備開拓力用完才使用燃料"
+
+#: app/setting_interface.py:306
+msgid "满包时自动分解遗器"
+msgstr "背包已滿時自動分解遺器"
+
+#: app/setting_interface.py:306
+msgid "遇到遗器满包时分解四星及以下遗器"
+msgstr "遺器背包已滿時，分解四星及以下遺器"
+
+#: app/setting_interface.py:310
+msgid "完成计划后继续清体力"
+msgstr "完成計畫後繼續清體力"
+
+#: app/setting_interface.py:310
+msgid "用剩余资源刷默认副本"
+msgstr "使用剩餘資源刷預設副本"
+
+#: app/setting_interface.py:925
+msgid "游戏连接"
+msgstr "遊戲連線"
+
+#: app/setting_interface.py:2462
+msgid "控制自动战斗检测及本地游戏的分辨率与画质调整"
+msgstr "控制自動戰鬥偵測與本機遊戲的解析度和畫質調整"
+
+#: app/setting_interface.py:2468
+msgid "战斗时检测并补开自动战斗和二倍速"
+msgstr "戰鬥時偵測並開啟自動戰鬥及二倍速"
+
+#: app/setting_interface.py:3056
+msgid "请先停止任务，再切换游戏运行位置"
+msgstr "請先停止任務，再切換遊戲執行位置"
+
+#: app/tools_interface.py:264
+msgid "请在“设置”→“游戏连接”中配置正确的游戏路径"
+msgstr "請在「設定」→「遊戲連線」中設定正確的遊戲路徑"
+
+#: module/game/adb_ready.py:61
+msgid "ADB 启动超时，请在安卓设备上检查是否需要登录或更新游戏"
+msgstr "ADB 啟動逾時，請在 Android 裝置上確認是否需要登入或更新遊戲"
+
+#: utils/tasks.py:50
+msgid "当前后端不支持，未执行"
+msgstr "目前的後端不支援，未執行"
+
+#: app/setting_interface.py:614
+msgid "改用连击那刻夏（S2）"
+msgstr "改用連擊那刻夏（S2）"
+
+#: app/setting_interface.py:616
+msgid "请更新货币战争策略"
+msgstr "請更新貨幣戰爭策略"
+
+#: app/setting_interface.py:622
+msgid "仅在首领节点处理装备"
+msgstr "僅在首領節點處理裝備"
+
+#: tasks/weekly/currency_wars_strategy.py:62
+msgid "连击那刻夏（S2）"
+msgstr "連擊那刻夏（S2）"
+
+#: tasks/weekly/currency_wars_strategy.py:62
+msgid "连击那刻夏（高难）"
+msgstr "連擊那刻夏（高難）"
+
+#: tasks/weekly/currency_wars_strategy.py:62
+msgid "寒鸦流萤（高难）"
+msgstr "寒鴉流螢（高難）"
+
+#: tasks/weekly/currency_wars_strategy.py:62
+msgid "寒鸦希露瓦（高难）"
+msgstr "寒鴉希露瓦（高難）"
+
+#: module/game/adb_transport.py:155
+msgid "未找到 adb"
+msgstr "找不到 adb"
+
+#: app/card/adb_setting_cards.py:485
+msgid "下载 adb"
+msgstr "下載 adb"
+
+#: app/card/adb_setting_cards.py:370
+msgid "正在下载 adb…"
+msgstr "正在下載 adb…"
+
+#: app/tools/adb_service.py:148
+msgid "下载 adb 失败"
+msgstr "無法下載 adb"
+
+#: app/tools/adb_service.py:153
+msgid "安装 adb 失败"
+msgstr "無法安裝 adb"
+
+#: app/tools/adb_service.py:232
+msgid "在“Android 设备”中下载 adb，或在“高级设置”里选择已有的 adb。"
+msgstr "在「Android 裝置」下載 adb，或在「進階設定」中選取已有的 adb。"
+
+#: assets/config/character_names.json
+msgid "星神★阿哈"
+msgstr "星神★阿哈"
+
+#: assets/config/instance_names.json
+msgid "戏剧中人"
+msgstr "戲劇中人"
+
+#: assets/config/instance_names.json
+msgid "欢愉 / 亚空"
+msgstr "歡愉 / 亞空"
+
+#: assets/config/instance_names.json
+msgid "贪欢的月亮"
+msgstr "貪歡的月亮"
+
+#: assets/config/instance_names.json
+msgid "贪欢的神颅"
+msgstr "貪歡的神顱"
+
+#: assets/config/character_names.json
+msgid "星神★阿哈·群星乐透"
+msgstr "星神★阿哈·群星樂透"
+
+#: app/sub_interfaces/accounts_interface.py:80
+msgid "账户导出失败，请确认已登录游戏后重试。"
+msgstr "帳戶匯出失敗，請確認已登入遊戲後再試。"
+
+#: app/sub_interfaces/accounts_interface.py:166
+msgid "账户导入失败，请重试。"
+msgstr "帳戶匯入失敗，請再試一次。"
+
+#: app/sub_interfaces/accounts_interface.py:171
+msgid "这会清除该游戏的登录信息和画质、分辨率等设置。确定继续吗？"
+msgstr "這會清除該遊戲的登入資訊以及畫質、解析度等設定。確定要繼續嗎？"
+
+#: app/sub_interfaces/accounts_interface.py:177
+msgid "清除失败，请重试。"
+msgstr "清除失敗，請再試一次。"
+
+#: app/sub_interfaces/accounts_interface.py:179
+msgid "游戏登录信息和设置已清除"
+msgstr "已清除遊戲登入資訊和設定"
+
+#: app/tools/warp_import.py:20
+msgid "抽卡记录格式无效。"
+msgstr "抽卡記錄格式無效。"
+
+#: app/tools/warp_import.py:25
+msgid "仅支持单账号导入，请导出只包含一个星铁账号的文件。"
+msgstr "僅支援單賬號匯入，請匯出只包含一個星鐵賬號的檔案。"
+
+#: app/tools/warp_import.py:36
+msgid "文件缺少有效的账号 UID，无法安全导入。"
+msgstr "檔案缺少有效的賬號 UID，無法安全匯入。"
+
+#: app/tools/warp_import.py:42
+msgid "抽卡记录时区无效，无法安全合并。"
+msgstr "抽卡記錄時區無效，無法安全合併。"
+
+#: app/tools/warp_import.py:50
+msgid "抽卡记录缺少有效 ID 或必要字段。"
+msgstr "抽卡記錄缺少有效 ID 或必要欄位。"
+
+#: app/tools/warp_import.py:53
+msgid "抽卡记录包含不支持的卡池或星级。"
+msgstr "抽卡記錄包含不支援的卡池或星級。"
+
+#: app/tools/warp_import.py:55
+msgid "记录中的账号与文件账号不一致，已停止导入。"
+msgstr "記錄中的賬號與檔案賬號不一致，已停止匯入。"
+
+#: app/tools/warp_import.py:61
+msgid "抽卡记录时间无效。"
+msgstr "抽卡記錄時間無效。"
+
+#: app/tools/warp_import.py:73
+msgid "相同记录 ID 的内容不一致，已停止导入。"
+msgstr "相同記錄 ID 的內容不一致，已停止匯入。"
+
+#: app/tools/warp_import.py:97
+msgid "账号不一致：现有 UID {existing}，导入 UID {incoming}。已停止导入，原记录未修改。"
+msgstr "賬號不一致：現有 UID {existing}，匯入 UID {incoming}。已停止匯入，原記錄未修改。"
+
+#: app/tools/warp_import.py:100
+msgid "文件的语言或时区与现有记录不同，请统一后再导入。原记录未修改。"
+msgstr "檔案的語言或時區與現有記錄不同，請統一後再匯入。原記錄未修改。"
+
+#: app/tools/warp_import.py:114
+msgid "确认期间本地记录发生变化，请重新导入。"
+msgstr "確認期間本地記錄發生變化，請重新匯入。"
+
+#: app/tools/warp_import.py:133
+msgid "临时文件校验失败，原记录未修改。"
+msgstr "臨時檔案校驗失敗，原記錄未修改。"
+
+#: app/tools/warp_import.py:142
+msgid "备份校验失败，原记录未修改。"
+msgstr "備份校驗失敗，原記錄未修改。"
+
+#: app/warp_interface.py:143
+msgid "确认导入抽卡记录"
+msgstr "確認匯入抽卡記錄"
+
+#: app/warp_interface.py:144
+msgid ""
+"账号 UID：{uid}\n"
+"导入方式：保留已有记录，补充新记录，自动跳过重复内容。\n"
+"\n"
+"现有记录：{existing} 条\n"
+"文件记录：{incoming} 条\n"
+"新增记录：{added} 条\n"
+"重复记录：{duplicates} 条\n"
+"合并后：{total} 条"
+msgstr ""
+"賬號 UID：{uid}\n"
+"匯入方式：保留已有記錄，補充新記錄，自動跳過重複內容。\n"
+"\n"
+"現有記錄：{existing} 條\n"
+"檔案記錄：{incoming} 條\n"
+"新增記錄：{added} 條\n"
+"重複記錄：{duplicates} 條\n"
+"合併後：{total} 條"
+
+#: app/warp_interface.py:150
+msgid "确认合并"
+msgstr "確認合併"
+
+
+#: app/warp_interface.py:142
+msgid "选择导入方式"
+msgstr "選擇匯入方式"
+
+#: app/warp_interface.py:143
+msgid "默认合并会保留现有记录。只有希望用文件内容覆盖现有记录时，才选择强制替换。"
+msgstr "預設合併會保留現有記錄。只有希望用檔案內容覆蓋現有記錄時，才選擇強制替換。"
+
+#: app/warp_interface.py:147
+msgid "安全合并（推荐）"
+msgstr "安全合併（推薦）"
+
+#: app/warp_interface.py:147
+msgid "强制替换现有记录"
+msgstr "強制替換現有記錄"
+
+#: app/warp_interface.py:150
+msgid "下一步"
+msgstr "下一步"
+
+#: app/warp_interface.py:167
+msgid "警告：替换现有抽卡记录"
+msgstr "警告：替換現有抽卡記錄"
+
+#: app/warp_interface.py:168
+msgid ""
+"当前账号：{existing_uid}\n"
+"导入账号：{uid}\n"
+"导入方式：替换现有记录。\n"
+"\n"
+"现有记录数量：{existing}\n"
+"替换后记录数量：{total}\n"
+"\n"
+"此操作会用导入文件中的记录替换目前保存的全部记录。原有记录不会保留在当前列表中。\n"
+"\n"
+"确定要替换吗？"
+msgstr ""
+"當前賬號：{existing_uid}\n"
+"匯入賬號：{uid}\n"
+"匯入方式：替換現有記錄。\n"
+"\n"
+"現有記錄數量：{existing}\n"
+"替換後記錄數量：{total}\n"
+"\n"
+"此操作會用匯入檔案中的記錄替換目前儲存的全部記錄。原有記錄不會保留在當前列表中。\n"
+"\n"
+"確定要替換嗎？"
+
+#: app/warp_interface.py:173
+msgid "确认替换"
+msgstr "確認替換"
+
+#: app/tools/warp_import.py:105
+msgid "现有记录无法读取，不能合并。请重新导入并选择替换现有记录。"
+msgstr "現有記錄無法讀取，不能合併。請重新匯入並選擇替換現有記錄。"
+
+#: app/warp_interface.py:173
+msgid "无法读取"
+msgstr "無法讀取"
+
+#: app/warp_interface.py:174
+msgid "无法统计"
+msgstr "無法統計"
+
+#: app/setting_interface.py:624
+msgid "未完成对局"
+msgstr "未完成對局"
+
+#: app/setting_interface.py:626
+msgid "结算后重新开局"
+msgstr "結算後重新開局"
+
+#: app/setting_interface.py:626
+msgid "继续进度"
+msgstr "繼續進度"
+
+#: app/setting_interface.py:658
+msgid "投资选项优先级"
+msgstr "投資選項優先順序"
+
+#: app/setting_interface.py:660
+msgid "策略优先"
+msgstr "策略優先"
+
+#: app/setting_interface.py:660
+msgid "图鉴优先"
+msgstr "圖鑑優先"
