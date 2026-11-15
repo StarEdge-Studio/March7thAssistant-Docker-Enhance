@@ -7,6 +7,7 @@ import numpy as np
 
 from module.game.adb_transport import AdbError
 from module.localization import tr
+from module.logger import log
 from utils.image_utils import ImageUtils
 from utils.pause import pause_ctl
 
@@ -30,17 +31,18 @@ def _match(image, name, template):
     x, y, right, bottom = _TEMPLATES[name]
     crop = cv2.cvtColor(np.asarray(image.crop((x, y, right, bottom))), cv2.COLOR_RGB2BGR)
     score, (left, top) = ImageUtils.scale_and_match_template(crop, template)
+    log.debug(f"ADB 启动模板 {name} 区域={_TEMPLATES[name]} 相似度={score:.3f} 阈值=0.90")
     if score < 0.90:
         return None
     height, width = template.shape[:2]
     return x + left + width // 2, y + top + height // 2
 
 
-def wait_for_game(controller, timeout, *, recover=None):
+def wait_for_game(controller, timeout, *, recover=None, recover_without_frame=None):
     """等游戏可操作。只有输入后的新画面仍是标题页才重试点按。"""
+    deadline = time.monotonic() + timeout
     templates = {name: _load_template(name) for name in _TEMPLATES}
     inputs = controller.get_input_handler()
-    deadline = time.monotonic() + timeout
     next_enter = 0.0
     next_recovery = 0.0
     while time.monotonic() < deadline:
@@ -57,5 +59,7 @@ def wait_for_game(controller, timeout, *, recover=None):
             elif recover is not None and time.monotonic() >= max(next_enter, next_recovery):
                 recover()
                 next_recovery = time.monotonic() + 4
+        elif recover_without_frame is not None:
+            recover_without_frame(deadline)
         time.sleep(0.35)
     raise AdbError("game_start_timeout", tr("ADB 启动超时，请在安卓设备上检查是否需要登录或更新游戏"))

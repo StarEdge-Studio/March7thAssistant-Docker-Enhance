@@ -14,7 +14,7 @@ from tasks.daily.synthesis import Synthesis
 import tasks.challenge as challenge
 from tasks.power.power import Power
 from tasks.power.policy import SupportDemand
-from tasks.daily.training import SUPPORT_TASK, MATERIAL_TASK, can_complete, needs_action
+from tasks.daily.training import SUPPORT_TASK, MATERIAL_TASK, DailyTrainingError, can_complete, needs_action
 from tasks.reward.quest import Quest
 from tasks.daily.himekotry import HimekoTry
 from tasks.weekly.echoofwar import Echoofwar
@@ -28,7 +28,11 @@ class Daily:
     def support_demand(*, full_run=False):
         if not can_complete(cfg, full_run=full_run) or not cfg.borrow_enable or cfg.borrow_character_enable:
             return SupportDemand()
-        activity, tasks, _ = Quest.scan(collect=False)
+        try:
+            activity, tasks, _ = Quest.scan(collect=False)
+        except DailyTrainingError as error:
+            log.warning(f"未能查询支援实训，本轮继续处理副本：{error}")
+            return SupportDemand()
         return SupportDemand(needs_action(activity, tasks) and tasks.get(SUPPORT_TASK, False))
 
     @staticmethod
@@ -67,6 +71,13 @@ class Daily:
         ))
 
     @staticmethod
+    def run_standalone():
+        return run_steps((
+            ("日常领奖", reward.start),
+            ("每日实训", Daily.run),
+        ))
+
+    @staticmethod
     def _run_scheduled_divergent_universe(divergent: DivergentUniverse):
         target_count = int(cfg.universe_count)
         cycle = "weekly" if cfg.universe_frequency == "weekly" else "daily"
@@ -98,7 +109,11 @@ class Daily:
         log.info("差分宇宙固定次数已全部完成，记录本轮执行时间")
 
     @staticmethod
-    def start():
+    def currency_wars_due():
+        return cfg.currencywars_enable and Date.is_next_mon_x_am(cfg.currencywars_timestamp, cfg.refresh_hour)
+
+    @staticmethod
+    def start(*, currency_wars_first=False):
         steps = [("日常准备", Daily.prepare_daily)]
 
         if cfg.asset_manager_enable:
@@ -107,7 +122,9 @@ class Daily:
             if any(cfg.get_value(item.enable_key, False) for item in EmberExchange.ITEMS):
                 steps.append(("余烬兑换", EmberExchange.start))
 
-        if cfg.currencywars_enable and Date.is_next_mon_x_am(cfg.currencywars_timestamp, cfg.refresh_hour):
+        if currency_wars_first:
+            steps.insert(0, ("货币战争", Daily._run_currency_wars))
+        elif Daily.currency_wars_due():
             steps.append(("货币战争", Daily._run_currency_wars))
 
         if cfg.weekly_divergent_enable and Date.is_next_mon_x_am(cfg.weekly_divergent_timestamp, cfg.refresh_hour):
@@ -149,8 +166,8 @@ class Daily:
         for _ in range(3):
             if divergent.check_divergent_universe_score():
                 return True
-            if divergent.start() is False:
-                return False
+            # 未完成对局也可能结算本周积分。按周奖励状态判断是否继续补打。
+            divergent.start()
             if not Date.is_next_mon_x_am(cfg.weekly_divergent_timestamp, cfg.refresh_hour):
                 return True
         log.warning("尝试运行了多轮差分宇宙，但积分奖励仍未完成")

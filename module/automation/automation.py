@@ -439,16 +439,18 @@ class Automation(metaclass=SingletonMeta):
         self.logger.debug(f"目标文字：{', '.join(targets)} 未找到匹配文字")
         return None, None
 
-    def perform_ocr(self):
-        """执行OCR识别，并更新OCR结果列表。如果未识别到文字，保留ocr_result为一个空列表。"""
+    def perform_ocr(self, *, raise_on_error=False):
+        """刷新 OCR 结果。调用方需要重试时，可以接收识别异常。"""
         try:
             self.ocr_result = ocr.recognize_multi_lines(np.array(self.screenshot))
             if not self.ocr_result:
                 self.logger.debug(f"未识别出任何文字")
                 self.ocr_result = []
         except Exception as e:
-            self.logger.error(f"OCR识别失败：{e}")
             self.ocr_result = []  # 确保在异常情况下，ocr_result为列表类型
+            if raise_on_error:
+                raise
+            self.logger.error(f"OCR识别失败：{e}")
 
     @pause_guard
     def find_text_element(self, target, include, need_ocr=True, relative=False):
@@ -939,8 +941,8 @@ class Automation(metaclass=SingletonMeta):
 
         return True
 
-    def drag_mouse(self, start, end, duration=0.5, end_pause=0.0, repeats=1):
-        """按归一化坐标连续拖动，只截图定位一次，仅最后一次可在终点停留。"""
+    def drag_mouse(self, start, end, duration=0.5, end_pause=0.0, repeats=1, *, take_screenshot=True):
+        """按归一化坐标连续拖动。调用方已核对画面时可复用它的截图定位。"""
         duration = float(duration)
         if not math.isfinite(duration) or not 0 <= duration <= 60:
             raise ValueError("滑动时长必须在 0 到 60 秒之间")
@@ -951,7 +953,10 @@ class Automation(metaclass=SingletonMeta):
             raise ValueError("连续拖动次数必须是 1 到 10 之间的整数")
         if any(not 0 <= value <= 1 for value in (*start, *end)):
             raise ValueError("坐标必须在 0 到 1 之间")
-        self.take_screenshot()
+        if take_screenshot:
+            self.take_screenshot()
+        else:
+            pause_ctl.checkpoint()
         if self.screenshot is None or self.screenshot_pos is None:
             raise RuntimeError("无法获取游戏窗口尺寸")
 

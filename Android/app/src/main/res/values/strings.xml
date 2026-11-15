@@ -42,7 +42,10 @@
     <string name="permission_inactive">未运行</string>
     <string name="permission_denied">未授权</string>
     <string name="permission_ready">已就绪</string>
-    <string name="get_shizuku">下载 Shizuku</string>
+    <string name="permission_checking_root">正在检查 Root 权限</string>
+    <string name="install_shizuku_offline">离线安装</string>
+    <string name="shizuku_releases">官方发布页</string>
+    <string name="shizuku_install_failed">无法准备 Shizuku 安装包，请重试。</string>
     <string name="open_shizuku">打开 Shizuku</string>
     <string name="authorize">授权</string>
     <string name="check_root">检查 Root</string>
@@ -308,7 +311,7 @@
     <string name="guide_root_heading">通过 Root 授权</string>
     <string name="guide_root_about">设备已经 Root 时可以用，不需要 Shizuku。</string>
     <string name="guide_install_title">安装 Shizuku</string>
-    <string name="guide_install_detail">Shizuku 是开源的授权工具。到它的官方发布页下载最新版 APK 并安装，装好后回到这里。</string>
+    <string name="guide_install_detail">使用内置安装包。若系统要求授权，允许小助手安装未知应用，返回后再点安装。</string>
     <string name="guide_install_done">已安装</string>
     <string name="guide_start_title">启动 Shizuku 服务</string>
     <string name="guide_start_pending">安装后再启动服务</string>
@@ -330,7 +333,7 @@
     <string name="guide_root_denied">在 Root 管理应用（如 Magisk）里允许小助手使用 Root，再检查一次。</string>
     <string name="guide_root_missing">没有找到 su 命令，这台设备可能没有 Root。没有 Root 请改用 Shizuku。</string>
     <string name="guide_root_done">已获得 Root 权限</string>
-    <string name="guide_root_experimental">Root 方式还没有在真机上完整验证。遇到问题请改用 Shizuku。</string>
+    <string name="guide_root_fallback">遇到问题请改用 Shizuku。</string>
     <string name="guide_ready_title">权限已就绪</string>
     <string name="guide_ready_detail">可以回到首页开始任务了。</string>
     <string name="guide_back_home">回到首页</string>
@@ -420,7 +423,8 @@
     <string name="logs_empty_detail">开始一次任务后，这里会实时显示每一步。</string>
     <string name="logs_no_match">没有符合条件的日志</string>
     <string name="logs_no_match_detail">换一个级别，或清除搜索词。</string>
-    <string name="logs_footer">这里显示本轮最近 200 条，导出的文件包含本轮全部日志</string>
+    <string name="logs_footer">这里显示本轮最近 200 条运行日志，导出文件还包含诊断详情</string>
+    <string name="logs_traceback_summary">任务执行出错，可导出日志查看详情。</string>
     <string name="logs_see_fix">处理办法</string>
     <string name="logs_to_bottom">回到最新</string>
     <string name="help_intro">点开对应的问题，按步骤处理后重新开始。仍然不行的话，导出日志到项目主页反馈。</string>
@@ -434,6 +438,10 @@
     <string name="error_root_advice">1. 在 Root 管理应用（如 Magisk）里允许三月七小助手使用超级用户权限。\n2. 到权限引导点「检查 Root」。\n3. 没有 Root 的设备请改用 Shizuku。</string>
     <string name="error_game_title">没有找到游戏</string>
     <string name="error_game_advice">请先安装国服《崩坏：星穹铁道》，手动打开一次，完成登录和资源下载后再开始。</string>
+    <string name="error_game_exited_title">游戏已退出</string>
+    <string name="error_game_exited_advice">可以直接从小助手重新启动游戏。若反复退出，请导出日志反馈。</string>
+    <string name="error_game_start_timeout_title">等待游戏就绪超时</string>
+    <string name="error_game_start_timeout_advice">打开游戏确认是否需要登录或更新，然后重新开始任务。反复超时可导出日志反馈。</string>
     <string name="error_login_title">需要你先登录游戏</string>
     <string name="error_login_advice">1. 在手机上打开游戏，完成登录，进到能操作角色的界面。\n2. 回到小助手重新开始。</string>
     <string name="error_locked_title">手机处于锁屏状态</string>

@@ -7270,6 +7270,10 @@ msgstr ""
 "The Android game exited. Check the game's background settings on the device "
 "and try again."
 
+#: module/game/adb.py:290
+msgid "重新启动后，Android 游戏窗口再次消失"
+msgstr "The Android game window disappeared again after the game restarted."
+
 #: module/game/adb.py:148
 msgid "游戏未能回到目标 Android 屏幕，请结束游戏后重试"
 msgstr ""
@@ -8123,6 +8127,10 @@ msgstr "Daily training activity {activity}/{maximum}"
 #: tasks/touch/rewards.py:216
 msgid "奖励检查完成，{daily_summary}"
 msgstr "Reward check complete ({daily_summary})"
+
+#: tasks/touch/power.py:647
+msgid "已完成 {count} 次挑战"
+msgstr "Completed {count} challenges"
 
 #: tasks/touch/power.py:534
 msgid "已完成 {count} 次挑战，剩余开拓力 {power}/300"

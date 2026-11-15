@@ -20,7 +20,8 @@ from tasks.power.battle import ensure_double_speed
 from tasks.power.policy import (
     BATTLE_TIMEOUT, ENTRY_TIMEOUT, DEFEAT_RETRIES, CAVERN, CRIMSON_CALYX, ECHO, GOLDEN_CALYX,
     INSTANCE_LIMITS, ORNAMENT, STAGNANT_SHADOW, BattleDefeat, PowerError, RelicBagFull,
-    SupportDemand, batch_limit, check_balance, normalize as _normalize, parse_power, run_plan,
+    SupportDemand, batch_limit, check_balance, normalize as _normalize, parse_challenge_cost,
+    parse_echo_rewards, parse_power, parse_wave_count, run_plan,
 )
 from tasks.power.readout import read_number
 from tasks.power.supplement import supplement
@@ -53,7 +54,6 @@ START_CHALLENGE = (1410 / 1920, 946 / 1080, 420 / 1920, 80 / 1080)
 TEAM_TABS = (531 / 1920, 14 / 1080, 861 / 1920, 86 / 1080)
 BATTLE_CONTROLS = (1665 / 1920, 30 / 1080, 210 / 1920, 63 / 1080)
 RESULT_TITLE = (754 / 1920, 109 / 1080, 411 / 1920, 253 / 1080)
-RESULT_COUNT = (1135 / 1920, 861 / 1080, 257 / 1920, 48 / 1080)
 REPEAT_COST = (1091 / 1920, 917 / 1080, 85 / 1920, 61 / 1080)
 REPEAT = (1180 / 1920, 911 / 1080, 290 / 1920, 74 / 1080)
 EXIT = (414 / 1920, 906 / 1080, 1075 / 1920, 87 / 1080)
@@ -70,29 +70,15 @@ def read_power(crop=POWER_VALUE):
 
 
 def _read_echo_rewards():
-    def parse(text):
-        match = re.fullmatch(r"([0-3])/3", _normalize(text))
-        return int(match[1]) if match else None
-
-    return _read_number(ECHO_REWARDS, parse, "未能确认历战余响的剩余奖励次数")
+    return _read_number(ECHO_REWARDS, parse_echo_rewards, "未能确认历战余响的剩余奖励次数")
 
 
 def _read_waves(crop, label):
-    def parse(text):
-        match = re.fullmatch(rf"{label}:?(\d{{1,2}})", _normalize(text))
-        if match and 1 <= int(match[1]) <= MAX_WAVES:
-            return int(match[1])
-        return None
-
-    return _read_number(crop, parse, f"未能确认{label}")
+    return _read_number(crop, lambda text: parse_wave_count(text, label, MAX_WAVES), f"未能确认{label}")
 
 
 def _read_cost(crop):
-    def parse(text):
-        match = re.fullmatch(r"[xX×]?(\d{1,3})", _normalize(text))
-        return int(match[1]) if match else None
-
-    return _read_number(crop, parse, "未能确认挑战按钮上的开拓力消耗")
+    return _read_number(crop, parse_challenge_cost, "未能确认挑战按钮上的开拓力消耗")
 
 
 def _tap(x, y):
@@ -341,6 +327,7 @@ def _exit_result(instance_screen):
     if not wait_until(lambda: any(screen.check_screen(target) for target in (instance_screen, "guide3", "main")), 25, 0.5):
         raise PowerError("退出关卡后未回到副本、生存索引或主界面")
     time.sleep(0.5)
+    return screen.current_screen
 
 
 def classify_auto_button(pixels, glyph):
@@ -473,9 +460,9 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
         if planned is None:
             screen.change_to("main", max_recursion=1)
             return
-    power = read_power()
+    power = 0
     if quota != 0:
-        power = _supplement(power)
+        power = _supplement(read_power())
         if power < cost:
             log.info("开拓力不足，结束本副本项")
             screen.change_to("main", max_recursion=1)
@@ -529,13 +516,15 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
             _wait_battle(repeated=repeated, instance_screen=instance_screen)
         except BattleDefeat:
             _select_category(instance_type)
-            after = read_power()
-            check_balance(power, after, 0, time.monotonic() - started)
+            if not practice:
+                after = read_power()
+                check_balance(power, after, 0, time.monotonic() - started)
+                power = after
             if retries >= DEFEAT_RETRIES:
                 raise
             retries += 1
-            log.warning(f"已确认战败且未扣费，重试 {retries}/{DEFEAT_RETRIES}")
-            power, previous = after, 0
+            log.warning(f"已确认战败，重试 {retries}/{DEFEAT_RETRIES}")
+            previous = 0
             _enter_instance(instance_type, name)
             continue
         except RelicBagFull:
@@ -543,26 +532,19 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
                 raise
             cleaned = True
             _select_category(instance_type)
-            power, previous = read_power(), 0
+            power, previous = (0 if practice else read_power()), 0
             _enter_instance(instance_type, name)
             continue
 
-        completed = 1 if waves == 1 else _read_waves(RESULT_COUNT, "上轮挑战波次")
-        if completed > waves:
-            raise PowerError("实际结算次数超过已选波次")
         demand.won(borrowed)
-        yield completed
-        after = read_power()
-        if completed != waves:
-            raise PowerError(f"实际结算 {completed}/{waves} 次，已保留确认的进度")
-        check_balance(power, after, 0 if practice else waves * cost, time.monotonic() - started)
-        power, previous, retries = after, waves, 0
+        yield waves
+        log.info(f"已结算 {waves} 次")
+        previous, retries = waves, 0
         if remaining is not None:
-            remaining -= completed
-        if on_settlement is not None:
-            on_settlement(completed, power)
-        log.info(f"已结算 {completed} 次，剩余开拓力 {power}/300")
+            remaining -= waves
 
+        after = None
+        needs_entry = False
         if is_echo and not practice:
             _exit_result(instance_screen)
             previous = 0
@@ -570,14 +552,33 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
             quota = _read_echo_rewards()
             if quota == 0:
                 cfg.save_timestamp("echo_of_war_timestamp")
-                if planned is None:
-                    break
-            if remaining is None or remaining > 0:
-                _enter_instance(instance_type, name)
+            needs_entry = remaining != 0 and (quota > 0 or planned is not None)
+            if needs_entry and quota > 0:
+                after = read_power()
+        elif remaining != 0 and not practice:
+            try:
+                after = read_power()
+            except PowerError:
+                log.warning("结算页开拓力未识别，回到生存索引核对后再挑战")
+                _exit_result(instance_screen)
+                previous = 0
+                _select_category(instance_type)
+                after = read_power()
+                needs_entry = True
+        if after is not None:
+            check_balance(power, after, waves * cost, time.monotonic() - started)
+            power = after
+        if needs_entry and (quota == 0 or power >= cost):
+            _enter_instance(instance_type, name)
+        if on_settlement is not None:
+            on_settlement(waves, after)
 
-    if previous:
-        _exit_result(instance_screen)
-    screen.change_to("main", max_recursion=1)
+        if is_echo and quota == 0 and planned is None:
+            break
+
+    exit_screen = _exit_result(instance_screen) if previous else None
+    if exit_screen != "main":
+        screen.change_to("main", max_recursion=1)
 
 
 def run_weekly_echo(*, borrow_for_daily=False):
@@ -641,8 +642,11 @@ def run(*, borrow_for_daily=False, on_summary=None):
         except PowerError as error:
             log.error(f"触屏清体力：{error}")
             return False
-    if succeeded and on_summary is not None and remaining is not None:
-        on_summary(tr("已完成 {count} 次挑战，剩余开拓力 {power}/300").format(count=total, power=remaining))
+    if succeeded and on_summary is not None:
+        if remaining is not None:
+            on_summary(tr("已完成 {count} 次挑战，剩余开拓力 {power}/300").format(count=total, power=remaining))
+        elif total:
+            on_summary(tr("已完成 {count} 次挑战").format(count=total))
     return succeeded
 
 

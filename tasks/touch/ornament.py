@@ -110,7 +110,8 @@ def run_instance(name, planned, batch_limit, borrow_for_daily, on_settlement):
         return power.read_power(DETAIL_POWER)
 
     power._select_category(power.ORNAMENT)
-    power._supplement(power.read_power(INDEX_POWER), plus=(1510, 55), power_crop=INDEX_POWER)
+    if cfg.use_reserved_trailblaze_power or cfg.use_fuel:
+        power._supplement(power.read_power(INDEX_POWER), plus=(1510, 55), power_crop=INDEX_POWER)
     power._enter_instance(power.ORNAMENT, name)
     available = power.read_power(DETAIL_POWER)
     remaining = planned
@@ -180,23 +181,26 @@ def run_instance(name, planned, batch_limit, borrow_for_daily, on_settlement):
             available, previous = enter(), 0
             continue
 
-        # 单场只有胜利及奖励，连续挑战还须核对结算波次。
-        completed = 1 if waves == 1 else power._read_waves(power.RESULT_COUNT, "上轮挑战波次")
-        if completed > waves:
-            raise power.PowerError("饰品提取实际结算次数超过已选波次")
         demand.won(borrowed)
-        yield completed
-        after = power.read_power(INDEX_POWER)
-        if completed != waves:
-            raise power.PowerError(f"饰品提取实际结算 {completed}/{waves} 次，已保留确认的进度")
-        power.check_balance(available, after, cost, time.monotonic() - started)
-        log.info(f"饰品提取已结算 {completed} 次，剩余开拓力 {after}/300")
-        if on_settlement is not None:
-            on_settlement(completed, after)
+        yield waves
+        log.info(f"饰品提取已结算 {waves} 次")
         if remaining is not None:
-            remaining -= completed
-        available, previous, retries = after, waves, 0
+            remaining -= waves
+        previous, retries = waves, 0
+        after = None
+        if remaining != 0:
+            try:
+                after = power.read_power(INDEX_POWER)
+            except power.PowerError:
+                log.warning("饰品提取结算页开拓力未识别，返回副本核对后再挑战")
+                power._exit_result(instance_screen)
+                previous = 0
+                after = power.read_power(DETAIL_POWER) if screen.current_screen == instance_screen else enter()
+            power.check_balance(available, after, cost, time.monotonic() - started)
+            available = after
+        if on_settlement is not None:
+            on_settlement(waves, after)
 
-    if previous:
-        power._exit_result(instance_screen)
-    screen.change_to("main", max_recursion=1)
+    exit_screen = power._exit_result(instance_screen) if previous else None
+    if exit_screen != "main":
+        screen.change_to("main", max_recursion=1)

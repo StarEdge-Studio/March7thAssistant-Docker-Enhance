@@ -124,7 +124,7 @@ private fun ShizukuSteps(permission: PermissionState, device: DeviceInfo, enable
     val position = when (permission) {
         PermissionState.NOT_INSTALLED -> 0
         PermissionState.NOT_RUNNING -> 1
-        PermissionState.NOT_AUTHORIZED, PermissionState.NOT_CHECKED -> 2
+        PermissionState.NOT_AUTHORIZED, PermissionState.NOT_CHECKED, PermissionState.CHECKING -> 2
         PermissionState.READY -> 3
     }
     fun stateOf(index: Int) = when {
@@ -136,7 +136,10 @@ private fun ShizukuSteps(permission: PermissionState, device: DeviceInfo, enable
     StepItem(1, tr(R.string.guide_install_title), stateOf(0)) {
         if (position == 0) {
             BodyText(tr(R.string.guide_install_detail), Modifier.padding(top = 4.dp))
-            StepButton(tr(R.string.get_shizuku), actions.downloadShizuku, icon = true)
+            StepButton(tr(R.string.install_shizuku_offline), actions.installShizuku, enabled = enabled)
+            TextButton(actions.downloadShizuku, enabled = enabled) {
+                Text(tr(R.string.shizuku_releases))
+            }
         } else {
             BodyText(tr(R.string.guide_install_done))
         }
@@ -188,6 +191,8 @@ private fun RootSteps(permission: PermissionState, enabled: Boolean, actions: Ap
     StepItem(1, tr(R.string.guide_root_check_title), if (ready) StepState.DONE else StepState.CURRENT, last = true) {
         if (ready) {
             BodyText(tr(R.string.guide_root_done))
+        } else if (permission == PermissionState.CHECKING) {
+            BodyText(tr(R.string.permission_checking_root))
         } else {
             val hint = rootPermissionHint(Privilege.ROOT, permission)
             if (hint != null) {
@@ -198,17 +203,13 @@ private fun RootSteps(permission: PermissionState, enabled: Boolean, actions: Ap
             StepButton(tr(R.string.check_root), actions.requestPermission, enabled = enabled)
         }
     }
-    Notice(tr(R.string.guide_root_experimental), Modifier.padding(top = 14.dp), tone = Tone.WARNING, icon = M7Icons.Warning)
+    Notice(tr(R.string.guide_root_fallback), Modifier.padding(top = 14.dp), tone = Tone.WARNING, icon = M7Icons.Warning)
 }
 
 @Composable
-private fun StepButton(text: String, onClick: () -> Unit, enabled: Boolean = true, icon: Boolean = false) {
+private fun StepButton(text: String, onClick: () -> Unit, enabled: Boolean = true) {
     Button(onClick, Modifier.padding(top = 12.dp).fillMaxWidth().heightIn(min = 48.dp), enabled = enabled) {
         Text(text)
-        if (icon) {
-            Spacer(Modifier.width(6.dp))
-            Icon(M7Icons.OpenInNew, null, Modifier.size(16.dp))
-        }
     }
 }
 

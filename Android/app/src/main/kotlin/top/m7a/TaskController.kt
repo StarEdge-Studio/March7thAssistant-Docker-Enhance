@@ -64,8 +64,11 @@ class TaskController private constructor(private val context: Context) {
     private val prefs = context.getSharedPreferences("task-options", Context.MODE_PRIVATE)
     private val usage = UsageTelemetry.get(context)
     private val access = DeviceAccess(context)
+    private val rootProbeInFlight = AtomicBoolean()
     private val marker = AtomicFile(File(context.filesDir, "active-task"))
     private val logFile = File(context.filesDir, "last-run.log")
+    private val diagnostics = RunDiagnostics(context.filesDir)
+    private val tracebackFallback = context.getString(R.string.logs_traceback_summary)
     private val logLock = Any()
     // 偏好键与早期版本不同名，旧键留在文件里也不会被读到。
     private val stateData = MutableStateFlow(
@@ -78,7 +81,7 @@ class TaskController private constructor(private val context: Context) {
         )
     )
     private val logData = MutableStateFlow(
-        runCatching { logFile.readRunLog(LOG_LINES) }.getOrDefault(emptyList())
+        runCatching { logFile.readRunLog(LOG_LINES).map { it.forDisplay(tracebackFallback) } }.getOrDefault(emptyList())
     )
     private val previewData = MutableStateFlow<GamePreviewSource?>(null)
     private var active: TaskRun? = null
@@ -102,6 +105,10 @@ class TaskController private constructor(private val context: Context) {
             stateData.update { it.copy(phase = TaskPhase.FAILED, errorCode = "interrupted") }
             recover()
         }
+        // 旧版只保存了所选模式，升级后对原先选用 Root 的用户补做一次检查。
+        if (state.value.privilege == Privilege.ROOT && prefs.getBoolean(KEY_ROOT_VERIFIED, true)) {
+            checkRootPermission()
+        }
         Shizuku.addBinderReceivedListenerSticky {
             refreshPermission()
             recover()
@@ -116,26 +123,42 @@ class TaskController private constructor(private val context: Context) {
     }
 
     fun refreshPermission() {
-        stateData.update { it.copy(permission = access.state(it.privilege)) }
+        stateData.update { it.copy(permission = permissionFor(it.privilege)) }
     }
+
+    private fun permissionFor(privilege: Privilege) =
+        if (privilege == Privilege.ROOT && rootProbeInFlight.get()) PermissionState.CHECKING else access.state(privilege)
 
     fun selectPrivilege(privilege: Privilege): Boolean {
         if (state.value.busy) return false
-        prefs.edit().putBoolean("root", privilege == Privilege.ROOT).apply()
-        stateData.update { it.copy(privilege = privilege, permission = access.state(privilege)) }
+        val edit = prefs.edit().putBoolean("root", privilege == Privilege.ROOT)
+        if (privilege == Privilege.ROOT && !prefs.contains(KEY_ROOT_VERIFIED)) edit.putBoolean(KEY_ROOT_VERIFIED, false)
+        edit.apply()
+        stateData.update { it.copy(privilege = privilege, permission = permissionFor(privilege)) }
         return true
     }
 
     fun requestPermission() {
         if (state.value.busy) return
         if (state.value.privilege == Privilege.ROOT) {
-            worker.execute {
-                runCatching { access.probeRoot() }
-                refreshPermission()
-            }
+            checkRootPermission()
         } else {
             runCatching { access.requestShizukuPermission() }
             refreshPermission()
+        }
+    }
+
+    private fun checkRootPermission() {
+        if (!rootProbeInFlight.compareAndSet(false, true)) return
+        refreshPermission()
+        worker.execute {
+            try {
+                runCatching { access.probeRoot() }.onFailure { Log.w("M7ARoot", "Root check failed", it) }
+                prefs.edit().putBoolean(KEY_ROOT_VERIFIED, access.state(Privilege.ROOT) == PermissionState.READY).apply()
+            } finally {
+                rootProbeInFlight.set(false)
+                refreshPermission()
+            }
         }
     }
 
@@ -157,7 +180,7 @@ class TaskController private constructor(private val context: Context) {
         refreshPermission()
         recover()
         val snapshot = state.value
-        if (snapshot.busy) return false
+        if (snapshot.busy || snapshot.permission == PermissionState.CHECKING) return false
         if (snapshot.permission != PermissionState.READY) {
             usage.preflightError(snapshot.task, snapshot.privilege, "permission_unavailable")
             return false
@@ -191,7 +214,10 @@ class TaskController private constructor(private val context: Context) {
 
     /** 在 I/O 线程调用，复制当前一轮的 UTF-8 日志。流由调用者关闭。 */
     fun exportLog(output: OutputStream) {
-        synchronized(logLock) { logFile.inputStream().use { it.copyTo(output) } }
+        synchronized(logLock) {
+            logFile.inputStream().use { it.copyTo(output) }
+            diagnostics.exportTo(output)
+        }
     }
 
     internal fun begin(onFinished: () -> Unit): Boolean {
@@ -258,10 +284,15 @@ class TaskController private constructor(private val context: Context) {
 
     private fun appendLog(entry: LogEntry) {
         synchronized(logLock) {
-            runCatching { logFile.appendText(entry.toLogText(), Charsets.UTF_8) }.onFailure {
+            runCatching {
+                if (entry.level == LogLevel.DEBUG) diagnostics.append(entry)
+                else logFile.appendText(entry.toLogText(), Charsets.UTF_8)
+            }.onFailure {
                 Log.w("M7ATask", "Cannot write task log", it)
             }
-            logData.update { (it + entry).takeLast(LOG_LINES) }
+            if (entry.level != LogLevel.DEBUG) {
+                logData.update { (it + entry.forDisplay(tracebackFallback)).takeLast(LOG_LINES) }
+            }
         }
     }
 
@@ -301,6 +332,7 @@ class TaskController private constructor(private val context: Context) {
                 usageRun = usage.startTask(snapshot.task, snapshot.privilege, snapshot.config.panelOff)
                 synchronized(logLock) {
                     logFile.writeText("")
+                    diagnostics.clear()
                     logData.value = emptyList()
                 }
                 val markerStream = marker.startWrite()
@@ -558,6 +590,7 @@ class TaskController private constructor(private val context: Context) {
         // 更早的版本用过 task 和 tasks，这里换一个没用过的名字。
         private const val KEY_TASK = "selected-task"
         private const val KEY_CONFIG = "task-config"
+        private const val KEY_ROOT_VERIFIED = "root-probe-verified"
         private const val KEY_DAILY_DONE = "last-daily-done"
         private const val KEY_ECHO_DONE = "last-echo-done"
         private const val LOG_LINES = 200
