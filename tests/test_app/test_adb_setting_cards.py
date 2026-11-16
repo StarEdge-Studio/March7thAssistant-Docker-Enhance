@@ -486,6 +486,7 @@ def settings_page(qtbot, tmp_path, monkeypatch, adb):
     for module in (settings, cards, service, switch_card):
         monkeypatch.setattr(module, "cfg", config)
     monkeypatch.setattr("module.config.cfg", config)
+    monkeypatch.setattr(settings, "read_active_run", lambda: None)
     monkeypatch.setattr(cards, "read_adb_run_status", lambda: None)
     interface = settings.SettingInterface()
     qtbot.addWidget(interface)
@@ -527,8 +528,8 @@ def test_settings_page_walks_through_adb_setup(settings_page, qtbot, adb):
     assert interface.gamePathCard.isHidden() and interface.browserTypeCard.isHidden()
 
     devices = interface.adbDeviceCard
-    wait_idle(qtbot, devices)  # 切到 ADB 后自动查找设备
-    assert len(devices.deviceRows()) == 4
+    # 切换后先排队启动扫描，不能把启动前的空闲当成扫描结束。
+    qtbot.waitUntil(lambda: len(devices.deviceRows()) == 4, timeout=5000)
     devices.deviceRows()[1].radio.click()
     assert saved(path)["adb_serial"] == PHONE.serial
     assert interface.adbAdvancedCard.serialCard.contentLabel.text() == PHONE.serial
@@ -544,7 +545,7 @@ def test_settings_page_walks_through_adb_setup(settings_page, qtbot, adb):
     assert interface.adbStatusCard.rows["game"].value.text() == "被登录界面带回了实体屏"
 
 
-def test_connection_switch_preserves_legacy_cloud_config(settings_page, qtbot):
+def test_connection_switch_preserves_legacy_cloud_config(settings_page, qtbot, adb):
     interface, config, path = settings_page
     combo = interface.adbBackendCard.comboBox
     for mode in ("cloud", "adb", "local"):
@@ -562,6 +563,24 @@ def test_connection_switch_preserves_legacy_cloud_config(settings_page, qtbot):
             assert saved(path)["ui_profile"] == "pc_1080"
 
 
+def test_connection_switch_restores_local_touch_settings(settings_page):
+    from app.tools.adb_service import display_connection
+
+    interface, config, path = settings_page
+    config.set_values({"ui_profile": "touch_720"})
+    combo = interface.adbBackendCard.comboBox
+
+    combo.setCurrentIndex(combo.findData("cloud"))
+    assert saved(path)["ui_profile"] == "touch_720"
+    assert display_connection(config).ui_profile == "pc_1080"
+    assert not interface.activityEnableCard.isHidden()
+
+    combo.setCurrentIndex(combo.findData("local"))
+    assert saved(path)["ui_profile"] == "touch_720"
+    assert display_connection(config).ui_profile == "touch_720"
+    assert interface.activityEnableCard.isHidden()
+
+
 def test_opening_old_echo_plan_does_not_change_instance_type(settings_page, qtbot):
     from app.card.messagebox_custom import MessageBoxPowerPlan
 
@@ -571,6 +590,24 @@ def test_opening_old_echo_plan_does_not_change_instance_type(settings_page, qtbo
     qtbot.addWidget(dialog)
     assert dialog.validate_inputs()
     assert dialog.get_plans() == plan
+
+
+@pytest.mark.parametrize("invalid", [{"control_backend": "android"}, {"ui_profile": "old_touch"}])
+def test_invalid_connection_can_be_repaired_in_settings(settings_page, qtbot, invalid):
+    from app.setting_interface import SettingInterface
+
+    _, config, path = settings_page
+    config.set_values(invalid)
+    panel = SettingInterface()
+    qtbot.addWidget(panel)
+    backend = panel.adbBackendCard
+    assert backend.comboBox.currentIndex() == -1
+    assert all(saved(path)[key] == value for key, value in invalid.items())
+
+    backend.comboBox.setCurrentIndex(backend.comboBox.findData("local"))
+    assert backend.comboBox.currentData() == "local"
+    assert saved(path)["control_backend"] is None
+    assert saved(path)["ui_profile"] == "pc_1080"
 
 
 def test_backend_change_is_blocked_while_task_runs(settings_page):

@@ -27,7 +27,7 @@ from utils.pause import pause_ctl
 from utils.screenshot_util import save_error_screenshot
 
 
-TASK_SECONDS = 120 * 60
+TASK_SECONDS = 4 * 60 * 60
 MAX_WEEKLY_MATCHES = 3
 MAX_RECONNECTS = 2
 MAX_ENTRY_ESCAPES = 3
@@ -39,8 +39,12 @@ BATTLE_SECONDS = 10 * 60
 MAX_AUTO_ATTEMPTS = 2
 AUTO_RETRY_SECONDS = 12
 MAX_PREPARATION_FALLBACKS = 3
+MAX_OPENING_RESTARTS = 2
 DEFAULT_PREPARE_LIMIT = 30
+DEFAULT_OPENING_RECRUITMENT = "开局招募"
 DEFAULT_HALO_REFRESHES = 2
+MAX_HALO_IDENTITY_RETRIES = 2
+HALO_FOLLOWUP_SECONDS = 3
 ACTION_POLL = 0.22
 CLICK_HOLD = 0.075
 BOX_HOLD = 0.20
@@ -49,10 +53,11 @@ RANK_CLICK_HOLD = 0.03
 PROMOTION_CAP_ENEMY_RANK = 28  # 入画奇航超频博弈 A4 冰钛 6
 PREP_OVERLAYS = frozenset((Page.SHOP, Page.TIMED_SHOP, Page.RAIL_SHOP, Page.BLACK_MARKET, Page.REVEAL, Page.CHOICE,
                            Page.DANCE, Page.RANGER, Page.SVAROG_MODIFICATION, Page.GARDEN, Page.HACK,
-                           Page.BENCH_FULL, Page.HALO_TIP, Page.HALO_INFO, Page.EMPTY_FRONT))
+                           Page.BENCH_FULL, Page.HALO_TIP, Page.HALO_INFO, Page.HALO_MENTOR, Page.EMPTY_FRONT))
 PLAY_PAGES = PREP_OVERLAYS | {Page.BOARD, Page.BATTLE, Page.NODE_RESULT, Page.MATCH_RESULT,
                              Page.HALO, Page.HALO_DETAIL, Page.HALO_REPLACE, Page.TEA}
 ACTIVE_PAGES = PLAY_PAGES | {Page.DETAIL, Page.PARTNER_DETAIL, Page.EQUIPMENT, Page.CONFIRM_FIGHT}
+HALO_EXIT_PAGES = (ACTIVE_PAGES | {Page.HOME, Page.WEEKLY}) - {Page.HALO}
 REWARD_PAGES = {Page.HOME, Page.WEEKLY, Page.REWARD_RECEIPT, Page.REWARD_LIMIT}
 BOARD_PAGES = {Page.BOARD, Page.BENCH_FULL}
 ENTRY_SCREENS = ("guide5", "main", "menu", "guide1", "guide2", "guide3", "guide4", "start_game", "click_enter")
@@ -69,6 +74,17 @@ SAFE_BENEFITS = ("免费刷新", "额外金币", "获得金币", "简易装备",
                  "前台强度", "后台强度", "速度增幅提高", "战利品晶矿")
 EVENT_RISKS = ("失去", "消耗", "出售", "替换", "变为", "无法上场", "随机移除", "敌人难度", "扣除", "损失")
 INVESTMENT_RESTRICTIONS = ("节省工位", "只有3个备战", "奋斗协议", "钻石商人", "长线空头", "无法合成")
+
+
+def task_limit_seconds(minutes) -> int | None:
+    """把货币战争总时限的分钟数换算成秒；0 或负数表示不限制，缺省/非法值沿用 TASK_SECONDS。"""
+    if minutes is None:
+        return TASK_SECONDS
+    try:
+        value = int(minutes)
+    except (TypeError, ValueError, OverflowError):
+        return TASK_SECONDS
+    return value * 60 if value > 0 else None
 
 
 class CurrencyWarsError(RuntimeError):
@@ -121,6 +137,14 @@ class CurrencyWarsBenchBlocked(CurrencyWarsRecoverable):
     """晶矿需要空备战位，已无法在保留可用阵容的前提下腾位。"""
 
 
+class CurrencyWarsOpeningBlocked(CurrencyWarsError):
+    """开局已确认缺少可用前台，交回整局流程重开。"""
+
+    def __init__(self, frame, reason):
+        super().__init__(reason)
+        self.frame = frame
+
+
 class CurrencyWarsReconnect(CurrencyWarsError):
     """游戏已展示重连提示，放下当前操作，等待重新读取状态。"""
 
@@ -145,6 +169,17 @@ class ReserveSaleAttempt:
                 and cv2.absdiff(frame.slot_mark(slot.point), self.portrait).mean() <= 16)
 
 
+@dataclass(frozen=True)
+class HaloSelection:
+    stage: str
+    cards: tuple[tuple[strategy.Slot, np.ndarray], ...]
+    selected_face: np.ndarray | None = None
+
+    def same_face(self, frame):
+        return (self.selected_face is not None
+                and cv2.absdiff(frame.crop(ui.HALO_TARGET_FACE), self.selected_face).mean() <= 20)
+
+
 class CurrencyWars:
     def __init__(self):
         self.deadline = None
@@ -162,11 +197,13 @@ class CurrencyWars:
         self.last_result_stage = None
         self.slot_cache = {}
         self.halo_candidate = None
+        self.halo_identity_retries: dict[str, int] = {}
         self.tea_menu_fallback = None
         self.halo_excluded = set()
         self.stage_refreshes = {}
         self.deployment_stage = None
         self.deployment_moves = ()
+        self.deployment_history = set()
         self.held_deployment = None
         self.deployment_replan_stage = None
         self.preparation_progress = 0
@@ -489,16 +526,21 @@ class CurrencyWars:
         return False
 
     def _homepage(self, frame, *, keep_weekly=False):
-        if frame.page == Page.REWARD_RECEIPT:
+        for _ in range(3):
+            page = frame.page
+            if page == Page.REWARD_LIMIT:
+                message = "助燃券容量提示未确认关闭"
+            elif page == Page.REWARD_RECEIPT:
+                message = "奖励展示未确认关闭"
+            else:
+                break
             frame = self._click_to(
-                frame, lambda f: f.reward_close(), lambda f: f.page in (Page.WEEKLY, Page.HOME),
-                "奖励展示未确认关闭", seconds=8, attempts=2,
+                frame, lambda f: f.reward_limit_close() if page == Page.REWARD_LIMIT else f.reward_close(),
+                lambda f: f.page in REWARD_PAGES and f.page != page,
+                message, seconds=8, attempts=2,
             )
-        if frame.page == Page.REWARD_LIMIT:
-            frame = self._click_to(
-                frame, lambda f: ui.point(f.reward_limit_confirm()), lambda f: f.page in (Page.WEEKLY, Page.HOME),
-                "助燃券容量提示未确认关闭", seconds=8, attempts=2,
-            )
+        if frame.page in (Page.REWARD_RECEIPT, Page.REWARD_LIMIT):
+            raise CurrencyWarsReadTimeout("多次关闭后仍显示货币战争领奖提示")
         if frame.page in (Page.RANK, Page.END_MATCH_CONFIRM):
             frame = self._go_back(frame, Page.MODES)
         if keep_weekly and frame.page == Page.WEEKLY:
@@ -692,7 +734,7 @@ class CurrencyWars:
         )
 
     def _settle_saved_match(self, frame):
-        log.info("检测到未完成对局，按设置结束并结算")
+        log.info("结束未完成的货币战争对局并核对结算")
         confirmation_sent = False
 
         def menu_ready(f):
@@ -754,6 +796,46 @@ class CurrencyWars:
                 if confirmation_sent or frame.page == Page.RECONNECT or frame.page in ACTIVE_PAGES:
                     raise CurrencyWarsUnavailable(f"旧对局结算待核对，保留当前现场：{error}") from error
                 raise
+
+    def _restart_match(self, frame, *, can_exit, recovered=None, start_new=True):
+        """结束当前对局并按当前模式重新进入，返回新画面和是否重开。"""
+        location = frame.stage or frame.page.value
+        ending = {Page.END_MATCH_CONFIRM, Page.MATCH_RESULT, Page.HOME, Page.MODES}
+        in_match, mode_confirmed = self.in_match, self.mode_confirmed
+        # 放弃页也是整局结算。重开期间不将这次结算登记为本次任务的结果。
+        self.in_match = False
+        self.mode_confirmed = False
+
+        def advanced(f):
+            return f.page in ending or recovered is not None and recovered(f)
+
+        def escape(_):
+            self._check_budget()
+            return auto.press_key("esc")
+
+        try:
+            while not advanced(frame):
+                try:
+                    frame = self._action(
+                        frame, lambda f: () if can_exit(f) else None, escape, advanced,
+                        "按 ESC 后未确认货币战争退出或结算界面", seconds=8, attempts=2,
+                    )
+                    break
+                except CurrencyWarsReconnect as error:
+                    frame = self._recover_network(error.frame, resume_match=False)
+            if frame.page not in ending:
+                self.mode_confirmed = mode_confirmed
+                return frame, False
+            frame = self._settle_saved_match(frame)
+            if not start_new:
+                return frame, False
+            if (reopened := self._enter_with_recovery(frame, resume=False)) is not None:
+                return reopened, True
+            raise CurrencyWarsUnavailable(f"{location} 旧对局已结束，未确认新对局成功进入")
+        except CurrencyWarsRecoverable as error:
+            raise CurrencyWarsUnavailable(f"{location} 货币战争重开未完成：{error}") from error
+        finally:
+            self.in_match = in_match
 
     def _launch(self, frame, resume):
         if frame.page == Page.END_MATCH_CONFIRM:
@@ -1472,13 +1554,14 @@ class CurrencyWars:
         previous = None
         pressed = False
         confirmed = False
+        labels = ("免费刷新",) if self.default_strategy else ui.SHOP_REFRESH_LABELS
 
         def current_shop(f):
             return f.page == Page.SHOP and f.stage in (None, stage)
 
         def locate(f):
             if f.gold == before.gold and f.shop_refresh_price == price and not f.shop_catalog_changed(before):
-                if label := f.find(*ui.SHOP_REFRESH_LABELS, area=ui.SHOP_REFRESH):
+                if label := f.find(*labels, area=ui.SHOP_REFRESH):
                     return (label.point,)
             return None
 
@@ -1520,24 +1603,29 @@ class CurrencyWars:
             if frame.page != Page.SHOP or frame.stage not in (None, board.stage):
                 break
             shop_board = replace(board, gold=frame.gold)
-            if offer := strategy.shop_purchase(shop_board, frame.offers, experience_price=experience_price):
+            offer = (strategy.default_front_offer(shop_board, frame.offers) if self.default_strategy
+                     else strategy.shop_purchase(shop_board, frame.offers, experience_price=experience_price))
+            if offer:
                 before = frame
                 minimum_gold = before.gold - offer.cost
                 merge_pair = strategy.merge_purchase(shop_board, offer)
                 pressed = False
 
                 def same_offer(f):
-                    return next((card.point for card in f.offers if (card.name, card.cost, card.column)
+                    return next((card for card in f.offers if (card.name, card.cost, card.column)
                                  == (offer.name, offer.cost, offer.column) and card.stars == offer.stars), None)
 
                 def locate(f):
-                    if f.gold == before.gold and (point := same_offer(f)) is not None:
-                        return (point,)
+                    if (f.gold == before.gold and (card := same_offer(f)) is not None
+                            and (not self.default_strategy or card.front)):
+                        return (card.point,)
 
                 def buy(f, point):
                     nonlocal pressed
                     self._check_budget()
                     pressed = True
+                    if self.default_strategy:
+                        self.deferred_operations.add((board.stage, DEFAULT_OPENING_RECRUITMENT))
                     return self._tap(f, point)
 
                 def sold(f):
@@ -1572,11 +1660,15 @@ class CurrencyWars:
                     frame = self._verify_merge(board, offer.name)
                 return frame, refreshes, confirmed
             price = frame.shop_refresh_price
-            if price is None or not strategy.should_refresh(shop_board, price, refreshes,
-                                                            experience_price=experience_price):
-                break
-            if not board.lineup and price > 0 and strategy.should_buy_exp(shop_board, experience_price):
-                break
+            if self.default_strategy:
+                if refreshes or price != 0 or not frame.has("免费刷新", area=ui.SHOP_REFRESH):
+                    break
+            else:
+                if price is None or not strategy.should_refresh(shop_board, price, refreshes,
+                                                                experience_price=experience_price):
+                    break
+                if not board.lineup and price > 0 and strategy.should_buy_exp(shop_board, experience_price):
+                    break
             frame, pressed = self._refresh_shop(frame, price, refreshes, board.stage)
             refreshes += int(pressed)
         if frame.page == Page.SHOP:
@@ -1744,8 +1836,11 @@ class CurrencyWars:
         return frame
 
     def _disassemble_for_upgrade(self, frame, board):
-        if not board.has_bench_space or not frame.disassembly_tool():
+        tool_origin = frame.disassembly_tool() if board.has_bench_space else None
+        if tool_origin is None:
             return None
+        x, y = tool_origin
+        tool_area = (x - 24, y - 24, x + 28, y + 36)
         for source in board.field:
             unit = source.unit
             if unit is None or not unit.equipment or (board.stage, unit.name) in self.disassembly_attempted:
@@ -1756,40 +1851,64 @@ class CurrencyWars:
                 continue
             source_face = frame.slot_mark(source.point)
             target_face = frame.slot_mark(target.point)
-            items_before = frame.inventory_items()
+            sent_frame = None
             self.disassembly_attempted.add((board.stage, unit.name))
+
+            def loadout_unchanged(f, before, equipped):
+                target_equipment = f.card_equipment(target)
+                return (equipped > 0 and equipped == before.card_equipment(source)
+                        and target_equipment is not None and target_equipment == before.card_equipment(target)
+                        and f.inventory_items() == before.inventory_items()
+                        and not self._equipment_inventory_changed(before, f))
+
+            def tool_unchanged(f):
+                # 扳手图像包含剩余次数，消耗未核实时不能重发。
+                return np.array_equal(f.crop(tool_area), sent_frame.crop(tool_area))
 
             def positions(f):
                 tool = f.disassembly_tool()
-                if (tool and f.capacity == (board.used, board.capacity)
+                equipped = f.card_equipment(source) or 0
+                if (tool is not None and max(abs(a - b) for a, b in zip(tool, tool_origin)) <= 5
+                        and f.capacity == (board.used, board.capacity)
                         and f.slot_occupied(source.point) and f.slot_occupied(target.point)
-                        and f.card_equipment(source) > target.unit.equipment
+                        and target.point not in f.locked_bench_slots | f.black_hole_slots
+                        and equipped > target.unit.equipment
                         and self._card_stars(f, source) == unit.stars
                         and self._card_stars(f, target) == target.unit.stars
                         and f.slot_portrait_matches(source.point, source_face)
-                        and f.slot_portrait_matches(target.point, target_face)):
+                        and f.slot_portrait_matches(target.point, target_face)
+                        and (sent_frame is None or loadout_unchanged(f, sent_frame, equipped) and tool_unchanged(f))):
                     return tool, source.point
                 return None
 
+            def disassemble(f, tool, recipient):
+                nonlocal sent_frame
+                sent_frame = f
+                return self._drag(f, tool, recipient)
+
             def transferred(f):
-                return f.page in PREP_OVERLAYS or (f.page == Page.BOARD and f.stage == board.stage
+                return f.page in PREP_OVERLAYS or (sent_frame is not None
+                        and f.page == Page.BOARD and f.stage == board.stage
                         and f.slot_portrait_matches(source.point, source_face)
                         and f.card_equipment(source) == 0
-                        and (len(f.inventory_items()) > len(items_before)
-                             or self._equipment_inventory_changed(frame, f)))
+                        and (len(f.inventory_items()) > len(sent_frame.inventory_items())
+                             or self._equipment_inventory_changed(sent_frame, f)))
 
             try:
-                updated = self._action(frame, positions, lambda f, a, b: self._drag(f, a, b), transferred,
-                                       f"未确认取下{unit.name}低星版本的装备", seconds=8, attempts=1)
+                # 卡面动画会改变中心像素，连续两帧核对工具位置、星级和肖像后即可拖动。
+                updated = self._action(frame, positions, disassemble, transferred,
+                                       f"未确认取下{unit.name}低星版本的装备", seconds=8, attempts=2,
+                                       retry_after=4, track_control=False)
             except CurrencyWarsRecoverable:
                 self._check_budget()
                 current = self.frame
+                before = sent_frame if sent_frame is not None else frame
                 if (current is None or current.page != Page.BOARD or current.stage != board.stage
                         or current.capacity != (board.used, board.capacity)
                         or not current.slot_portrait_matches(source.point, source_face)
-                        or not current.card_equipment(source)
-                        or current.inventory_items() != items_before
-                        or self._equipment_inventory_changed(frame, current)):
+                        or not current.slot_portrait_matches(target.point, target_face)
+                        or not loadout_unchanged(current, before, current.card_equipment(source) or 0)
+                        or sent_frame is not None and not tool_unchanged(current)):
                     raise
                 log.warning(f"{unit.name}拆装未生效，保留原装备和阵容")
                 return current
@@ -2074,8 +2193,10 @@ class CurrencyWars:
         else:
             target = max(fronts, key=lambda slot: (slot.unit.name == board.core, slot.unit.is_output,
                                                    strategy.slot_priority(board, slot.unit, "front")))
-        portrait = cv2.resize(frame.slot_mark(target.point), (12, 12)).astype(np.int16)
-        self.halo_candidate = (target, portrait)
+        ordered = (target, *(slot for slot in fronts if slot.index != target.index))
+        self.halo_candidate = HaloSelection(
+            board.stage, tuple((slot, frame.slot_mark(slot.point).copy()) for slot in ordered),
+        )
         return self._click_to(
             frame, lambda f: ui.point(f.find("返回主角选择", area=ui.TEA_RETURN)
                                       or f.find("选择主角", area=ui.BOARD_FIGHT)),
@@ -2110,6 +2231,11 @@ class CurrencyWars:
         log.warning(f"{frame.stage}金币暂未稳定，保留本节点经济操作")
         return stable
 
+    @staticmethod
+    def _deployment_layout(board):
+        slots = frozenset((s.zone, s.index, s.occupied, s.blocked, s.unit) for s in board.slots)
+        return board.stage, board.used, board.capacity, board.hp, slots
+
     def _next_deployment(self, board):
         if self.deployment_stage != board.stage:
             self.deployment_stage = board.stage
@@ -2140,6 +2266,11 @@ class CurrencyWars:
             log.debug("部署计划的角色或卡位已变化，按当前棋盘重新规划")
             self.deployment_moves = ()
         if self.held_deployment is not None:
+            return None
+        if (board.front_count and board.used <= board.capacity
+                and self._deployment_layout(board) in self.deployment_history):
+            # 同节点已从这套阵容成功执行过部署。保留当前阵容，继续商店、经验和装备。
+            log.debug(f"{board.stage}已回到本节点部署过的阵容，暂缓重复换位")
             return None
         self.deployment_moves = strategy.deployment(board)
         return self.deployment_moves[0] if self.deployment_moves else None
@@ -2295,10 +2426,11 @@ class CurrencyWars:
             zones = ("front", "back") if isinstance(error, CurrencyWarsDuplicateUnit) else (zone,)
             self.default_deployment_skips.update((stage, source.point, skipped_zone) for skipped_zone in zones)
 
-    def _prepare_default_team(self, frame, *, make_space=False, deploy_only=False):
+    def _prepare_default_team(self, frame, *, make_space=False, deploy_only=False, minimum_free=1):
         stage = frame.stage
         board_page = frame.page
         overflow = board_page == Page.BENCH_FULL
+        opening = self.default_strategy and not overflow and stage == "1-1"
         deferred_moves = set()
         for _ in range(DEFAULT_PREPARE_LIMIT):
             layout = frame.slots() if overflow else ()
@@ -2307,7 +2439,7 @@ class CurrencyWars:
             frame, board = self._read_default_board(frame, bench_only=bench_only)
             if board is None or frame.page != board_page or board.stage != stage:
                 return frame
-            if make_space and not overflow and board.has_bench_space:
+            if make_space and not overflow and len(board.empty_bench) >= minimum_free:
                 return frame
             copies = {slot: copy for slot in strategy.default_bench(board)
                       if (copy := frame.deployed_copy(slot, board.field)) and copy.unit is not None}
@@ -2315,7 +2447,8 @@ class CurrencyWars:
                 (point, zone) for saved_stage, point, zone in self.default_deployment_skips if saved_stage == stage
             }
             move = strategy.default_deployment(board, copies, skipped, overflow=make_space)
-            if deploy_only and move is None and not board.front_count and board.used < board.capacity:
+            if ((deploy_only or opening and not make_space)
+                    and move is None and not board.front_count and board.used < board.capacity):
                 target = next((s for s in board.slots if s.zone == "front" and not s.occupied and not s.blocked), None)
                 source = next((s for s in board.slots if s.zone == "bench" and not s.blocked and s.unit
                                and s not in copies and (s.point, "front") not in skipped
@@ -2353,9 +2486,12 @@ class CurrencyWars:
                         return frame
                     continue
 
-            if board.used > board.capacity and board.has_bench_space and not overflow:
+            needs_front_seat = (opening and not make_space and not board.front_count and board.used == board.capacity
+                                and strategy.default_deployment(replace(board, capacity=board.capacity + 1),
+                                                                copies, skipped, overflow=True))
+            if (board.used > board.capacity or needs_front_seat) and board.has_bench_space and not overflow:
                 retreat = next((s for s in sorted((s for s in board.field if s.unit), key=strategy.default_priority)
-                                if not s.unit.has_halo and (s.zone == "back" or board.front_count > 1)
+                                if not s.blocked and not s.unit.has_halo and (s.zone == "back" or board.front_count > 1)
                                 and (s.point, "bench") not in skipped), None)
                 if retreat is not None:
                     try:
@@ -2470,6 +2606,33 @@ class CurrencyWars:
                 break
         return frame, True
 
+    def _recruit_default_opening_front(self, frame, board):
+        stage = board.stage
+        key = stage, DEFAULT_OPENING_RECRUITMENT
+        if key in self.deferred_operations:
+            raise CurrencyWarsOpeningBlocked(frame, "开局缺少可上阵的前台角色，商店补位未成功")
+        retire_one = board.used == board.capacity
+        front_open = any(s.zone == "front" and not s.occupied and not s.blocked for s in board.slots)
+        can_retreat = any(s.unit and not s.blocked and not s.unit.has_halo for s in board.field)
+        if not front_open or board.used > board.capacity or retire_one and not can_retreat:
+            raise CurrencyWarsOpeningBlocked(frame, "开局缺少前台角色且没有可用部署位")
+        minimum_free = 2 if retire_one else 1
+        if len(board.empty_bench) < minimum_free:
+            try:
+                return self._prepare_default_team(frame, make_space=True, minimum_free=minimum_free)
+            except CurrencyWarsBenchBlocked as error:
+                raise CurrencyWarsOpeningBlocked(frame, "开局缺少前台角色且无法腾出备战位") from error
+
+        try:
+            frame, _, bought = self._shop(frame, board, self.stage_refreshes.get(stage, 0))
+        except CurrencyWarsRecoverable as error:
+            return self._recover_preparation(stage, DEFAULT_OPENING_RECRUITMENT, error)
+        if frame.page == Page.BOARD and frame.stage == stage:
+            self.deferred_operations.add(key)
+            if bought:
+                self.preparation_progress += 1
+        return frame
+
     def _prepare(self, frame):
         stage = frame.stage
         frame = self._settle_board(frame)
@@ -2488,7 +2651,13 @@ class CurrencyWars:
             if frame.page != Page.BOARD or frame.stage != stage:
                 return frame
             frame, board = self._read_default_board(frame)
-            return self._finish_preparation(frame, board) if board is not None else frame
+            if board is None:
+                return frame
+            if (stage == "1-1" and not board.front_count and frame.board_advance
+                    and frame.board_advance.text == "出战"
+                    and not any(s.unit and s.unit.front and not s.blocked for s in board.slots)):
+                return self._recruit_default_opening_front(frame, board)
+            return self._finish_preparation(frame, board)
         refreshes = self.stage_refreshes.get(stage, 0)
         shop_needed = True
         shop_space_checks = 0
@@ -2515,6 +2684,7 @@ class CurrencyWars:
                     frame = self._recover_deployment(board, error)
                 else:
                     if frame.page == Page.BOARD and frame.stage == stage:
+                        self.deployment_history.add(self._deployment_layout(board))
                         self.deployment_moves = self.deployment_moves[1:]
                         if not self.deployment_moves:
                             self.held_deployment = None
@@ -2592,11 +2762,44 @@ class CurrencyWars:
         return (frame is not None and frame.page == Page.BOARD and frame.stage == stage
                 and any(slot.zone == "front" and slot.occupied for slot in frame.slots()))
 
+    def _opening_front_empty(self, frame):
+        if not self.default_strategy or frame.page != Page.BOARD or frame.stage != "1-1":
+            return False
+        fight = frame.board_advance
+        if fight is None or fight.text != "出战" or frame.preparation_banner:
+            return False
+        field = frame.field_slots()
+        front = tuple(s for s in field if s.zone == "front")
+        return bool(front and frame.field_count_matches(field) and not any(s.occupied for s in front))
+
+    @staticmethod
+    def _opening_can_continue(frame):
+        if frame.page != Page.BOARD:
+            return frame.page in (Page.BATTLE, Page.NODE_RESULT, Page.CONFIRM_FIGHT)
+        if not frame.stage:
+            return False
+        if frame.stage != "1-1":
+            return True
+        field = frame.field_slots()
+        return frame.field_count_matches(field) and any(s.zone == "front" and s.occupied for s in field)
+
     def _finish_preparation(self, frame, board):
+        stage = board.stage
+        if (not self.default_strategy and self.held_deployment is None
+                and (stage, "部署") not in self.deferred_operations and (move := strategy.anaxa_front_fallback(board))):
+            try:
+                frame = self._move(frame, board, *move)
+            except CurrencyWarsRecoverable as error:
+                frame = self._recover_deployment(board, error)
+            if frame.page != Page.BOARD or frame.stage != stage:
+                return frame
+            frame, board = self._read_board(frame)
+            if board is None or board.stage != stage:
+                return frame
         frame = self._equip(frame, board)
         if frame.page != Page.BOARD or frame.stage != board.stage:
             return frame
-        fight = frame.find(*ui.BOARD_ADVANCE, area=ui.BOARD_FIGHT)
+        fight = frame.board_advance
         if fight is None or (fight.text == "出战" and not board.front_count):
             raise CurrencyWarsActionUnready("备战结束时未确认可推进按钮或前台角色")
         if fight.text == "出战" and board.used > board.capacity:
@@ -2609,8 +2812,8 @@ class CurrencyWars:
         stage = frame.stage
 
         def advance(f):
-            button = f.find(fight.text, area=ui.BOARD_FIGHT)
-            return ui.point(button)
+            button = f.board_advance
+            return button.point if button is not None and button.text == fight.text else None
 
         return self._click_to(
             frame, advance,
@@ -2641,7 +2844,7 @@ class CurrencyWars:
             return frame
         if frame.shop_open:
             return self._close_shop(frame)
-        fight = frame.find(*ui.BOARD_ADVANCE, area=ui.BOARD_FIGHT)
+        fight = frame.board_advance
         if fight is None:
             return self._prepare(frame)
         if fight.text == "出战" and self._deployment_blocks_fight(frame):
@@ -2725,7 +2928,8 @@ class CurrencyWars:
         priorities = () if self.default_strategy else (
             self.lineup.preferences if self.lineup else (strategy.CORE, *strategy.BACK, *strategy.FRONT[1:])
         )
-        catalog_first = (title == "投资环境" or title in ui.INVESTMENT_CHOICES) and (
+        investment = title == "投资环境" or title in ui.INVESTMENT_CHOICES
+        catalog_first = investment and (
             self.default_strategy or cfg.get_value("currencywars_investment_priority", "strategy") == "catalog"
         )
         uncollected = frame.uncollected_investment_columns if catalog_first else ()
@@ -2783,8 +2987,9 @@ class CurrencyWars:
                     EMBLEM_PREFERENCES.index(label.text)
                     if label.text in EMBLEM_PREFERENCES else len(EMBLEM_PREFERENCES), label.point[0]
                 ), default=None)
+            area = ui.ITEM_CARD_NAMES if title == ui.EQUIPMENT_REWARD else (230, 220, 1750, 839)
             for name in (*priorities, *SUPPLY_ITEMS):
-                if label := frame.find(name, area=(230, 220, 1750, 839)):
+                if label := frame.find(name, area=area):
                     return label
             if title in ui.ITEM_CHOICES:
                 return next(iter(frame.item_cards()), None)
@@ -2793,9 +2998,17 @@ class CurrencyWars:
         # 主要匹配显式收益，排除涉及放弃、支付或替换角色的效果。
         scores = []
         catalog_scores = []
-        for index, (left, right) in enumerate(((195, 700), (700, 1225), (1225, 1740))):
-            column = [label for label in labels if left <= label.point[0] < right]
-            effect = "".join(label.text for label in column)
+        catalog_fallback = None
+        columns = ((195, 700), (700, 1225), (1225, 1740))
+        groups = frame.investment_groups if investment else ((0,), (1,), (2,))
+        for group in groups:
+            if investment:
+                effect = "。".join("".join(label.text for label in frame.investment_card_texts(index))
+                                  for index in group)
+            else:
+                left, right = columns[group[0]]
+                column = [label for label in labels if left <= label.point[0] < right]
+                effect = "".join(label.text for label in column)
             cost_text = effect.replace("消耗品", "").replace("未损失小队生命值", "")
             lower_difficulty = self.lineup is not None and re.search(r"敌人难度降低[1-9]", effect)
             if lower_difficulty:
@@ -2818,41 +3031,47 @@ class CurrencyWars:
             score += bool(re.search(r"获得(?:\d+|[一二两三四五六七八九十]+)(个|件|金币)", effect))
             score += 3 * any(name in effect for name in priorities)
             if score:
-                title_label = next((label for label in column if 353 <= label.point[1] <= 559), None)
-                scores.append((score, title_label or column[0]))
-            if index in uncollected and not restricted and not re.search(
+                if investment:
+                    index = group[0]
+                    card = frame.investment_card_title(index) or ui.Label("投资卡牌", frame.investment_card_point(index))
+                else:
+                    card = next((label for label in column if 353 <= label.point[1] <= 559), column[0])
+                scores.append((score, card))
+            if restricted or not uncollected or re.search(
                     r"从商店中移除|交换[^。；]{0,24}(?:生命值|金币)|移除[^。；]{0,24}角色", effect):
+                continue
+            for index in group:
+                if index not in uncollected:
+                    continue
                 if card := frame.investment_card_title(index):
                     rank = len(environments) - environments.index(card.text) if card.text in environments else 0
                     catalog_scores.append((rank, score, card))
+                elif self.default_strategy and catalog_fallback is None and not any(word in effect for word in EVENT_RISKS):
+                    # 新图鉴图标已定位卡片。漏读标题时仍可选择同组内的固定卡位。
+                    catalog_fallback = ui.Label("未收录投资", frame.investment_card_point(index))
         if catalog_scores:
             return max(catalog_scores, key=lambda option: option[:2])[2]
-        if self.default_strategy and uncollected:
-            for index in sorted(uncollected):
-                # 新图鉴图标已定位卡片，标题漏读时仍可选择，排除读到的高风险效果。
-                x, y = frame.investment_card_point(index)
-                text = "".join(label.text for label in frame.texts((x - 195, y, x + 195, 829)))
-                if not any(word in text for word in EVENT_RISKS + INVESTMENT_RESTRICTIONS):
-                    return ui.Label("未收录投资", (x, y))
-        return preferred_environment or max(scores, key=lambda option: option[0], default=(0, None))[1]
+        return catalog_fallback or preferred_environment or max(scores, key=lambda option: option[0], default=(0, None))[1]
 
     def _refresh_unusable_investments(self, frame):
         kind = frame.choice
         key = frame.stage or self.last_result_stage, "投资刷新"
         if key in self.deferred_operations:
             return frame
-        for column, point in enumerate(ui.INVESTMENT_REFRESH):
-            if self._choice_option(frame) or frame.choice_confirm():
+        refresh_points = frame.investment_refresh_points
+        for group, point in zip(frame.investment_groups, refresh_points):
+            if (frame.investment_refresh_points != refresh_points
+                    or frame.investment_confirm(enabled_only=True) or self._choice_option(frame)):
                 break
             titles = frame.investment_titles()
-            if not all(titles) or frame.investment_refresh_count(column) != 1:
+            if not all(titles) or frame.investment_refresh_count(point) != 1:
                 continue
             issued = False
 
             def available(f):
-                if (f.choice == kind and f.investment_titles() == titles
-                        and f.investment_refresh_count(column) == 1
-                        and not f.choice_confirm() and not self._choice_option(f)):
+                if (f.choice == kind and f.investment_refresh_points == refresh_points
+                        and f.investment_titles() == titles and f.investment_refresh_count(point) == 1
+                        and not f.investment_confirm(enabled_only=True) and not self._choice_option(f)):
                     return (point,)
                 return None
 
@@ -2865,9 +3084,11 @@ class CurrencyWars:
                 if f.page != Page.CHOICE or f.choice != kind:
                     return False
                 if not issued:
-                    return bool(self._choice_option(f) or f.choice_confirm())
-                new = f.investment_titles()[column]
-                return f.investment_refresh_count(column) == 0 and new not in (None, titles[column])
+                    return bool(f.investment_confirm(enabled_only=True) or self._choice_option(f))
+                if f.investment_refresh_points != refresh_points or f.investment_refresh_count(point) != 0:
+                    return False
+                current = f.investment_titles()
+                return any(current[index] not in (None, titles[index]) for index in group)
 
             try:
                 frame = self._action(frame, available, send, changed, "未确认投资策略免费刷新生效",
@@ -2884,12 +3105,15 @@ class CurrencyWars:
                 log.warning(f"暂停投资刷新，按当前选项推进：{error}")
                 return frame
             if issued:
-                log.info(f"已确认投资卡免费刷新：{titles[column]} → {frame.investment_titles()[column]}")
+                current = frame.investment_titles()
+                before = "、".join(titles[index] for index in group)
+                after = "、".join(current[index] for index in group if current[index])
+                log.info(f"已确认投资卡免费刷新：{before} → {after}")
         return frame
 
     def _choose_single(self, frame, option, confirm, advanced, message, *, seconds=8, retry_after=2.2,
-                       can_confirm=None):
-        """同一单选页先点选，再尝试确认，以游戏转场为准。"""
+                       can_confirm=None, ready_confirm=None):
+        """点选并尝试确认，已有可提交的选项时直接确认，以游戏转场为准。"""
         page, stage, dialog = frame.action_context
         attempts = 3
         attempted = 0
@@ -2900,12 +3124,19 @@ class CurrencyWars:
                     and (stage is None or current_stage is None or current_stage == stage))
 
         def locate(f):
-            candidate = option(f, attempted) if attempted < attempts else None
+            if attempted >= attempts:
+                return None
+            if ready_confirm is not None and ready_confirm(f):
+                # 用空候选表示此轮直接点击确认。
+                return (None,)
+            candidate = option(f, attempted)
             return (candidate,) if candidate else None
 
         def send(f, candidate):
             nonlocal attempted
             attempted += 1
+            if candidate is None:
+                return self._tap(f, confirm(f))
             log.info(f"{dialog or page.value}：选择「{candidate.text}」")
             if dialog == "补给阶段":
                 self.supply_attempted[candidate.point[0]] = f.supply_selection()
@@ -2935,27 +3166,33 @@ class CurrencyWars:
             frame = self._refresh_unusable_investments(frame)
             if frame.page != Page.CHOICE or frame.choice != title:
                 return frame
-        fallback = ui.Label("中间卡片", (960, 393) if title == "投资环境" else (960, 490))
+        stage = frame.stage
         submitted_frame = None
         submitted_titles = ()
         previous_titles = None
 
-        def option(f, _):
-            return self._choice_option(f) or fallback
+        def same_investment(f):
+            return f.page == Page.CHOICE and f.choice == title and (stage is None or f.stage in (None, stage))
 
-        def confirm(f):
+        def option(f, _):
+            if previous_titles is None:
+                return self._choice_option(f) or ui.Label("中间卡片", f.investment_card_point(1))
+            return None
+
+        def remember_confirmation(f, point):
             nonlocal submitted_frame, submitted_titles
-            button = f.find("确认", area=ui.INVESTMENT_CONFIRM)
             submitted_frame = f
             submitted_titles = f.investment_titles()
-            # 此区域覆盖两种确认布局，避开左侧的环境刷新按钮。
-            return ui.point(button) or (960, 984)
+            return point
+
+        def confirm(f):
+            return remember_confirmation(f, f.investment_confirm().point)
 
         def advanced(f):
             nonlocal previous_titles
             if f.page not in PLAY_PAGES:
                 return False
-            if f.page != Page.CHOICE or f.choice != title:
+            if not same_investment(f):
                 return True
             if submitted_frame is not None:
                 titles = f.investment_titles()
@@ -2968,9 +3205,46 @@ class CurrencyWars:
             previous_titles = None
             return False
 
-        return self._choose_single(
-            frame, option, confirm, advanced, f"「{title}」点选并确认后未转场", seconds=10, retry_after=4,
-        )
+        message = f"「{title}」点选并确认后未转场"
+        try:
+            return self._choose_single(
+                frame, option, confirm, advanced, message, seconds=10, retry_after=4,
+                ready_confirm=lambda f: previous_titles is None and f.investment_confirm(enabled_only=True),
+            )
+        except (CurrencyWarsActionUnready, CurrencyWarsReceiptTimeout):
+            frame = self.frame
+            if frame is None or not same_investment(frame):
+                raise
+
+        log.warning(f"「{title}」常规点选未推进，改用固定卡位")
+        next_column = 0
+
+        def locate_fixed(f):
+            if previous_titles is not None:
+                return None
+            if button := f.investment_confirm(enabled_only=True):
+                return button.point, True
+            if next_column < len(ui.INVESTMENT_CENTERS):
+                return f.investment_card_point(next_column), False
+            return None
+
+        def send_fixed(f, point, is_confirm):
+            nonlocal next_column
+            if is_confirm:
+                return self._tap(f, remember_confirmation(f, point))
+            next_column += 1
+            log.info(f"「{title}」尝试第 {next_column} 张卡的固定位置")
+            return self._tap(f, point)
+
+        try:
+            return self._action(
+                frame, locate_fixed, send_fixed, advanced, message, seconds=10,
+                attempts=len(ui.INVESTMENT_CENTERS) + 3, track_control=False, same_view=same_investment,
+            )
+        except (CurrencyWarsActionUnready, CurrencyWarsReceiptTimeout) as error:
+            if self.frame is not None and same_investment(self.frame):
+                raise CurrencyWarsUnavailable(f"「{title}」多次尝试后仍无法提交，已保留当前现场") from error
+            raise
 
     def _choose(self, frame):
         title = frame.choice
@@ -2997,6 +3271,7 @@ class CurrencyWars:
             self._reset_supply()
         if title == "投资环境" or title in ui.INVESTMENT_CHOICES:
             return self._choose_investment(frame)
+        equipment_reward = title == ui.EQUIPMENT_REWARD
         reward_choice = title in REWARD_CHOICES or frame.priced_recruitment is not None
         confirm_area, confirm_point = {
             "补给阶段": (ui.SUPPLY_CONFIRM, (1692, 984)),
@@ -3030,7 +3305,8 @@ class CurrencyWars:
             if title == "遭遇节点":
                 return ui.Label("左侧遭遇", (666, 390))
             if reward_choice:
-                return ui.Label("奖励卡片", ((960, 1174, 746)[attempt], 230))
+                centers = ui.EQUIPMENT_REWARD_CENTERS if equipment_reward else (960, 1174, 746)
+                return ui.Label("奖励卡片", (centers[attempt], 230))
             # 其它明确标明单选的弹窗，可用正文中的可见卡片位置。
             if (f.has("请选择1个", "请选择一个", area=ui.ITEM_SELECTION)
                     or f.has("确认", "确认选择", "选定", "选择", area=confirm_area)):
@@ -3056,8 +3332,11 @@ class CurrencyWars:
                 or title == "补给阶段" and f.supply_layout not in (None, supply_layout)
             )
 
-        auto_claim = title in ui.ITEM_CHOICES or frame.priced_recruitment is not None
-        return self._choose_single(frame, option, None if auto_claim else confirm, advanced, f"「{title}」选择后未转场")
+        auto_claim = not equipment_reward and (title in ui.ITEM_CHOICES or frame.priced_recruitment is not None)
+        return self._choose_single(
+            frame, option, None if auto_claim else confirm, advanced, f"「{title}」选择后未转场",
+            ready_confirm=ui.Frame.choice_confirm if equipment_reward else None,
+        )
 
     @staticmethod
     def _supply_confirm(frame, required=None):
@@ -3187,60 +3466,163 @@ class CurrencyWars:
             same_view=same_popup,
         )
 
-    def _halo(self, frame):
-        if not self.halo_candidate:
-            return self._click_to(
-                frame, lambda f: ui.point(f.find("返回备战界面", area=ui.TEA_RETURN)),
-                lambda f: f.page == Page.BOARD, "未能返回备战页核对主角身份",
+    def _return_halo_board(self, frame):
+        return self._click_to(
+            frame, lambda f: ui.point(f.find("返回备战界面", area=ui.TEA_RETURN)),
+            lambda f: f.page in HALO_EXIT_PAGES, "未能返回备战页核对主角身份", seconds=8, attempts=2,
+        )
+
+    def _recover_halo_identity(self, frame, scores, reason):
+        if frame.page != Page.HALO:
+            return frame
+        selection = self.halo_candidate
+        target, _ = selection.cards[0]
+        stage = selection.stage
+        readings = " / ".join(f"{score:.3f}" for score in scores) or "未取得"
+        log.warning(f"{stage} 前台第 {target.index + 1} 格「{target.unit.name}」{reason}，前台相似度 {readings}")
+        attempts = self.halo_identity_retries.get(stage, 0)
+        if attempts >= MAX_HALO_IDENTITY_RETRIES:
+            return self._place_halo_by_position(frame, selection)
+
+        self.halo_identity_retries[stage] = attempts + 1
+        log.info(f"{stage} 返回备战重新读取前台（{attempts + 1}/{MAX_HALO_IDENTITY_RETRIES}）")
+        try:
+            updated = self._return_halo_board(frame)
+        except CurrencyWarsRecoverable as error:
+            log.warning(f"{stage} 返回备战暂未确认：{error}")
+            if self.frame.page == Page.HALO:
+                return self._place_halo_by_position(self.frame, selection)
+            return self.frame
+        if updated.page == Page.BOARD and updated.stage == stage:
+            self.slot_cache.clear()
+        return updated
+
+    def _place_halo_by_position(self, frame, selection):
+        before = frame.crop(ui.HALO_TARGET_FACE)
+        previous = None
+        attempted = 0
+
+        def positions(_):
+            if attempted < len(selection.cards) and previous is None:
+                slot, _ = selection.cards[attempted]
+                return ui.HALO_FRONT[slot.index], ui.HALO_TARGET
+            return None
+
+        def drag(f, start, end):
+            nonlocal attempted
+            slot, _ = selection.cards[attempted]
+            attempted += 1
+            log.info(f"{selection.stage} 按固定位置尝试前台第 {slot.index + 1} 格")
+            return self._drag(f, start, end, page=Page.HALO)
+
+        def placed(f):
+            nonlocal previous
+            if f.page != Page.HALO:
+                return f.page in HALO_EXIT_PAGES
+            face = f.halo_target_face
+            changed = (attempted > 0 and face is not None
+                       and cv2.absdiff(face, before).mean() > 20)
+            settled = changed and previous is not None and cv2.absdiff(face, previous).mean() <= 12
+            previous = face if changed else None
+            return settled
+
+        try:
+            updated = self._action(
+                frame, positions, drag, placed, "未确认固定卡位放入主角",
+                seconds=6, attempts=len(selection.cards), track_control=False,
             )
-        target, portrait = self.halo_candidate
+        except CurrencyWarsRecoverable as error:
+            raise CurrencyWarsUnavailable(f"{selection.stage} {error}，已保留当前现场") from error
+        if updated.page == Page.HALO:
+            index = attempted - 1
+            cards = selection.cards[index:] + selection.cards[:index]
+            self.halo_candidate = replace(selection, cards=cards, selected_face=updated.crop(ui.HALO_TARGET_FACE).copy())
+        return updated
+
+    def _select_halo_target(self, frame):
+        selection = self.halo_candidate
+        if selection.same_face(frame):
+            return frame
+        target, portrait = selection.cards[0]
         source = ui.HALO_FRONT[target.index]
+        scores = ()
 
         def portrait_matches(f):
-            return f.halo_portrait_matches(ui.HALO_TARGET, portrait)
+            return f.halo_portrait_scores((ui.HALO_TARGET,), portrait)[0] >= ui.HALO_PORTRAIT_MIN_SCORE
 
-        frame = self._expect(
-            lambda f: f.page == Page.HALO and (
-                portrait_matches(f) or f.halo_target_present() or f.halo_portrait_matches(source, portrait)
-            ), 8, "主角选择页与备战页的角色身份不一致",
-        )
-        verified_face = None
+        def source_matches(f):
+            nonlocal scores
+            scores = f.halo_portrait_scores(ui.HALO_FRONT, portrait)
+            score = scores[target.index]
+            other = max(value for index, value in enumerate(scores) if index != target.index)
+            return score >= ui.HALO_PORTRAIT_MIN_SCORE and score - other >= ui.HALO_PORTRAIT_MIN_GAP
+
+        def ready(f):
+            if f.page != Page.HALO:
+                return f.page in HALO_EXIT_PAGES
+            return f.halo_target_present() or portrait_matches(f) or source_matches(f)
+
+        try:
+            frame = self._expect(ready, 8, "未能核对主角选择页的前台角色")
+        except CurrencyWarsReadTimeout as error:
+            return self._recover_halo_identity(self.frame, scores, str(error))
+        if frame.page != Page.HALO:
+            return frame
+
         placed_target = False
         for attempt in range(2):
             if portrait_matches(frame):
                 break
             if frame.halo_target_present():
                 if self.default_strategy and placed_target:
-                    # 已确认拖放改动了中央角色，速刷直接锁定新肖像。
-                    verified_face = frame.crop(ui.HALO_TARGET_FACE)
                     break
                 if not self.default_strategy or not target.unit.name.endswith("格角色"):
-                    frame, matches = self._inspect_halo_target(frame, target.unit.name)
+                    try:
+                        frame, matches = self._inspect_halo_target(frame, target.unit.name)
+                    except CurrencyWarsRecoverable as error:
+                        return self._recover_halo_identity(self.frame, scores, str(error))
                     if matches or (matches is None and placed_target):
-                        verified_face = frame.crop(ui.HALO_TARGET_FACE)
                         break
             if attempt:
-                raise CurrencyWarsError(f"光环详情未确认{target.unit.name}，已保留当前选择")
+                return self._recover_halo_identity(frame, scores, "光环详情未确认角色")
 
             # 取消替换后，游戏可能仍保留前一次预选。拖放后核对中央角色已变化。
             previous_face = frame.crop(ui.HALO_TARGET_FACE) if frame.halo_target_present() else None
 
             def placed(f):
-                return f.page == Page.HALO and (portrait_matches(f) or f.halo_target_present() and (
+                if f.page != Page.HALO:
+                    return f.page in HALO_EXIT_PAGES
+                return portrait_matches(f) or (placed_target and f.halo_target_present() and (
                     previous_face is None or cv2.absdiff(f.crop(ui.HALO_TARGET_FACE), previous_face).mean() > 20
                 ))
 
-            frame = self._drag_to(
-                frame, lambda f: (source, ui.HALO_TARGET) if f.halo_portrait_matches(source, portrait) else None,
-                placed, "主角光环未确认放入角色",
-            )
-            placed_target = True
+            def drag(f, start, end):
+                nonlocal placed_target
+                placed_target = True
+                return self._drag(f, start, end, page=Page.HALO)
 
-        def same_target(f):
-            return portrait_matches(f) or (
-                verified_face is not None
-                and cv2.absdiff(f.crop(ui.HALO_TARGET_FACE), verified_face).mean() <= 20
-            )
+            try:
+                frame = self._action(
+                    frame, lambda f: (source, ui.HALO_TARGET) if source_matches(f) else None,
+                    drag, placed, "主角光环未确认放入角色", seconds=8, attempts=3,
+                )
+            except CurrencyWarsActionUnready as error:
+                return self._recover_halo_identity(self.frame, scores, str(error))
+            if frame.page != Page.HALO:
+                return frame
+        self.halo_candidate = replace(selection, selected_face=frame.crop(ui.HALO_TARGET_FACE).copy())
+        return frame
+
+    def _halo(self, frame):
+        if self.halo_candidate is None:
+            return self._return_halo_board(frame)
+        frame = self._select_halo_target(frame)
+        if frame.page != Page.HALO:
+            if frame.page not in (Page.HALO_DETAIL, Page.HALO_REPLACE):
+                self.halo_candidate = None
+            return frame
+        selection = self.halo_candidate
+        target, _ = selection.cards[0]
 
         if not self.default_strategy and not any(frame.halo_effect_texts()):
             frame = self._wait(lambda f: f.page == Page.HALO and any(f.halo_effect_texts()), 3) or frame
@@ -3318,7 +3700,7 @@ class CurrencyWars:
         effect = effect or frame.halo_effect(max_difficulty=5, allow_support=True, allowed=allowed)
 
         def option(f, attempt):
-            if not same_target(f):
+            if not selection.same_face(f):
                 return None
             if effect is not None:
                 _, index, title = effect
@@ -3336,10 +3718,38 @@ class CurrencyWars:
         def confirm(f):
             return ui.point(f.find("确认", area=ui.HALO_CONFIRM)) or (969, 954)
 
-        updated = self._choose_single(frame, option, confirm, advanced, "主角光环点选并确认后未转场")
-        if updated.page != Page.HALO_REPLACE:
+        updated = self._choose_single(
+            frame, option, confirm, advanced, "主角光环点选并确认后未转场",
+            can_confirm=lambda f, _: selection.same_face(f),
+        )
+        return self._settle_halo_confirmation(updated)
+
+    def _settle_halo_confirmation(self, frame):
+        if frame.page != Page.HALO_REPLACE:
             self.halo_candidate = None
-        return updated
+        if frame.page == Page.BOARD:
+            # 授予光环后的备战画面可能只是过渡。确认已生效，静候「从师」等后续页面。
+            return self._wait(lambda f: f.page in HALO_EXIT_PAGES - {Page.BOARD},
+                              HALO_FOLLOWUP_SECONDS) or self.frame
+        return frame
+
+    def _halo_mentor(self, frame):
+        def option(f, attempt):
+            cards = f.mentor_candidates
+            return cards[attempt % len(cards)] if cards else None
+
+        def confirm(f):
+            return ui.point(f.mentor_confirm())
+
+        try:
+            return self._choose_single(
+                frame, option, confirm, lambda f: f.page == Page.BOARD and not f.halo_preview(),
+                "从师选择后未确认返回备战", seconds=6, ready_confirm=confirm,
+            )
+        except (CurrencyWarsActionUnready, CurrencyWarsReceiptTimeout) as error:
+            if self.frame.page in (Page.HALO_MENTOR, Page.UNKNOWN, Page.CONFLICT):
+                raise CurrencyWarsUnavailable(f"{error}，已保留当前现场") from error
+            raise
 
     def _inspect_halo_target(self, frame, name):
         detail = self._click_to(
@@ -3560,7 +3970,7 @@ class CurrencyWars:
 
     def _cancel_halo_replacement(self, frame):
         if self.halo_candidate is not None:
-            target = self.halo_candidate[0]
+            target, _ = self.halo_candidate.cards[0]
             self.halo_excluded.add(target.point if self.default_strategy else target.unit.name)
         self.halo_candidate = None
         return self._click_to(
@@ -3802,6 +4212,8 @@ class CurrencyWars:
         current = self._wait(advanced, 10)
         if current is not None:
             log.warning(f"操作回执延迟，已确认转到{current.page.value}：{error}")
+            if before.page == Page.HALO:
+                return self._settle_halo_confirmation(current)
         return current
 
     def _recover_play_step(self, before, error):
@@ -3818,11 +4230,37 @@ class CurrencyWars:
         time.sleep(0.35)
         return self._observe()
 
+    def _play_with_opening_restarts(self, frame):
+        restarts = 0
+        while True:
+            self.in_match = True
+            try:
+                return self._play(frame)
+            except CurrencyWarsOpeningBlocked as error:
+                frame, reason = error.frame, str(error)
+            finally:
+                self.in_match = False
+                self.unidentified_since = None
+            retry = restarts < MAX_OPENING_RESTARTS
+            if retry:
+                log.warning(f"1-1 {reason}，尝试重开（{restarts + 1}/{MAX_OPENING_RESTARTS}）")
+            else:
+                log.warning(f"1-1 {reason}，已达重开上限，尝试结束当前对局")
+            frame, restarted = self._restart_match(
+                frame, can_exit=self._opening_front_empty, recovered=self._opening_can_continue, start_new=retry,
+            )
+            if not retry and frame.page == Page.MODES:
+                raise CurrencyWarsUnavailable(
+                    f"1-1 已达开局重开上限（{MAX_OPENING_RESTARTS} 次），{reason}，已结束最后一局"
+                )
+            restarts += int(restarted)
+
     def _play(self, frame):
         self.slot_cache.clear()
         self.stage_refreshes.clear()
         self.deployment_stage = None
         self.deployment_moves = ()
+        self.deployment_history.clear()
         self.held_deployment = None
         self.deployment_replan_stage = None
         self.preparation_progress = 0
@@ -3839,6 +4277,7 @@ class CurrencyWars:
         self._reset_supply()
         self.deferred_operations.clear()
         self.halo_excluded.clear()
+        self.halo_identity_retries.clear()
         self.halo_candidate = None
         self.tea_menu_fallback = None
         self.last_board = None
@@ -3878,6 +4317,8 @@ class CurrencyWars:
                         log.warning(f"节点 {stage or '开局'} 转场较慢，优先推进现有阵容")
                 if frame.page == Page.BOARD and (same_stage > 16 or prepare_failures >= 2):
                     if preparation_fallbacks >= MAX_PREPARATION_FALLBACKS:
+                        if self._opening_front_empty(frame):
+                            raise CurrencyWarsOpeningBlocked(frame, "多次复核后仍无法部署前台角色")
                         raise CurrencyWarsUnavailable(f"节点 {stage or '开局'} 多次复核后仍无法完成备战并推进，已保留当前现场")
                     preparation_fallbacks += 1
                     frame = self._advance_existing_team()
@@ -3888,7 +4329,7 @@ class CurrencyWars:
             except CurrencyWarsEquipmentReplan as error:
                 log.info(error)
                 frame = self.frame
-            except CurrencyWarsTerminalError:
+            except (CurrencyWarsTerminalError, CurrencyWarsOpeningBlocked):
                 raise
             except Exception as error:
                 if before.page == Page.BOARD:
@@ -3983,6 +4424,8 @@ class CurrencyWars:
             return self._close_halo_detail(frame)
         if page == Page.HALO_REPLACE:
             return self._cancel_halo_replacement(frame)
+        if page == Page.HALO_MENTOR:
+            return self._halo_mentor(frame)
         if page == Page.TEA:
             return self._tea(frame)
         if page in (Page.NODE_RESULT, Page.MATCH_RESULT):
@@ -4059,8 +4502,12 @@ class CurrencyWars:
 
         more_rewards_available = False
         if frame.page == Page.REWARD_RECEIPT:
-            frame = self._click_to(frame, lambda f: f.reward_close(), lambda f: f.page in (Page.WEEKLY, Page.HOME),
-                                   "领奖后未确认返回积分页", seconds=12)
+            frame = self._click_to(
+                frame, lambda f: f.reward_close(), lambda f: f.page in REWARD_PAGES - {Page.REWARD_RECEIPT},
+                "领奖后未确认返回积分页", seconds=12,
+            )
+            if frame.page == Page.REWARD_LIMIT:
+                raise CurrencyWarsReceiptTimeout("助燃券已达上限，货币战争积分奖励仍待领取")
             # 一键领取已确认到账。仅在画面明确显示还有奖励时保留本周待办。
             more_rewards_available = frame.page == Page.WEEKLY and frame.claim_button_visible()
         if frame.page != Page.HOME:
@@ -4187,7 +4634,9 @@ class CurrencyWars:
         self.lineup = strategy.LINEUPS.get(selected)
         log.hr(f"准备货币战争·入画奇航 ({selected})", "0")
         started = time.monotonic()
-        self.deadline = started + TASK_SECONDS
+        limit = task_limit_seconds(cfg.get_value("currencywars_time_limit"))
+        self.deadline = None if limit is None else started + limit
+        log.info("货币战争总时限：不限" if limit is None else f"货币战争总时限：{limit // 60} 分钟")
         self.network_reconnects = 0
         self.reward_claim_score = None
         self.reward_claim_notified = False
@@ -4236,12 +4685,7 @@ class CurrencyWars:
                     matches += 1
                     if loop:
                         self._loop_matches += 1
-                    self.in_match = True
-                    try:
-                        frame = self._play(frame)
-                    finally:
-                        self.in_match = False
-                        self.unidentified_since = None
+                    frame = self._play_with_opening_restarts(frame)
                     if self.result is None:
                         log.warning("已离开对局，整局胜负仍待核对")
                     frame, latest_score, just_claimed = self._check_weekly_reward(frame)

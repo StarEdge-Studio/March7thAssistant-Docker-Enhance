@@ -51,9 +51,6 @@ internal class RootAccess(
     }
 
     fun open(apkPath: String, token: String): DeviceLease {
-        val path = "'" + apkPath.replace("'", "'\\''") + "'"
-        val command = "CLASSPATH=$path exec /system/bin/app_process /system/bin " +
-            "--nice-name=m7a-apk-root org.march7th.deviceservice.AppServer $path"
         val shell = startShell(token)
         val tokenRequested = CompletableFuture<Boolean>()
         val portAnnounced = CompletableFuture<Int>()
@@ -81,7 +78,7 @@ internal class RootAccess(
         }
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(START_SECONDS)
         try {
-            shell.writeLine(command)
+            shell.writeLine(appServerCommand(apkPath))
             if (!tokenRequested.get(deadline - System.nanoTime(), TimeUnit.NANOSECONDS)) {
                 permission = PermissionState.NOT_AUTHORIZED
                 throw DeviceFailure("root_unavailable", "设备端未请求令牌")
@@ -98,14 +95,37 @@ internal class RootAccess(
         } catch (error: Exception) {
             val cleanup = runCatching { shell.close() }.exceptionOrNull()
             reader.join(OUTPUT_DRAIN_MS)
-            val code = (cleanup as? DeviceFailure)?.code ?: (error as? DeviceFailure)?.code ?: "service_start"
+            val code = (error as? DeviceFailure)?.code ?: "service_start"
             val reason = if (error is TimeoutException) {
                 if (tokenRequested.getNow(false)) "等待监听端口超时" else "等待设备端请求令牌超时"
             } else {
                 error.message ?: error.javaClass.simpleName
             }
-            throw DeviceFailure(code, shell.diagnostic(reason))
+            val failure = DeviceFailure(code, shell.diagnostic(reason))
+            if (cleanup != null) failure.addSuppressed(cleanup)
+            throw failure
         }
+    }
+
+    fun recoverAudio(apkPath: String) {
+        val shell = startShell()
+        val reader = shell.readOutput { false }
+        try {
+            shell.writeLine(appServerCommand(apkPath) + " --recover-audio")
+            shell.close()
+            reader.join(OUTPUT_DRAIN_MS)
+            if (shell.process.exitValue() != 0) {
+                throw DeviceFailure("cleanup_pending", shell.diagnostic("游戏音频恢复失败"))
+            }
+        } finally {
+            shell.process.destroy()
+        }
+    }
+
+    private fun appServerCommand(apkPath: String): String {
+        val path = "'" + apkPath.replace("'", "'\\''") + "'"
+        return "CLASSPATH=$path exec /system/bin/app_process /system/bin " +
+            "--nice-name=m7a-apk-root org.march7th.deviceservice.AppServer $path"
     }
 
     private fun startShell(token: String? = null): RootShell = try {
@@ -163,7 +183,7 @@ private class RootShell(val process: java.lang.Process, private val token: Strin
         runCatching { process.outputStream.close() }
         if (!process.waitFor(9, TimeUnit.SECONDS)) {
             process.destroy()
-            throw DeviceFailure("cleanup_pending")
+            throw DeviceFailure("cleanup_pending", "等待 Root 设备端服务退出超时")
         }
     }
 }

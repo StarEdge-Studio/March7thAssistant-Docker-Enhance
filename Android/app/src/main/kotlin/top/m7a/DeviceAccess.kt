@@ -5,8 +5,10 @@ import android.content.Context
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Binder
+import android.os.DeadObjectException
 import android.os.IBinder
 import android.util.Base64
+import android.util.Log
 import org.march7th.deviceservice.AppServer
 import rikka.shizuku.Shizuku
 import java.io.Closeable
@@ -35,6 +37,29 @@ internal fun Context.hasPackage(packageName: String): Boolean = try {
 
 internal interface DeviceLease : Closeable {
     val port: Int
+}
+
+internal fun closeUserService(binder: IBinder, timeoutMs: Long = 9_000, destroy: () -> Unit) {
+    if (!binder.isBinderAlive) return
+    val stopped = CountDownLatch(1)
+    val death = IBinder.DeathRecipient { stopped.countDown() }
+    try {
+        binder.linkToDeath(death, 0)
+        Closeable {
+            try {
+                binder.unlinkToDeath(death, 0)
+            } catch (_: NoSuchElementException) {
+                // 死亡监听已移除，仍以关闭请求和等待结果为准。
+            }
+        }.use {
+            destroy()
+            if (!stopped.await(timeoutMs, TimeUnit.MILLISECONDS)) {
+                throw DeviceFailure("cleanup_pending", "等待 Shizuku 设备端服务退出超时")
+            }
+        }
+    } catch (_: DeadObjectException) {
+        // 服务在注册监听或发送关闭请求时已经退出。
+    }
 }
 
 internal class DeviceAccess(private val context: Context) {
@@ -72,15 +97,29 @@ internal class DeviceAccess(private val context: Context) {
         Privilege.ROOT -> root.open(context.applicationInfo.sourceDir, token)
     }
 
+    fun recoverAudio(privilege: Privilege) {
+        if (privilege == Privilege.ROOT) {
+            root.recoverAudio(context.applicationInfo.sourceDir)
+            return
+        }
+        recoverShizuku()
+        UserBinding().use { binding ->
+            val remote = bindUserService(binding)
+            if (IDeviceBootstrap.Stub.asInterface(remote).recoverAudio() != 0) {
+                throw DeviceFailure("cleanup_pending")
+            }
+        }
+    }
+
     /** 只尝试回收本应用同一 tag 的残留 UserService。 */
     fun recoverShizuku() {
         if (state(Privilege.SHIZUKU) != PermissionState.READY) return
         val binding = UserBinding()
         if (Shizuku.peekUserService(userService, binding) >= 0) {
-            try {
-                if (!binding.connected.await(3, TimeUnit.SECONDS)) throw DeviceFailure("cleanup_pending")
-            } finally {
-                binding.close()
+            binding.use {
+                if (!it.connected.await(3, TimeUnit.SECONDS)) {
+                    throw DeviceFailure("cleanup_pending", "等待上次 Shizuku 设备端服务连接超时")
+                }
             }
         }
     }
@@ -88,17 +127,26 @@ internal class DeviceAccess(private val context: Context) {
     private fun openUserService(token: String): DeviceLease {
         val binding = UserBinding()
         try {
-            Shizuku.bindUserService(userService, binding)
-            if (!binding.connected.await(12, TimeUnit.SECONDS)) throw DeviceFailure("service_start")
-            val remote = binding.remote ?: throw DeviceFailure("service_start")
+            val remote = bindUserService(binding)
             binding.port = IDeviceBootstrap.Stub.asInterface(remote).start(token, binding.owner)
             if (binding.port == GameUserService.BUSY) throw DeviceFailure(AppServer.BUSY)
             if (binding.port !in 1..65535) throw DeviceFailure("service_start")
             return binding
         } catch (error: Exception) {
-            binding.close()
-            throw if (error is DeviceFailure) error else DeviceFailure("service_start")
+            val failure = if (error is DeviceFailure) error else DeviceFailure("service_start", error.toString())
+            try {
+                binding.close()
+            } catch (cleanupError: Exception) {
+                failure.addSuppressed(cleanupError)
+            }
+            throw failure
         }
+    }
+
+    private fun bindUserService(binding: UserBinding): IBinder {
+        Shizuku.bindUserService(userService, binding)
+        if (!binding.connected.await(12, TimeUnit.SECONDS)) throw DeviceFailure("service_start")
+        return binding.remote ?: throw DeviceFailure("service_start")
     }
 
     private inner class UserBinding : ServiceConnection, DeviceLease {
@@ -119,22 +167,18 @@ internal class DeviceAccess(private val context: Context) {
 
         override fun close() {
             val binder = remote
+            if (binder == null) {
+                Shizuku.unbindUserService(userService, this, true)
+                return
+            }
             try {
-                if (binder != null && binder.isBinderAlive) {
-                    val stopped = CountDownLatch(1)
-                    val death = IBinder.DeathRecipient { stopped.countDown() }
-                    try {
-                        binder.linkToDeath(death, 0)
-                        IDeviceBootstrap.Stub.asInterface(binder).destroy()
-                        if (!stopped.await(9, TimeUnit.SECONDS)) throw DeviceFailure("cleanup_pending")
-                    } catch (_: android.os.DeadObjectException) {
-                        // 服务已经自行完成关闭。
-                    } finally {
-                        binder.unlinkToDeath(death, 0)
-                    }
+                closeUserService(binder) {
+                    IDeviceBootstrap.Stub.asInterface(binder).destroy()
                 }
             } finally {
+                // Binder 提供实际退出结果，此处顺带移除 Shizuku 的绑定。
                 runCatching { Shizuku.unbindUserService(userService, this, true) }
+                    .onFailure { Log.w("M7ADevice", "Cannot remove Shizuku binding", it) }
             }
         }
     }

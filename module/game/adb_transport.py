@@ -46,8 +46,9 @@ class AdbError(RuntimeError):
         super().__init__(message)
 
 
-def disconnected():
-    return AdbError("disconnected", tr("ADB 设备或设备端服务已断开，请重新连接后再运行"))
+def disconnected(detail: str | None = None):
+    message = tr("ADB 设备或设备端服务已断开，请重新连接后再运行")
+    return AdbError("disconnected", f"{message} ({detail})" if detail else message)
 
 
 @dataclass(frozen=True)
@@ -207,6 +208,12 @@ class Adb:
     def shell(self, command: str, *, timeout: float = 5) -> str:
         return self.run("shell", command, timeout=timeout)
 
+    def primary_physical_display_id(self) -> str | None:
+        """从逻辑 display 0 的 uniqueId 取得 screencap 所用的 SurfaceFlinger ID。"""
+        output = self.shell("cmd display get-displays")
+        display = re.search(r'^[ \t]*Display id 0:[^\r\n]*\buniqueId "local:([0-9]+)"', output, re.MULTILINE)
+        return display[1] if display else None
+
     def focused_window(self, display_id: int) -> str | None:
         output = self.shell("dumpsys -t 2 window displays", timeout=3)
         on_display = False
@@ -333,9 +340,11 @@ class ServiceClient:
         self._id += 1
         message = json.dumps({"id": self._id, "cmd": cmd, **params}, allow_nan=False).encode("utf-8")
         deadline = time.monotonic() + timeout
+        phase = "send"
         try:
             self._socket.settimeout(timeout)
             self._socket.sendall(struct.pack(">II", len(message), 0) + message)
+            phase = "receive"
             header_size, payload_size = struct.unpack(">II", self._read(8, deadline))
             if not 0 < header_size <= 1 << 20 or payload_size > 64 << 20:
                 raise ValueError("invalid message size")
@@ -347,7 +356,9 @@ class ServiceClient:
             payload = self._read(payload_size, deadline)
         except (OSError, EOFError) as error:
             self.close()
-            raise disconnected() from error
+            detail = str(error)
+            reason = f"{type(error).__name__}: {detail}" if detail else type(error).__name__
+            raise disconnected(f"{cmd}/{phase}, {reason}") from error
         except ValueError as error:
             self.close()
             raise AdbError("invalid_response", tr("ADB 设备端服务返回了无效的响应")) from error

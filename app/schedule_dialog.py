@@ -13,6 +13,7 @@ from app.components.ascii_spin_box import AsciiSpinBox
 from qfluentwidgets import InfoBar, InfoBarPosition
 from qfluentwidgets import FluentIcon as FIF
 from utils.tasks import TASK_NAMES, supported_tasks, task_is_supported, UNSUPPORTED_TASK
+from app.tools.adb_service import display_connection
 from module.workflow import load_workflows
 import uuid
 import os
@@ -20,7 +21,8 @@ import json
 from module.config import cfg
 from module.localization import tr
 from app.common.schedule import (parse_schedule_time, task_timeout_seconds, task_trigger_mode,
-                                 task_weekdays, schedule_weekday_labels, format_task_weekdays)
+                                 task_weekdays, schedule_weekday_labels, format_task_weekdays,
+                                 scheduled_task_payload, task_launch_block_reason)
 
 
 def _strip_jsonc_comments(text: str) -> str:
@@ -142,7 +144,8 @@ class AddEditScheduleDialog(MessageBox):
         self.program_type_combo = ComboBox(self)
         # 程序类型：本体、流程编排、外部程序，以及来自配置的特殊程序
         self.program_type_combo.addItem(tr('本体'), userData='self')
-        if task_is_supported('workflow', cfg):
+        connection = display_connection(cfg)
+        if task_is_supported('workflow', connection):
             self.program_type_combo.addItem(tr('流程编排'), userData='workflow')
         elif str((task or {}).get('program', '')).strip().lower() == 'workflow':
             self.program_type_combo.addItem(f"{tr('流程编排')}（{tr(UNSUPPORTED_TASK)}）", userData='workflow')
@@ -168,7 +171,7 @@ class AddEditScheduleDialog(MessageBox):
         self.args_combo = ComboBox(self)
         # 显示本地化任务名，但保存时保留对应的任务ID（TASK_NAMES 存的是中文原文）
         # 保持 TASK_NAMES 的原始顺序（插入顺序）
-        task_items = list(supported_tasks(cfg).items())
+        task_items = list(supported_tasks(connection).items())
         self._task_keys = [k for k, v in task_items]
         self._task_labels = [tr(v) for k, v in task_items]
         self.args_combo.addItems(self._task_labels)
@@ -1094,6 +1097,12 @@ class ScheduleManagerDialog(MessageBox):
             m.exec()
             return
         t = self.scheduled_tasks[row]
+        if reason := task_launch_block_reason(scheduled_task_payload(t), cfg):
+            info = MessageBox(tr('提示'), reason, self)
+            info.cancelButton.hide()
+            info.yesButton.setText(tr('确认'))
+            info.exec()
+            return
         # 确认
         m = MessageBox(tr('确认'), tr('确认立即运行任务 "{name}" 吗？').format(name=t.get("name", "")), self)
         m.yesButton.setText(tr('确认'))

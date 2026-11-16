@@ -28,10 +28,14 @@ def _crop(rect):
     return (x / 1280, y / 720, w / 1280, h / 720)
 
 
-def supplement(auto, screen, config, balance, open_dialog, read_balance, *, return_screen):
+def supplement(auto, screen, config, balance, open_dialog, read_balance, *, return_screen, can_continue=False):
     if not (config.use_reserved_trailblaze_power or config.use_fuel):
         return balance
     if not open_dialog() or not auto.find_element("开拓力补充", "text", crop=TITLE, max_retries=8, retry_delay=0.3):
+        # 尚未选择或确认任何补充方式，且能继续使用已读到的资源。
+        if can_continue and screen.check_screen(return_screen):
+            log.warning("未找到开拓力补充弹窗，按现有资源继续挑战")
+            return balance
         raise PowerError("未找到开拓力补充弹窗")
 
     def click_label(label, crop):
@@ -75,17 +79,39 @@ def supplement(auto, screen, config, balance, open_dialog, read_balance, *, retu
             click_label("取消", CANCEL)
         raise
 
-    if expected is not None:
-        if auto.find_element("获得物品", "text", crop=ITEM_POPUP, max_retries=5, retry_delay=0.3):
-            auto.click_element(_crop((640, 569, 0, 0)), "crop")
-            time.sleep(0.4)
-    if auto.find_element("开拓力补充", "text", crop=TITLE) and not click_label("取消", CANCEL):
-        raise PowerError("无法关闭开拓力补充弹窗")
-    screen.wait_for_screen_change(return_screen, max_recursion=0)
+    received = expected is not None and auto.find_element(
+        "获得物品", "text", crop=ITEM_POPUP, max_retries=5, retry_delay=0.3,
+    )
+
+    def dismiss_receipt():
+        auto.click_element(_crop((640, 569, 0, 0)), "crop")
+        time.sleep(0.4)
+
+    def close_supplement_dialog():
+        if auto.find_element("开拓力补充", "text", crop=TITLE) and not click_label("取消", CANCEL):
+            raise PowerError("无法关闭开拓力补充弹窗")
+
+    def retry_receipt_dismissal():
+        if not auto.find_element("获得物品", "text", crop=ITEM_POPUP):
+            return False
+        dismiss_receipt()
+        close_supplement_dialog()
+        screen.wait_for_screen_change(return_screen, max_recursion=0)
+        return True
+
+    if received:
+        dismiss_receipt()
+    close_supplement_dialog()
+    if received:
+        screen.wait_for_screen_change(return_screen, max_recursion=0, on_timeout=retry_receipt_dismissal)
+    else:
+        screen.wait_for_screen_change(return_screen, max_recursion=0)
     if expected is None:
         return balance
-    after = read_balance()
-    if not balance + expected <= after <= balance + expected + 1:
-        raise PowerError(f"补充开拓力后余额未确认（原有 {balance}，预期增加 {expected}，实际 {after}）")
+    after = balance + expected
+    if not received:
+        after = read_balance()
+        if not balance + expected <= after <= balance + expected + 1:
+            raise PowerError(f"补充开拓力后余额未确认（原有 {balance}，预期增加 {expected}，实际 {after}）")
     log.info(f"开拓力由 {balance} 补充至 {after}")
     return after

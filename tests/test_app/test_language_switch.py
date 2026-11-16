@@ -1,7 +1,7 @@
 """Language refresh must not navigate, restart work, or discard runtime state."""
 import sys
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 import pytest
 from PySide6.QtCore import QEvent, QProcess, QTimer, QThread, Qt
@@ -157,6 +157,27 @@ def switch_language(qtbot, window, language):
     qtbot.waitUntil(lambda: window.settingInterface is not old_settings, timeout=15000)
     qtbot.wait(20)
     assert localization.get_current_language() == language
+
+
+def test_github_token_is_the_last_update_source_card_and_edits_as_password(window, monkeypatch):
+    from app.card.messagebox_custom import MessageBoxEdit
+    from module.config import cfg
+
+    setting = window.settingInterface
+    card = setting.githubTokenCard
+    children = setting.updateSourceCard.viewLayout
+    assert children.itemAt(children.count() - 1).widget() is card
+    assert card.contentLabel.text() == ""
+
+    def edit(dialog):
+        assert dialog.lineEdit.echoMode() == dialog.lineEdit.EchoMode.Password
+        dialog.lineEdit.setText("  test-token  ")
+        return True
+
+    monkeypatch.setattr(MessageBoxEdit, "exec", edit)
+    card.button.click()
+    cfg.set_value.assert_called_with("github_token", "test-token")
+    assert card.contentLabel.text() == ""
 
 
 def test_actual_language_combo_keeps_settings_tab_scroll_and_expansion(window, qtbot, monkeypatch):
@@ -462,6 +483,55 @@ def test_config_reload_failure_disposes_unused_settings(window, monkeypatch, fai
         assert window.stackedWidget.count() == 7
         assert len(window.findChildren(module.SettingInterface)) == 1
     assert warning.call_count == 2
+
+
+def test_config_reload_refreshes_home_and_tools_for_new_backend(window, monkeypatch):
+    from app import main_window as module
+    from app import tools_interface as tools
+    from module import notification
+
+    config = module.cfg
+    runtime_calls = Mock()
+    monkeypatch.setattr(module.auto, "reload_connection", runtime_calls.bind_input)
+    monkeypatch.setattr(module.screen, "reload_profile", runtime_calls.reload_screen)
+    config.config.update(control_backend="local", ui_profile="pc_1080", home_cards=None)
+    window.refreshBackendTasks()
+    initial = window.homeInterface.basicInputView.flowLayout.count()
+    assert initial > 2
+    runtime_calls.reset_mock()
+    monkeypatch.setattr(notification, "init_notifiers", Mock())
+    monkeypatch.setattr(config, "_load_config", lambda *_a, **_kw: config.config.update(
+        control_backend="adb", ui_profile="touch_720"))
+    window._on_config_file_changed()
+
+    assert window.settingInterface.adbBackendCard.backend() == "adb"
+    assert window.homeInterface.basicInputView.flowLayout.count() == 2
+    assert window.toolsInterface.cloudTouchCard.isHidden()
+    assert not window.toolsInterface.gameScreenshotCard.isHidden()
+    assert runtime_calls.method_calls == [call.bind_input(), call.reload_screen()]
+    monkeypatch.setattr(tools, "tr", lambda text: "Choose local image" if text == "手动选择图片" else text)
+    window.toolsInterface.retranslateUi()
+    assert window.toolsInterface.gameScreenshotCard.button.text() == "Choose local image"
+    from_file = Mock()
+    capture = Mock()
+    monkeypatch.setattr(tools.QFileDialog, 'getOpenFileName', Mock(return_value=('saved.png', '')))
+    monkeypatch.setattr(tools.tool, 'start_screenshot_from_file', from_file)
+    monkeypatch.setattr(tools.tool, 'start', capture)
+    window.toolsInterface.gameScreenshotCard.button.click()
+    from_file.assert_called_once_with('saved.png')
+    capture.assert_not_called()
+
+    runtime_calls.reset_mock()
+    monkeypatch.setattr(window.toolsInterface.automaticPlotCard, "getSwitchState", lambda: True)
+    monkeypatch.setattr(window.toolsInterface, "_ToolsInterface__startAutoPlot", runtime_calls.start_plot)
+    monkeypatch.setattr(config, "_load_config", lambda *_a, **_kw: config.config.update(
+        control_backend="local", ui_profile="pc_1080"))
+    window._on_config_file_changed()
+
+    if sys.platform == "win32":
+        assert runtime_calls.method_calls == [call.bind_input(), call.reload_screen(), call.start_plot()]
+    else:
+        assert runtime_calls.method_calls == [call.bind_input(), call.reload_screen()]
 
 
 @pytest.mark.parametrize('checked', [False, True])
