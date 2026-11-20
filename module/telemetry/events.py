@@ -57,6 +57,7 @@ STARTUP_NOTIFICATION_CHANNEL_CODES = (
     "pushplus",
     "qmsg",
     "qqbot",
+    "pushchanqq",
     "wechatworkapp",
     "wechatworkbot",
     "gotify",
