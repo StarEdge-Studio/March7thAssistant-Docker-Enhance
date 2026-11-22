@@ -94,6 +94,7 @@ INVESTMENT_CONFIRM = (850, 945, 1310, 1024)
 INVESTMENT_CONFIRM_POINT = (960, 984)
 EQUIPMENT_REWARD_TITLE = (835, 16, 1230, 65)
 EQUIPMENT_REWARD_CENTERS = (1028, 738, 1319)
+AHA_EQUIPMENT_CENTERS = (593, 883, 1174, 1464)
 ITEM_SELECTION = (835, 65, 1230, 125)
 ITEM_CARD_NAMES = (450, 279, 1590, 354)
 ITEM_CARD_DETAILS = (450, 354, 1590, 410)
@@ -128,11 +129,17 @@ DRAGON_TITLE = (900, 30, 1190, 90)
 DRAGON_SUBTITLE = (790, 76, 1330, 135)
 DRAGON_PROMPT = (1280, 423, 1725, 584)
 DRAGON_CONFIRM = (1280, 451, 1725, 655)
+DRAGON_BOND_TITLE = (900, 45, 1200, 132)
+DRAGON_BOND_PROMPT = (845, 112, 1260, 200)
+DRAGON_BOND_CARDS = (575, 325, 1525, 448)
+DRAGON_BOND_CONFIRM = (1300, 550, 1690, 725)
+DRAGON_BOND_NAMES = ("召唤", "治疗", "连击", "反击")
 SUPPLY_CENTERS = (250, 605, 960, 1315, 1670)
 SUPPLY_FOUR_CENTERS = (428, 783, 1137, 1492)
 RAIL_TITLE = (655, 51, 1450, 108)
 RAIL_DETAILS = (430, 409, 1540, 480)
 RAIL_LAUNCH = (937, 352, 1093, 409)
+RAIL_LAUNCH_CENTER = (1046, 260)
 RAIL_UNLOCK = (1470, 312, 1640, 354)
 RAIL_SPENT = (1480, 380, 1640, 434)
 RAIL_COLUMNS = (556, 806, 1056, 1306)
@@ -179,7 +186,9 @@ CONTINUE_MATCH = ("继续进度", "继续对局", "继续博弈")
 END_MATCH = ("结束并结算", "放弃并结算")
 WEAPON_BOXES = ("武装箱", "简易武装箱", "完整武装箱", "进阶武装箱", "特权武装箱")
 EQUIPMENT_REWARD = "选择装备"
-ITEM_CHOICES = (*WEAPON_BOXES, *(f"阿哈·{box}" for box in WEAPON_BOXES), "星徽秘典", "阿哈", EQUIPMENT_REWARD)
+AHA_EQUIPMENT_REWARD = "为阿哈选择1件简易装备"
+ITEM_CHOICES = (*WEAPON_BOXES, *(f"阿哈·{box}" for box in WEAPON_BOXES),
+                "星徽秘典", "阿哈", EQUIPMENT_REWARD, AHA_EQUIPMENT_REWARD)
 RECRUIT_CHOICES = ("员工招募书", "员工聘用书", "专家邀请函")
 INVESTMENT_CHOICES = ("请选择投资策略", "投资策略")
 CHOICES = (
@@ -231,6 +240,7 @@ class Page(Enum):
     RANGER = "巡海游侠任命"
     SVAROG_MODIFICATION = "机心巧匠改装"
     DRAGON_CLEANSE = "苍龙濯世"
+    DRAGON_BOND = "双龙吟"
     GARDEN = "奇兽花园"
     HACK = "骇入效果"
     HALO = "主角光环"
@@ -510,7 +520,8 @@ class Frame:
     @cached_property
     def choice(self) -> str | None:
         label = self.find(EQUIPMENT_REWARD, area=EQUIPMENT_REWARD_TITLE) or self.find(*CHOICES, area=CHOICE_TITLE)
-        if (label and (label.text in ("武装箱", "阿哈", EQUIPMENT_REWARD) or label.text.startswith("阿哈·"))
+        if (label and (label.text in ("武装箱", "阿哈", EQUIPMENT_REWARD, AHA_EQUIPMENT_REWARD)
+                       or label.text.startswith("阿哈·"))
                 and not self.has("请选择1个", "请选择一个", area=ITEM_SELECTION)
                 and not self.has("查看详情", area=ITEM_CARD_DETAILS)):
             return None
@@ -657,6 +668,12 @@ class Frame:
             return Page.SVAROG_MODIFICATION
         if self.dragon_cleanse:
             return Page.DRAGON_CLEANSE
+        if all(self.dragon_bond_heading) or (self.has("确认选择", area=DRAGON_BOND_CONFIRM) and (
+                any(self.dragon_bond_heading)
+                or {label.text for label in self.matching(DRAGON_BOND_NAMES, DRAGON_BOND_CARDS)}
+                == set(DRAGON_BOND_NAMES))):
+            # 识别不全时仍把操作留在弹层，等标题和提示都恢复后再选。
+            return Page.DRAGON_BOND
 
         if self.has("主角光环与奇遇详情", area=(420, 27, 1065, 104), contains=True) and (
                 self.has("前往重选", area=(640, 164, 1360, 260), contains=True)
@@ -670,11 +687,8 @@ class Frame:
             if bright.mean(axis=1).max() >= 0.66:
                 return Page.HALO_TIP
 
-        if (self.stage and self.has("梦境交织", area=EMPLOYEE_EVENT_TITLE)
-                and self.has("选择2个角色进行共舞", "选择2名角色进行共舞",
-                             area=EMPLOYEE_EVENT_SUBTITLE, contains=True)):
-            if self.has("确认选择", area=EMPLOYEE_EVENT_CONFIRM) or len(self.dance_cards) >= 2:
-                return Page.DANCE
+        if self.dance_overlay:
+            return Page.DANCE
         if (self.has("巡海游侠", area=EMPLOYEE_EVENT_TITLE)
                 and (self.has("任命1名角色", "任命一名角色", area=EMPLOYEE_EVENT_SUBTITLE, contains=True)
                      or self.has("确认选择", area=EMPLOYEE_EVENT_CONFIRM))):
@@ -818,11 +832,16 @@ class Frame:
                     cost = self.number((x + 208, 286, x + 240, 327), 5, local=True)
             else:
                 continue
+            # 报价前的金币图标还会读成 1、h、Y 等字符粘在名字末尾，例如「昔涟h」「千冶·刃1」，名字对不上就会漏买。
+            # 角色名没有以汉字加单个字母或数字结尾的（银狼LV.999 末尾的数字前面也是数字）。
+            name = re.sub(r"(?<=[\u3400-\u9fff])[0-9A-Za-z]$", "", name)
             if cost is not None and 1 <= cost <= ceiling:
-                front_square = self.crop((x + 218, 78, x + 238, 104))
-                is_front = bool((front_square.min(axis=2) > 205).sum() >= 90)
-                back_square = self.crop((x + 218, 105, x + 238, 130))
-                is_back = bool((back_square.min(axis=2) > 205).sum() >= 90)
+                # 卡面右上角上下两枚方块，实心表示能上前台、后台，空心表示不能。只取方块内部，
+                # 避开空心方块的边框和下方的「试用」角标。
+                front_square = self.crop((x + 212, 79, x + 220, 87))
+                is_front = bool((front_square.min(axis=2) > 205).sum() >= 48)
+                back_square = self.crop((x + 212, 97, x + 220, 105))
+                is_back = bool((back_square.min(axis=2) > 205).sum() >= 48)
                 offers.append(Offer(name, cost, (x + 106, 194), index, is_front,
                                     is_back if is_front or is_back else None, stars))
         return tuple(offers)
@@ -1006,8 +1025,11 @@ class Frame:
 
     def _card_role(self, point: Point, shift: int) -> tuple[bool, bool]:
         x, y = point
-        icon = self.crop((x + shift - 6, y - 57, x + shift + 7, y - 31))
-        light = (icon.min(axis=2) > 183).sum(axis=1)
+        icon = self.crop((x + shift - 6, y - 57, x + shift + 7, y - 31)).astype(np.int16)
+        # 推荐的站位是实心方块：卡在推荐区或备战席时是白色；站到另一区时，推荐区的方块变成红色（实机为 255, 98, 98），
+        # 例如刻律德菈站前台时她的后台方块是红的。不推荐的站位是空心框。
+        red = (icon[..., 0] > 200) & (icon[..., 0] - icon[..., 1:].max(axis=2) > 100)
+        light = ((icon.min(axis=2) > 183) | red).sum(axis=1)
         return bool(light[3:10].sum() >= 22), bool(light[13:22].sum() >= 22)
 
     def card_stars(self, slot: Slot, *, separate_glow=False) -> int | None:
@@ -1549,6 +1571,14 @@ class Frame:
                         area=DANCE_SELECTION_PROMPT, contains=True)
 
     @cached_property
+    def dance_overlay(self) -> bool:
+        return (self.dance_needs_pair
+                or self.has("选择2个角色进行共舞", "选择2名角色进行共舞",
+                            area=EMPLOYEE_EVENT_SUBTITLE, contains=True)
+                or self.has("梦境交织", area=EMPLOYEE_EVENT_TITLE) and (
+                    self.has("确认选择", area=EMPLOYEE_EVENT_CONFIRM) or len(self.dance_cards) >= 2))
+
+    @cached_property
     def unlabeled_dance_confirm(self) -> Label | None:
         if (self.page == Page.DANCE and not self.dance_needs_pair
                 and not self.has("确认选择", area=EMPLOYEE_EVENT_CONFIRM)):
@@ -1565,6 +1595,7 @@ class Frame:
             if self.page == Page.DANCE:
                 if self.dance_needs_pair:
                     return None
+                # 有文字且整条按钮点亮时，游戏已校验人数。按钮文字漏读时还要核对两个选中徽标。
                 return self._wide_confirm(button, EMPLOYEE_EVENT_CONFIRM, DANCE_CONFIRM_X)
             return self.enabled_button(button)
         if self.unlabeled_dance_confirm and self.dance_pair_selected:
@@ -1602,6 +1633,32 @@ class Frame:
         return self._wide_confirm(button, DRAGON_CONFIRM, 1492)
 
     @cached_property
+    def dragon_bond_heading(self) -> tuple[bool, bool]:
+        return (
+            self.has("双龙吟", area=DRAGON_BOND_TITLE),
+            self.has("请选择一个羁绊加入", "请选择1个羁绊加入", area=DRAGON_BOND_PROMPT),
+        )
+
+    def dragon_bond_card(self, name: str) -> Label | None:
+        card = self.find(name, area=DRAGON_BOND_CARDS)
+        return card if card is not None and card.confidence >= 0.75 else None
+
+    def dragon_bond_selected(self, card: Label) -> bool:
+        x, y = card.point
+        # 悬停只改变边框。读卡面两侧的填充色，避开边框和中央羁绊图标。
+        for left, right in ((x - 87, x - 63), (x + 63, x + 87)):
+            red, green, blue = self.crop((left, y - 108, right, y - 48)).astype(np.int16).transpose(2, 0, 1)
+            gold = (red >= 158) & (green >= 130) & (green - blue >= 26) & (red - blue >= 48)
+            if gold.mean() < 0.6:
+                return False
+        return True
+
+    def dragon_bond_confirm(self) -> Label | None:
+        if button := self.find("确认选择", area=DRAGON_BOND_CONFIRM):
+            return self._wide_confirm(button, DRAGON_BOND_CONFIRM, button.point[0])
+        return None
+
+    @cached_property
     def board_effect_cards(self) -> tuple[tuple[Label, str], ...]:
         cards = []
         columns = HACK_COLUMNS if self.page == Page.HACK else GARDEN_COLUMNS
@@ -1613,20 +1670,20 @@ class Frame:
             cards.append((card, effect))
         return tuple(cards)
 
-    @cached_property
-    def rail_balance(self) -> int | None:
-        return self.number((596, 89, 664, 135), 999, local=True)
-
     def rail_launch(self) -> Label | None:
         label = self.find("星穹列车", area=RAIL_LAUNCH, contains=True)
+        if label is None and self.has("详情", area=(975, 409, 1135, 480)):
+            # 小尺寸画面的整屏 OCR 可能把「穹」读成「弯」，按卡名区单独复核。
+            title = self.read_local(RAIL_LAUNCH)
+            if title and "星穹列车" in title:
+                label = Label(title, (1012, 380))
         if label and self.number((1121, 360, 1156, 402), 99, local=True) == 0:
             return label
         return None
 
     def rail_catalog_ready(self) -> bool:
         if (self.has("星穹列车", area=RAIL_LAUNCH, contains=True)
-                or not self.has("累计消耗解锁", area=RAIL_UNLOCK)
-                or self.ratio(RAIL_SPENT) is None):
+                or not (self.has("累计消耗解锁", area=RAIL_UNLOCK) or self.ratio(RAIL_SPENT) is not None)):
             return False
         # 目录商品会随机变化，只有多列详情按钮和累计消耗栏是共同结构。
         details = self.matching(("详情",), RAIL_DETAILS)

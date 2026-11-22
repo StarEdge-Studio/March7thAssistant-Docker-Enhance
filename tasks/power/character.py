@@ -1,9 +1,14 @@
-from module.automation import auto
-from module.logger import log
-from module.config import cfg
 import time
+
+import numpy as np
+
+from module.automation import auto
 from module.automation.screenshot import Screenshot
-from tasks.base.list_drag import drag_list
+from module.config import cfg
+from module.localization import get_character_names
+from module.logger import log
+from tasks.base.list_drag import changed_ratio, drag_list
+from tasks.power.policy import SupportNameSearch
 
 
 SUPPORT_BUTTON_CROPS = {
@@ -17,6 +22,34 @@ SUPPORT_RETRY_CROPS = {
 }
 SUPPORT_LIST_TITLES = ["支援列表", "支援角色"]
 SUPPORT_LIST_TITLE_CROP = (157 / 1920, 22 / 1080, 300 / 1920, 81 / 1080)
+SUPPORT_LIST_CROP = (40 / 1920, 180 / 1080, 544 / 1920, 770 / 1080)
+
+
+def _support_scrollbar(frame):
+    # 1080P 下轨道位于 x=568–583，滑块比左右两侧亮。
+    track = frame.crop((round(frame.width * 528 / 544), 0, frame.width, frame.height))
+    gray = np.asarray(track.convert("L"), dtype=np.int16)
+    width = track.width
+    side = round(width * 5 / 16)
+    center = np.median(gray[:, round(width * 6 / 16):round(width * 10 / 16)], axis=1)
+    sides = (np.median(gray[:, :side], axis=1) + np.median(gray[:, -side:], axis=1)) / 2
+    edges = np.flatnonzero(np.diff(np.r_[False, center - sides >= 30, False]))
+    top, bottom = max(zip(edges[::2], edges[1::2]), key=lambda span: span[1] - span[0], default=(0, 0))
+    if bottom - top >= round(24 * frame.height / 770):
+        return top, bottom
+    return None
+
+
+def _support_list_stable(before, after):
+    previous = _support_scrollbar(before)
+    current = _support_scrollbar(after)
+    if previous is None and current is None:
+        # 没有滑块时只比较头像列，避开持续播放的横幅。
+        avatars = (0, 0, round(before.width * 106 / 544), before.height)
+        return changed_ratio(before.crop(avatars), after.crop(avatars)) <= 0.01
+    return previous is not None and current is not None and all(
+        abs(a - b) <= 1 for a, b in zip(previous, current)
+    )
 
 
 def _button_in_crop(button, crop, frame_crop):
@@ -87,12 +120,13 @@ class Character:
         """查找并选择支援角色"""
         window = Screenshot.get_window(cfg.game_title_name)
         left, top, width, height = Screenshot.get_window_region(window)
+        name_search = SupportNameSearch()
 
         for i in range(cfg.borrow_scroll_times):
             for key, value in cfg.borrow_friends:
                 if key == "None":
                     continue
-                if Character.find_character_and_click(key, value, left, top, width, height):
+                if Character.find_character_and_click(key, value, left, top, width, height, name_search=name_search):
                     break
             else:
                 # 若未找到角色，尝试滚动页面
@@ -120,16 +154,19 @@ class Character:
             elif Character.confirm_selection(type):
                 return True
 
-        # 未找到支援角色，退出
+        # 未借到支援角色，退出
+        name_search.warn_if_unmatched()
         Character.exit_support_list(type)
         return False
 
     @staticmethod
-    def find_character_and_click(key, value, left, top, width, height):
+    def find_character_and_click(key, value, left, top, width, height, *, name_search=None):
         """查找支援角色并点击"""
-        # crop = (40.0 / 1920, 152.0 / 1080, 531.0 / 1920, 809.0 / 1080)
         crop = (0 / 1920, 0 / 1080, 593.0 / 1920, 1005.0 / 1080)
         image_path = "./assets/images/share/character/" + key + ".png"
+        if name_search is None:
+            name_search = SupportNameSearch()
+        name = get_character_names().get(key, key) if value else key
         # 已入队头像可能带有右上角角标；原匹配未选到目标时才遮罩该区域重试。
         for mask_ratio in (None, 0.26):
             matches = auto.find_element(
@@ -144,7 +181,8 @@ class Character:
                     auto.click_element_with_pos(match, (left, top))
                     time.sleep(1)
                     return True
-                elif auto.click_element(value, "text", crop=crop_new, include=True):
+                owner_match = name_search.find_owner(auto, name, value, crop_new)
+                if owner_match and auto.click_element_with_pos(owner_match):
                     time.sleep(1)
                     return True
         return False
@@ -186,7 +224,7 @@ class Character:
     def scroll_support_list():
         """拖动支援列表，失败时由调用方退出，不继续选择角色。"""
         completed = drag_list(auto, (400 / 1920, 850 / 1080), (400 / 1920, 400 / 1080),
-                              crop=(40 / 1920, 152 / 1080, 531 / 1920, 809 / 1080), duration=1.0)
+                              crop=SUPPORT_LIST_CROP, duration=1.0, is_stable=_support_list_stable)
         time.sleep(0.5)
         return completed
 

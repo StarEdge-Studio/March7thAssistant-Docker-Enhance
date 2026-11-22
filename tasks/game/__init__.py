@@ -18,8 +18,8 @@ from tasks.power.power import Power
 from module.game import cloud_game, get_game_controller
 from module.game.adb_transport import AdbError
 from module.game.cloud import (
-    CloudGameDisconnectedError, CloudGameLoginTimeoutError, CloudGameProbeUnready, CloudGameQueueTimeoutError,
-    CloudGameZeroDurationError,
+    CloudGameDisconnectedError, CloudGameLoginTimeoutError, CloudGamePageNotReadyError, CloudGameProbeUnready,
+    CloudGameQueueTimeoutError, CloudGameZeroDurationError,
 )
 from module.logger import log
 from module.screen import screen
@@ -414,7 +414,8 @@ def start_game(headless=None, *, optimize_graphics=True, screen_ready=None, pres
                 if not switched:
                     time.sleep(10)
 
-                if background:
+                # 直启前刚发现的已有进程也走有界的接管等待，超时保留游戏现场。
+                if switched or background:
                     _wait_for_local_window(starrail, remaining_startup_time())
                 elif not wait_until(switch_to_window, remaining_startup_time()):
                     pause_ctl.checkpoint()
@@ -594,6 +595,9 @@ def start_game(headless=None, *, optimize_graphics=True, screen_ready=None, pres
                     message += f"：{readiness_error}"
                 raise GameStartupUnavailable(message) from readiness_error
             break
+        except CloudGamePageNotReadyError as error:
+            cloud_game.preserve_running_browser()
+            raise GameStartupUnavailable(f"{error}，已保留当前浏览器") from error
         except CloudGameZeroDurationError:
             # 重入时长为 0 时保留附着的浏览器，播放器可能在读取余额后恢复。
             if preserve_cloud_session and cloud_disconnected:

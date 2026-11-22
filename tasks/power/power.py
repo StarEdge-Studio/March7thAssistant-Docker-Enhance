@@ -7,11 +7,13 @@ from tasks.base.task_steps import FATAL_GAME_ERRORS, run_steps
 from tasks.daily.buildtarget import BuildTarget
 from tasks.power.instance import ChallengePageUnavailable, Instance, TeamPresetUnavailable
 from tasks.power.policy import (
-    ECHO, ORNAMENT, INSTANCE_LIMITS, BattleDefeat, InstanceUnavailable, RelicBagFull, PowerError, SupportDemand,
+    ECHO, ORNAMENT, INSTANCE_LIMITS, BattleDefeat, InstanceTeamUnavailable, InstanceUnavailable, RelicBagFull,
+    PowerError, SupportDemand,
     DEFEAT_RETRIES, batch_limit, parse_pc_power, plan_paid_batch, run_plan,
 )
 from tasks.power.readout import read_immersifier_stock, read_number
 from tasks.power.supplement import supplement
+from tasks.power.team import restore_main
 from tasks.power.weekly_relic_cleanup import WeeklyRelicCleanup
 from utils.date import Date
 
@@ -126,12 +128,50 @@ class Power:
             log.info("饰品提取资源不足，结束本副本项" if is_ornament else "开拓力不足，结束本副本项")
             return
 
+        remaining = planned
+        # Opt-in PC feature. Explicitly pending support training still needs a
+        # real battle; afterwards the remaining paid waves may use tickets.
+        quick_enabled = (getattr(cfg, "prefer_fuel_tickets", False) is True
+                         and not immersifier_only
+                         and instance_type in ("拟造花萼（金）", "拟造花萼（赤）", "凝滞虚影"))
+
+        def quick_batches():
+            nonlocal available, remaining, quick_enabled
+            if not quick_enabled or support.pending:
+                return
+            from tasks.power.fuel_ticket_ui import PCFuelTicketScreen
+            display_name = (get_raw_instance_names()[instance_type][name].replace("2", "")
+                            if instance_type == "拟造花萼（赤）" else name)
+            ui = PCFuelTicketScreen(auto, Instance, display_name)
+            while available >= cost_per_wave and (remaining is None or remaining > 0):
+                requested = available // cost_per_wave if remaining is None else min(remaining, available // cost_per_wave)
+                done = (ui.run_batch(instance_type, name, available, requested)
+                        if getattr(cfg, "fuel_ticket_batch_enable", False) is True
+                        else ui.run_one(instance_type, name, available))
+                if not done:
+                    quick_enabled = False
+                    log.info("助燃券速刷不可用，保留剩余计划并回退普通战斗")
+                    break
+                available -= done * cost_per_wave
+                if remaining is not None:
+                    remaining -= done
+                log.info(f"助燃券已确认结算 {done} 次")
+                # Persist the confirmed paid run before closing the result UI.
+                yield done
+                ui.close_receipt()
+
+        yield from quick_batches()
+        if remaining == 0 or (rewards != 0 and not immersifiers and available < cost_per_wave):
+            screen.change_to("main")
+            return
+
         world_team = False
+        team_failure = None
         if cfg.tp_before_instance:
             # 锚点恢复作用于主世界出战队伍，沿用 PC 已有的先切队再恢复顺序。
             if cfg.instance_team_enable and not is_ornament:
-                Instance.select_world_team(instance_type, name)
-                world_team = True
+                team_failure = Instance.select_world_team(instance_type, name)
+                world_team = team_failure is None
             Instance.heal_teams()
 
         def enter():
@@ -144,10 +184,13 @@ class Power:
                     raise
                 except RuntimeError as error:
                     if isinstance(error, InstanceUnavailable) or attempt == 3:
+                        if team_failure and isinstance(error, PowerError):
+                            Instance.check_team_connection()
+                            restore_main(screen, name)
+                            raise InstanceTeamUnavailable(f"{name}：未确认进入原定副本，已跳过本项（{error}）") from error
                         raise
                     log.warning(f"进入副本失败，重试 {attempt}/2：{error}")
 
-        remaining = planned
         previous = 0
         borrowed = False
         enter()
@@ -156,6 +199,10 @@ class Power:
         while remaining is None or remaining > 0:
             practice = rewards == 0
             requested = limit if remaining is None else min(limit, remaining)
+            if quick_enabled and support.pending and getattr(cfg, "borrow_enable", False):
+                # Only one real battle is needed for support training. The
+                # rest of the paid plan should remain eligible for tickets.
+                requested = min(requested, 1)
             if practice:
                 if planned is None:
                     break
@@ -185,9 +232,12 @@ class Power:
                                 waves, cost = selected, selected * cost_per_wave
                             borrowed = Instance.start_instance(
                                 instance_type, name, support, practice=practice, world_team=world_team,
+                                team_failure=team_failure,
                             )
                         except ChallengePageUnavailable as error:
                             if attempt == 3:
+                                if team_failure:
+                                    raise InstanceTeamUnavailable(f"{name}：{error}，已跳过本项") from error
                                 raise
                             log.warning(f"开打前准备失败，重新进入副本 {attempt}/2：{error}")
                             # 先退出当前页面，重新进入后从默认一场设置波次。
@@ -198,13 +248,16 @@ class Power:
                 if not Instance.wait_fight(repeated=repeated):
                     Instance.exit_defeat()
                     raise BattleDefeat("副本挑战失败")
-            except TeamPresetUnavailable:
-                log.info("改用主世界切换配置的队伍")
-                screen.change_to("main", max_recursion=1)
-                Instance.select_world_team(instance_type, name)
-                world_team = True
+            except TeamPresetUnavailable as error:
+                log.info(f"{name}：{error}，改用主世界切队")
+                restore_main(screen, name, leave_team=Instance.leave_challenge_team)
+                team_failure = Instance.select_world_team(instance_type, name)
+                world_team = team_failure is None
                 enter()
                 continue
+            except InstanceTeamUnavailable:
+                restore_main(screen, name, leave_team=Instance.leave_challenge_team)
+                raise
             except BattleDefeat:
                 if retries >= DEFEAT_RETRIES:
                     raise
@@ -221,6 +274,7 @@ class Power:
                 previous = 0
                 continue
 
+            was_support_pending = support.pending
             support.won(borrowed)
             available -= cost
             immersifiers -= used_immersifiers
@@ -229,6 +283,14 @@ class Power:
             previous, retries = waves, 0
             if remaining is not None:
                 remaining -= waves
+            if (quick_enabled and was_support_pending and not support.pending
+                    and (remaining is None or remaining > 0) and available >= cost_per_wave):
+                Instance.complete_run(instance_type)
+                previous = 0
+                yield from quick_batches()
+                if remaining == 0 or available < cost_per_wave:
+                    break
+                enter()
             if is_echo and not practice:
                 rewards -= waves
                 if rewards == 0:

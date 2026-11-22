@@ -115,6 +115,8 @@ RUN if [ "$TARGETARCH" != "arm64" ]; then \
 COPY . .
 COPY --from=webui-builder /webui/static ./webui/static
 
+RUN python -m tools.i18n compile
+
 RUN python build.py --task ocr \
     && rm -rf ./logs \
     && rm -f config.yaml

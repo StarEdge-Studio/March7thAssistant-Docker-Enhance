@@ -1,14 +1,94 @@
 from types import SimpleNamespace
 from unittest.mock import Mock, call
 
+from PIL import Image
 import pytest
 
+from module.automation.automation import Automation
 from module.automation.background_input import GameWindowLost, InputInterrupted
 from tasks.power import instance, power, supplement
 from tasks.power.policy import (
     CAVERN, ECHO, GOLDEN_CALYX, ORNAMENT, BattleDefeat, InstanceUnavailable, PowerError, RelicBagFull, SupportDemand,
 )
 from utils.pause import RunStopRequested
+
+
+@pytest.mark.parametrize(
+    "old_frames, target_page, missed_drags, expected_drags",
+    [
+        (1, 0, (), []),
+        (11, 0, (), [True, True, True, True, False, False]),
+        (0, 1, (1,), [True, True]),
+        (0, 2, (1, 3), [True, True, True, True]),
+    ],
+    ids=["panel-switch", "panel-wait-timeout", "first-drag-missed", "later-drag-missed-after-movement"],
+)
+def test_pc_instance_entry_search(monkeypatch, old_frames, target_page, missed_drags, expected_drags):
+    name = "密伶之径"
+    now = 0.0
+    page = 0
+    row_reads = 0
+    entered = False
+    texts = []
+    drags = []
+    auto = Automation.__new__(Automation)
+    auto.logger = Mock()
+    auto.screenshot_scale_factor = 1
+    auto._is_debug_enabled = lambda: False
+    auto.click_element = Mock(return_value=True)
+
+    def sleep(seconds):
+        nonlocal now
+        now += seconds
+
+    def capture(crop=(0, 0, 1, 1), *_args):
+        nonlocal row_reads, texts
+        if crop == instance.ENTRY_ROWS:
+            row_reads += 1
+            if row_reads <= old_frames and not drags:
+                texts = ["角色培养", "前往", "隧洞遗器推荐", "培养设置"]
+            else:
+                texts = [name if page == target_page else "霜风之径", "40", "进入"]
+        else:
+            texts = [name] if entered else []
+        auto.screenshot = Image.new("RGB", (30, 40), (page * 60,) * 3)
+        auto.screenshot_pos = (686, 287, 980, 650) if crop == instance.ENTRY_ROWS else (0, 0, 1920, 1080)
+        return auto.screenshot, auto.screenshot_pos, 1
+
+    def ocr():
+        auto.ocr_result = [
+            ([(10 + i * 100, 10 + i * 50), (60 + i * 100, 10 + i * 50),
+              (60 + i * 100, 30 + i * 50), (10 + i * 100, 30 + i * 50)], (text, 1.0))
+            for i, text in enumerate(texts)
+        ]
+
+    def drag(_start_x, start_y, _end_x, end_y, *_args):
+        nonlocal page
+        down = end_y < start_y
+        drags.append(down)
+        if len(drags) not in missed_drags:
+            page = min(2, max(0, page + (1 if down else -1)))
+        return True
+
+    def enter(_x, _y):
+        nonlocal entered
+        entered = True
+        return True
+
+    auto.take_screenshot = capture
+    auto.perform_ocr = ocr
+    auto.mouse_drag = drag
+    auto.mouse_click = Mock(side_effect=enter)
+    clock = SimpleNamespace(monotonic=lambda: now, sleep=sleep)
+    monkeypatch.setattr(instance, "auto", auto)
+    monkeypatch.setattr(instance, "screen", Mock())
+    monkeypatch.setattr(instance, "time", clock)
+    monkeypatch.setattr("tasks.base.list_drag.time", clock)
+    monkeypatch.setattr("utils.wait.time", clock)
+
+    assert instance.Instance.prepare_instance(CAVERN, name)
+    assert drags == expected_drags
+    auto.mouse_click.assert_called_once_with(921, 407)
 
 
 @pytest.mark.parametrize(
@@ -236,7 +316,7 @@ def test_pc_battle_hud_confirms_battle_when_pause_is_missing(monkeypatch, repeat
         return not auto_disabled
 
     monkeypatch.setattr(instance, "auto", Mock(find_element=Mock(side_effect=find), press_key=enable))
-    monkeypatch.setattr(instance, "cfg", SimpleNamespace(get_value=lambda _key, default: default))
+    monkeypatch.setattr(instance, "cfg", SimpleNamespace(get_game_hotkey=lambda _key, default: default))
     monkeypatch.setattr(instance, "ENTRY_TIMEOUT", 2)
     monkeypatch.setattr(instance, "time", SimpleNamespace(monotonic=lambda: now, sleep=sleep))
     monkeypatch.setattr(instance, "ensure_double_speed", Mock())
@@ -458,6 +538,8 @@ def test_pc_supplement_rechecks_budget_and_stop_after_button_lookup(monkeypatch,
 
     def find(label, kind, *_args, **_kwargs):
         nonlocal now, stop_requested
+        if kind == "image" and label.endswith("/reserved_trailblaze_power.png"):
+            return ((497, 290), (603, 360))
         if kind == "image":
             return "入口"
         if kind == "crop":
@@ -489,7 +571,7 @@ def test_pc_supplement_rechecks_budget_and_stop_after_button_lookup(monkeypatch,
             raise RunStopRequested()
 
     auto = Mock(find_element=Mock(side_effect=find), click_element_with_pos=Mock(side_effect=send),
-                input_handler=SimpleNamespace(reports_dispatch=True))
+                input_handler=SimpleNamespace(reports_dispatch=True), screenshot=SimpleNamespace(width=1280))
     screen = Mock(check_screen=Mock(side_effect=lambda target: target == page))
     cfg = SimpleNamespace(use_reserved_trailblaze_power=True, use_fuel=False,
                           instance_names_challenge_count={}, tp_before_instance=False)
@@ -679,6 +761,7 @@ def test_universe_bonus_delegates_to_immersifier_only_power_task(monkeypatch, en
     config = SimpleNamespace(
         weekly_divergent_timestamp=1, refresh_hour=4, weekly_divergent_bonus_enable=True,
         universe_bonus_enable=True, instance_names={ORNAMENT: "浴火钢心"}, build_target_enable=False,
+        get_game_hotkey=lambda _name, default: default,
         notify_template={"SimulatedUniverseRewardClaimed": "已领取积分奖励", "SimulatedUniverseCompleted": "已完成"},
     )
     monkeypatch.setattr(power, "cfg", config)

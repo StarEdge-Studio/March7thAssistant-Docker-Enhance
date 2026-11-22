@@ -1,15 +1,17 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import MessageBox
+from qfluentwidgets import IndicatorPosition, MessageBox, SettingCard, SwitchButton
 
 from app.card.pushsettingcard1 import PushSettingCardKey
 from app.common.icon import UiIcon
 from app.common.scroll_dialog import (SplitFadeDialogMixin, available_host_size,
                                       build_scroll_area)
 from module.config import cfg
+from module.config.game_hotkeys import AUTO_DETECT_GAME_HOTKEYS, detect_game_hotkeys
 from module.localization import tr
+from utils.game_key_templates import PROMPT_KEY_DEFAULTS
 
 
 class HotkeyInterface(SplitFadeDialogMixin, MessageBox):
@@ -17,6 +19,8 @@ class HotkeyInterface(SplitFadeDialogMixin, MessageBox):
 
     def __init__(self, parent=None):
         configlist = {
+            tr("交互"): "hotkey_interact",
+            tr("战斗内角色详情"): "hotkey_character_details",
             tr("秘技（只对清体力和逐光捡金场景生效）"): "hotkey_technique",
             tr("地图"): "hotkey_map",
             tr("跃迁"): "hotkey_warp",
@@ -54,9 +58,24 @@ class HotkeyInterface(SplitFadeDialogMixin, MessageBox):
         list_layout.setContentsMargins(0, 0, 0, 0)
         list_layout.setSpacing(4)
 
+        detect_title = tr("自动识别游戏按键")
+        detect_card = SettingCard(FIF.SYNC, detect_title, parent=list_container)
+        self.auto_detect_switch = SwitchButton("", detect_card, IndicatorPosition.RIGHT)
+        self.auto_detect_switch.label.hide()
+        self.auto_detect_switch.indicator.setAccessibleName(detect_title)
+        self._initial_auto_detect = bool(cfg.get_value(AUTO_DETECT_GAME_HOTKEYS, True))
+        self.auto_detect_switch.setChecked(self._initial_auto_detect)
+        detect_card.hBoxLayout.addWidget(self.auto_detect_switch, 0, Qt.AlignmentFlag.AlignRight)
+        detect_card.hBoxLayout.addSpacing(16)
+        list_layout.addWidget(detect_card)
+
         self.pushButton_dict = {}
         for name, config in self.configlist.items():
-            if config == "hotkey_technique":
+            if config == "hotkey_interact":
+                icon = FIF.GAME
+            elif config == "hotkey_character_details":
+                icon = FIF.PEOPLE
+            elif config == "hotkey_technique":
                 icon = UiIcon.WAND
             elif config == "hotkey_map":
                 icon = UiIcon.MAP
@@ -80,20 +99,16 @@ class HotkeyInterface(SplitFadeDialogMixin, MessageBox):
                 icon,
                 name,
                 config,
+                requires_key_template=config in PROMPT_KEY_DEFAULTS,
             )
             pushButton.setFont(font)
 
             list_layout.addWidget(pushButton, 0, Qt.AlignmentFlag.AlignTop)
             self.pushButton_dict[config] = pushButton
 
-        # 添加提示标签：交互 F / 角色详细 C 不允许修改
-        hint_label = QLabel(tr("注意：交互（F）和角色详细（C）按键不允许修改，请保持游戏内默认设置。"))
-        hint_font = QFont()
-        hint_font.setPointSize(9)
-        hint_label.setFont(hint_font)
-        hint_label.setStyleSheet("color: gray;")
-        hint_label.setWordWrap(True)
-        list_layout.addWidget(hint_label, 0, Qt.AlignmentFlag.AlignTop)
+        self._show_detected_keys(self._initial_auto_detect)
+        self.auto_detect_switch.checkedChanged.connect(self._show_detected_keys)
+
         list_layout.addStretch(1)
 
         # 按键列表装进限高滚动区：弹窗必须装进父窗口（遮罩尺寸跟随父窗口而非屏幕），
@@ -114,8 +129,16 @@ class HotkeyInterface(SplitFadeDialogMixin, MessageBox):
         self.yesButton.clicked.connect(self._onConfirmClicked)
         self.cancelButton.clicked.connect(self._onCancelClicked)
 
+    def _show_detected_keys(self, enabled):
+        detected = detect_game_hotkeys(cfg) if enabled else {}
+        for config, card in self.pushButton_dict.items():
+            card.set_detected_key(detected.get(config))
+
     def _onConfirmClicked(self):
         """ 确认按钮点击处理 - 保存配置 """
+        enabled = self.auto_detect_switch.isChecked()
+        if enabled != self._initial_auto_detect:
+            cfg.set_value(AUTO_DETECT_GAME_HOTKEYS, enabled)
         self.accept()
 
     def _onCancelClicked(self):

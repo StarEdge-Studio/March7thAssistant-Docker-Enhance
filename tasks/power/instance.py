@@ -6,17 +6,17 @@ from module.config import cfg
 from module.localization import get_raw_instance_names
 from module.logger import log
 from module.screen import screen
-from tasks.base.list_drag import drag_list
-from tasks.base.task_steps import FATAL_GAME_ERRORS
-from tasks.base.team import Team
+from tasks.base.list_drag import changed_ratio, drag_list
+from tasks.base.task_steps import FATAL_GAME_ERRORS, GameRecoveryError
 from tasks.power.battle import battle_speed_visible, ensure_double_speed
 from tasks.power.policy import (
     BATTLE_TIMEOUT, ENTRY_TIMEOUT, CRIMSON_CALYX, ECHO, ORNAMENT,
-    InstanceUnavailable, PowerError, RelicBagFull, parse_echo_rewards,
+    InstanceTeamUnavailable, InstanceUnavailable, PowerError, RelicBagFull, parse_echo_rewards,
 )
 from tasks.power.readout import read_number
 from tasks.power.character import CHALLENGE, Character
 from tasks.power.relicset import Relicset
+from tasks.power.team import TEAM_ACTIONS, find_current_team_start, select_preset, warn_team_switch
 from utils.game_options import game_option_enabled
 from utils.wait import wait_until
 
@@ -24,7 +24,6 @@ from utils.wait import wait_until
 CATEGORY = (262 / 1920, 289 / 1080, 422 / 1920, 624 / 1080)
 ENTRY_ROWS = (686 / 1920, 287 / 1080, 980 / 1920, 650 / 1080)
 WAVE_SELECTOR = (1160 / 1920, 828 / 1080, 755 / 1920, 104 / 1080)
-TEAM_TABS = (311 / 1920, 12 / 1080, 1376 / 1920, 105 / 1080)
 DIALOG = (245 / 1920, 200 / 1080, 1430 / 1920, 645 / 1080)
 INSTANCE_POPUPS = ("开拓力补充", "背包内遗器持有数量已达上限", "长时间未操作", "已处于无法战斗状态")
 ORNAMENT_START_POPUPS = ("仍有角色位空缺", "当前不存在任何存档，是否直接开始战斗")
@@ -59,9 +58,24 @@ class Instance:
     @staticmethod
     def prepare_instance(instance_type, instance_name):
         Instance.select_category(instance_type)
+        names = get_raw_instance_names()[instance_type]
+        names = tuple(name for name in (names.values() if instance_type == CRIMSON_CALYX else names)
+                      if name not in ("无", "跳过"))
+
+        def list_ready():
+            if not auto.find_element(names, "text", crop=ENTRY_ROWS, include=True):
+                return False
+            return (auto.find_element(("传送", "进入", "追踪"), "text", take_screenshot=False, need_ocr=False)
+                    and not auto.find_element(("角色培养", "培养设置"), "text", include=True,
+                                              take_screenshot=False, need_ocr=False))
+
+        wait_until(list_ready, 5, 0.5)
         auto.click_element("./assets/images/screen/guide/power.png", "image", max_retries=2)
         is_ornament = instance_type == ORNAMENT
-        for _ in range(12):
+        start = (1125 / 1920, 810 / 1080)
+        end = (1125 / 1920, (490 if is_ornament else 410) / 1080)
+        unchanged_drags = 0
+        for attempt in range(24):
             entry = auto.find_element(
                 ("传送", "进入", "追踪"), "min_distance_text", crop=ENTRY_ROWS, include=True,
                 source=instance_name, source_type="text",
@@ -73,9 +87,14 @@ class Instance:
                 if not auto.click_element_with_pos(entry):
                     raise PowerError(f"无法点击副本入口：{instance_name}")
                 break
-            if not drag_list(auto, (1125 / 1920, 810 / 1080), (1125 / 1920, (490 if is_ornament else 410) / 1080),
-                             crop=ENTRY_ROWS, end_pause=0.2, settle=0.45):
+            # 单次手势可能漏收，连续两次停稳无位移才提前反向。
+            search_down = attempt < 12 and unchanged_drags < 2
+            drag_start, drag_end = (start, end) if search_down else (end, start)
+            before = auto.screenshot.copy()
+            if not drag_list(auto, drag_start, drag_end, crop=ENTRY_ROWS, end_pause=0.2, settle=0.45):
                 raise PowerError("生存索引列表未稳定")
+            if search_down:
+                unchanged_drags = unchanged_drags + 1 if changed_ratio(before, auto.screenshot) <= 0.01 else 0
         else:
             raise PowerError(f"未找到指定副本：{instance_name}")
 
@@ -139,24 +158,28 @@ class Instance:
 
     @staticmethod
     def select_world_team(instance_type, name):
-        if not Team.change_to(Instance.get_target_team(instance_type, name)):
-            raise PowerError(f"主世界未能切换到 {name} 配置的队伍")
+        team = Instance.get_target_team(instance_type, name)
+        screen.change_to("configure_team")
+        reason = select_preset(auto, team, activate=True)
+        if reason:
+            Instance.check_team_connection()
+            warn_team_switch(name, team, "主世界编队", reason)
+        else:
+            log.info(f"已确认主世界启用队伍 {str(team).zfill(2)}")
+        return reason
 
     @staticmethod
-    def _select_instance_team(team):
-        if not re.fullmatch(r"0?[1-9]|1[0-9]", str(team)):
-            raise PowerError(f"队伍编号 {team} 格式错误")
-        label = str(team).zfill(2)
-        left, right = (650 / 1920, 65 / 1080), (1300 / 1920, 65 / 1080)
-        for _ in range(5):
-            if auto.click_element(label, "text", crop=TEAM_TABS, max_retries=2, retry_delay=0.25):
-                time.sleep(0.6)
-                log.info(f"副本编队已选择队伍 {label}")
-                return True
-            start, end = (left, right) if int(team) <= 7 else (right, left)
-            if not drag_list(auto, start, end, crop=TEAM_TABS):
-                break
-        return False
+    def leave_challenge_team():
+        if auto.find_element(("快速编队", "开始挑战"), "text", crop=TEAM_ACTIONS):
+            auto.press_key("esc")
+            wait_until(lambda: auto.find_element("挑战", "text", crop=CHALLENGE), 5, 0.35)
+
+    @staticmethod
+    def check_team_connection():
+        if (auto.find_element("连接中断", "text", crop=DIALOG, include=True)
+                and auto.find_element(("尝试重连", "退出游戏"), "text", include=True,
+                                      take_screenshot=False, need_ocr=False)):
+            raise GameRecoveryError("副本准备期间检测到游戏连接中断")
 
     @staticmethod
     def _select_ornament_team(team):
@@ -191,7 +214,7 @@ class Instance:
             raise PowerError("无法确认历战余响无奖励挑战")
 
     @staticmethod
-    def start_instance(instance_type, name, support, *, practice, world_team):
+    def start_instance(instance_type, name, support, *, practice, world_team, team_failure=None):
         ornament = instance_type == ORNAMENT
         start_button = None
         if ornament:
@@ -205,31 +228,50 @@ class Instance:
                 raise PowerError("饰品提取没有可用编队，未能选中队伍 1")
         else:
             if not auto.click_element("挑战", "text", crop=CHALLENGE, max_retries=5, retry_delay=0.35):
+                if team_failure:
+                    Instance.check_team_connection()
                 Instance.check_popup()
                 raise ChallengePageUnavailable("未找到副本的挑战按钮")
             if practice:
                 Instance._confirm_practice()
             start_button = auto.find_element("开始挑战", "text", crop=CHALLENGE, max_retries=12, retry_delay=0.3)
-            if not start_button:
+            if not start_button and not (cfg.instance_team_enable and auto.find_element(
+                "快速编队", "text", crop=TEAM_ACTIONS,
+            )):
+                if team_failure:
+                    Instance.check_team_connection()
                 Instance.check_popup()
                 raise ChallengePageUnavailable("未进入副本编队")
-            if cfg.instance_team_enable and not world_team:
-                if not Instance._select_instance_team(Instance.get_target_team(instance_type, name)):
-                    # 有些 PC 编队页只给临时队伍。退出后沿用主世界切队。
-                    raise TeamPresetUnavailable("编队页未找到配置的预设队伍")
-                start_button = None
+            if cfg.instance_team_enable and not world_team and team_failure is None:
+                team = Instance.get_target_team(instance_type, name)
+                reason = select_preset(auto, team)
+                if not reason:
+                    start_button = auto.find_element("开始挑战", "text", crop=CHALLENGE,
+                                                     max_retries=4, retry_delay=0.35)
+                    if not start_button:
+                        reason = "未确认目标队伍可出战"
+                if reason:
+                    Instance.check_team_connection()
+                    raise TeamPresetUnavailable(f"副本未能使用队伍 {str(team).zfill(2)}（{reason}）")
+                log.info(f"已确认副本选中队伍 {str(team).zfill(2)}")
 
         borrowed = False
         if support.should_borrow(cfg):
             borrowed = Character.borrow("ornament" if ornament else "standard", for_training=support.pending)
             start_button = None
-        Instance._click_start_challenge(ornament=ornament, button=start_button)
+        if team_failure:
+            Instance.check_team_connection()
+            start_button = find_current_team_start(auto, CHALLENGE)
+            if not start_button:
+                raise InstanceTeamUnavailable(f"{name}：无法确认当前副本有可出战的队伍，已跳过本项")
+            log.info(f"{name}：已确认当前副本编队可出战，继续挑战")
+        Instance._click_start_challenge(ornament=ornament, button=start_button, verify_team=bool(team_failure))
         if ornament:
             Instance._engage_ornament_boss()
         return borrowed
 
     @staticmethod
-    def _click_start_challenge(*, ornament, button=None):
+    def _click_start_challenge(*, ornament, button=None, verify_team=False):
         if button is None:
             button = auto.find_element("开始挑战", "text", crop=CHALLENGE, max_retries=5, retry_delay=0.35)
         if not button:
@@ -245,7 +287,8 @@ class Instance:
             # 弹窗交给后续流程处理，补点前以最后一帧的按钮位置为准。
             if auto.find_element(popups, "text", crop=DIALOG, include=True):
                 return
-            button = auto.find_element("开始挑战", "text", crop=CHALLENGE, max_retries=2, retry_delay=0.25)
+            button = (find_current_team_start(auto, CHALLENGE) if verify_team else
+                      auto.find_element("开始挑战", "text", crop=CHALLENGE, max_retries=2, retry_delay=0.25))
             if not button:
                 return
         log.warning(f"已尝试点击开始挑战 {MAX_START_CLICKS} 次，按钮仍可见，等待游戏转场")
@@ -376,7 +419,7 @@ class Instance:
                     deadline = now + BATTLE_TIMEOUT
                 if controls_due:
                     if disabled_auto:
-                        auto.press_key(cfg.get_value("hotkey_auto_battle", "v"))
+                        auto.press_key(cfg.get_game_hotkey("hotkey_auto_battle", "v"))
                     if not speed_visible:
                         try:
                             ensure_double_speed(auto)
@@ -412,7 +455,7 @@ class Instance:
 
 
 class TeamPresetUnavailable(PowerError):
-    """当前编队界面不提供所选预设。"""
+    """副本编队未能确认所选预设，可以尝试主世界切队。"""
 
 
 class ChallengePageUnavailable(PowerError):

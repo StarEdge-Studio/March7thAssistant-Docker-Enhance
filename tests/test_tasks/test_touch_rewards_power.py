@@ -6,10 +6,12 @@ from PIL import Image
 import pytest
 
 from module.automation import automation
+from module.automation.input_base import limit_input_deadline
 from module.localization import tr
 from tasks.touch import ornament, power, rewards
 from tasks.power import readout, supplement
 from tasks.power.policy import plan_paid_batch
+from utils.pause import RunStopRequested
 
 
 @pytest.mark.parametrize(("text", "expected"), [
@@ -65,6 +67,92 @@ def test_echo_entry_uses_button_below_title():
     entry = _line("进入", 640, 137)
 
     assert power.find_instance_entry([unrelated, title, entry], "毁灭的开端", power.ECHO) == (entry[0], "进入")
+
+
+@pytest.mark.parametrize(
+    "start_page, target_page, panel_delay, missed, deadline, stop, expected_drags, expected_error",
+    [
+        (0, 0, 1.2, (), None, False, [], None),
+        (1, 0, 0, (), None, False, [True, True, True, False, False], None),
+        (0, 1, 0, (1,), None, False, [True, True], None),
+        (0, 0, 300, (), None, False, [], "未能确认侵蚀隧洞列表"),
+        (0, 1, 0, (), 1, False, [True], "生存索引查找副本超时"),
+        (0, 1, 0, (), None, True, [True], None),
+    ],
+    ids=["late-panel", "target-above-viewport", "missed-drag", "panel-never-switched",
+         "deadline-during-drag", "stop-during-drag"],
+)
+def test_touch_power_reentry_search(monkeypatch, start_page, target_page, panel_delay, missed, deadline, stop,
+                                    expected_drags, expected_error):
+    name = "密伶之径"
+    page = start_page
+    now = 0.0
+    drags = []
+    visible = []
+    auto = Mock()
+    nav = Mock()
+
+    def sleep(seconds):
+        nonlocal now
+        now += seconds
+
+    def capture(*, crop):
+        nonlocal visible
+        assert crop == power.INDEX_ROWS
+        if now < panel_delay:
+            visible = [_line("角色培养", 130, 45), _line("进入", 640, 59), _line("隧洞遗器推荐", 130, 245)]
+            hue = 0
+        else:
+            title = name if page == target_page else "霜风之径"
+            visible = [_line(title, 130, 45), _line("进入", 640, 59)]
+            hue = 60 + page * 60
+        auto.screenshot = Image.new("RGB", (60, 40), (hue,) * 3)
+        return auto.screenshot, (438, 170, 730, 453), 1
+
+    def read():
+        auto.ocr_result = visible
+
+    def drag(start, end, *_):
+        nonlocal page
+        down = end[1] < start[1]
+        drags.append(down)
+        if len(drags) not in missed:
+            page = min(2, max(0, page + (1 if down else -1)))
+        return True
+
+    auto.take_screenshot = capture
+    auto.perform_ocr = read
+    auto.drag_mouse = drag
+    auto.calculate_text_position.return_value = (1098, 238)
+    clock = SimpleNamespace(monotonic=lambda: now, sleep=sleep)
+    monkeypatch.setattr(power, "auto", auto)
+    monkeypatch.setattr(power, "screen", nav)
+    monkeypatch.setattr(power, "time", clock)
+    monkeypatch.setattr("tasks.base.list_drag.time", clock)
+    monkeypatch.setattr("utils.wait.time", clock)
+
+    def check_stop():
+        if stop and drags:
+            raise RunStopRequested()
+
+    monkeypatch.setattr(power.pause_ctl, "check_stop", check_stop)
+    with limit_input_deadline(deadline):
+        if stop:
+            with pytest.raises(RunStopRequested):
+                power._reenter_instance(power.CAVERN, name)
+        elif expected_error:
+            with pytest.raises(power.PowerError, match=expected_error):
+                power._reenter_instance(power.CAVERN, name)
+        else:
+            power._reenter_instance(power.CAVERN, name)
+
+    if stop or expected_error:
+        auto.click_element_with_pos.assert_not_called()
+    else:
+        auto.calculate_text_position.assert_called_once_with(_line("进入", 640, 59)[0], False)
+        auto.click_element_with_pos.assert_called_once_with((1098, 238))
+    nav.change_to.assert_called_once_with("guide3", max_recursion=1)
+    assert drags == expected_drags
 
 
 @pytest.mark.parametrize(("requested", "available", "stock", "batch"), [
@@ -503,10 +591,11 @@ def test_repeat_stops_at_plan_count_or_calculated_budget(monkeypatch, planned, a
     assert settlements.call_args_list == [call(1, None)] * 2
     balance.assert_called_once_with()
     assert start.call_args_list == [
-        call(power.GOLDEN_CALYX, "回忆之蕾", 1, borrow_for_daily=False, practice=False),
+        call(power.GOLDEN_CALYX, "回忆之蕾", 1, borrow_for_daily=False, practice=False,
+             world_team=False, team_failure=None),
     ] * (1 + first_defeat)
-    assert wait.call_args_list == [call(repeated=False, instance_screen="calyx")] * (1 + first_defeat) + [
-        call(repeated=True, instance_screen="calyx"),
+    assert wait.call_args_list == [call(repeated=False, instance_screen="calyx", verify_team=False)] * (1 + first_defeat) + [
+        call(repeated=True, instance_screen="calyx", verify_team=False),
     ]
     click.assert_called_once_with("再来一次", power.REPEAT)
     exit_result.assert_called_once_with("calyx")
@@ -535,7 +624,8 @@ def test_echo_without_weekly_rewards_only_fights_for_an_explicit_plan(monkeypatc
     balance.assert_not_called()
     supplement.assert_not_called()
     if planned:
-        start.assert_called_once_with(power.ECHO, "毁灭的开端", 1, borrow_for_daily=False, practice=True)
+        start.assert_called_once_with(power.ECHO, "毁灭的开端", 1, borrow_for_daily=False, practice=True,
+                                      world_team=False, team_failure=None)
         config.save_timestamp.assert_called_once_with("echo_of_war_timestamp")
     else:
         enter.assert_not_called()
@@ -854,7 +944,9 @@ def test_fixed_challenge_reuses_start_button_until_the_team_changes(monkeypatch,
     monkeypatch.setattr(power.time, "sleep", Mock())
     read_ocr = Mock(side_effect=[[_line("挑战次数5", 0, 0)], [_line("来", 0, 0), _line("×50", 40, 0)]])
     monkeypatch.setattr(readout.ocr, "recognize_multi_lines", read_ocr)
-    monkeypatch.setattr(power, "_select_team", Mock())
+    selected_start = ((1710, 970), (1790, 1010))
+    select = Mock(return_value=selected_start)
+    monkeypatch.setattr(power, "_select_team", select)
     click = Mock(return_value=True)
     monkeypatch.setattr(power, "_click_text", click)
 
@@ -864,12 +956,9 @@ def test_fixed_challenge_reuses_start_button_until_the_team_changes(monkeypatch,
     assert sum(args.args[0] == (1821 / 1920, 866 / 1080, 0, 0)
                for args in auto.click_element.call_args_list) == 4
     assert [lookup.args[0] for lookup in auto.find_element.call_args_list] == ["开始挑战"]
-    if select_team:
-        assert click.call_args_list == [call("挑战", power.CHALLENGE), call("开始挑战", power.START_CHALLENGE)]
-        auto.click_element_with_pos.assert_not_called()
-    else:
-        click.assert_called_once_with("挑战", power.CHALLENGE)
-        auto.click_element_with_pos.assert_called_once_with(button)
+    assert select.call_count == int(select_team)
+    click.assert_called_once_with("挑战", power.CHALLENGE)
+    auto.click_element_with_pos.assert_called_once_with(selected_start if select_team else button)
 
 
 def test_sms_pending_thread_accepts_sticker_reply(monkeypatch):
@@ -931,3 +1020,51 @@ def test_support_portrait_match_keeps_rows_separate():
 
     assert len(rows) == 2
     assert abs((rows[1] - rows[0]) - 180) <= 2
+
+
+@pytest.mark.parametrize("later_match", [False, True])
+def test_touch_support_logs_read_names_before_finishing_the_search(monkeypatch, later_match):
+    from tasks.power import policy
+    from tasks.touch import support
+
+    frame = Image.new("RGB", (96, 500))
+    auto = Mock(take_screenshot=Mock(return_value=(frame, None, 1)))
+    readings = iter(["持明上网", "小三月", "持明上網" if later_match else "小三月"])
+    confirm = Mock()
+
+    def find(target, kind, **_kwargs):
+        assert kind == "text"
+        if target == "解除支援":
+            return confirm.called
+        if target == "持明上網":
+            read_name = next(readings)
+            auto.ocr_result = [_line(read_name, 0, 0)]
+            return target in read_name
+        return target == "支援角色" or target == "开始挑战"
+
+    auto.find_element.side_effect = find
+    log = Mock()
+    tap = Mock()
+    monkeypatch.setattr(support, "auto", auto)
+    monkeypatch.setattr(policy, "log", log)
+    monkeypatch.setattr(support, "cfg", SimpleNamespace(borrow_friends=[("Cyrene", "持明上網")], borrow_scroll_times=2))
+    monkeypatch.setattr(support, "_click_text", Mock(return_value=True))
+    monkeypatch.setattr(support, "_portrait_rows", Mock(side_effect=[[70, 180], [70]]))
+    monkeypatch.setattr(support, "drag_list", Mock(return_value=True))
+    monkeypatch.setattr(support, "changed_ratio", Mock(return_value=0.5))
+    monkeypatch.setattr(support, "_tap", tap)
+    monkeypatch.setattr(support, "_confirm_standard_team", confirm)
+
+    assert support.borrow() is later_match
+    assert next(readings, None) is None
+    assert log.info.call_args_list == [
+        call("找到支援角色「昔涟」，你填的好友名字是「持明上網」，小助手读到的是「持明上网」。"),
+        call("找到支援角色「昔涟」，你填的好友名字是「持明上網」，小助手读到的是「小三月」。"),
+    ]
+    assert log.warning.call_count == int(not later_match)
+    if later_match:
+        tap.assert_called_once_with(124, (round(support.PORTRAITS[1] * 720) + 70) * 1.5)
+        confirm.assert_called_once_with("昔涟")
+    else:
+        tap.assert_called_once_with(1848, 55)
+        confirm.assert_not_called()

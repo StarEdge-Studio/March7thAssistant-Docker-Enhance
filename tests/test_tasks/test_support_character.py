@@ -3,9 +3,10 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 
+from PIL import Image, ImageDraw
 import pytest
 
-from tasks.power import character, instance
+from tasks.power import character, instance, policy
 from tasks.power.policy import CAVERN, ORNAMENT, SupportDemand
 
 
@@ -161,16 +162,79 @@ def test_support_avatar_uses_original_match_without_retry(monkeypatch):
 def test_support_avatar_retries_after_friend_name_does_not_match(monkeypatch):
     first_match = ((48, 333), (156, 434))
     badge_match = ((48, 477), (156, 578))
-    find_element = Mock(side_effect=[[first_match], [badge_match]])
-    click_text = Mock(side_effect=[False, True])
-    monkeypatch.setattr(character.auto, "find_element", find_element)
-    monkeypatch.setattr(character.auto, "click_element", click_text)
+    friend_name = ((156, 491), (252, 516))
+    auto = Mock(
+        find_element=Mock(side_effect=[[first_match], None, [badge_match], friend_name]),
+        ocr_result=[(None, ("另外一位", 0.98))],
+    )
+    log = Mock()
+    monkeypatch.setattr(character, "auto", auto)
+    monkeypatch.setattr(policy, "log", log)
     monkeypatch.setattr(character.time, "sleep", lambda _: None)
 
-    assert character.Character.find_character_and_click("Cyrene", "指定好友", 0, 0, 1920, 1080)
-    assert find_element.call_count == 2
-    assert click_text.call_count == 2
-    assert find_element.call_args_list[1].kwargs["mask_top_right_ratio"] == 0.26
+    search = policy.SupportNameSearch()
+    assert character.Character.find_character_and_click("Cyrene", "指定好友", 0, 0, 1920, 1080, name_search=search)
+    search.warn_if_unmatched()
+    assert auto.find_element.call_count == 4
+    assert auto.find_element.call_args_list[2].kwargs["mask_top_right_ratio"] == 0.26
+    auto.click_element_with_pos.assert_called_once_with(friend_name)
+    log.info.assert_called_once_with("找到支援角色「昔涟」，你填的好友名字是「指定好友」，小助手读到的是「另外一位」。")
+    log.warning.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "read_name, scroll_finished, detail, warn",
+    [
+        pytest.param("持明上网", True, "小助手读到的是「持明上网」", True, id="mismatch"),
+        pytest.param("", True, "小助手没读出这一位的名字", True, id="unreadable"),
+        pytest.param("持明上網", True, None, False, id="matching-name-but-click-fails"),
+        pytest.param(None, True, None, False, id="missing-portrait"),
+        pytest.param("持明上网", False, "小助手读到的是「持明上网」", False, id="interrupted-scroll"),
+    ],
+)
+def test_support_name_tip_requires_a_completed_search_without_a_match(
+    monkeypatch, read_name, scroll_finished, detail, warn,
+):
+    portrait = ((48, 477), (156, 578))
+    name_box = ((156, 491), (252, 516))
+
+    def find(target, kind, *_args, **_kwargs):
+        if kind == "image_with_multiple_targets":
+            return [portrait] if read_name is not None else []
+        if target == "持明上網" and read_name == target:
+            return name_box
+        return None
+
+    auto = Mock(
+        find_element=Mock(side_effect=find),
+        click_element_with_pos=Mock(return_value=False),
+        ocr_result=[(None, (read_name, 0.98))] if read_name else [],
+    )
+    log = Mock()
+    monkeypatch.setattr(character, "auto", auto)
+    monkeypatch.setattr(policy, "log", log)
+    monkeypatch.setattr(character, "cfg", SimpleNamespace(
+        game_title_name="test", borrow_scroll_times=2, borrow_friends=[("Cyrene", "持明上網")],
+    ))
+    monkeypatch.setattr(character.Screenshot, "get_window", Mock())
+    monkeypatch.setattr(character.Screenshot, "get_window_region", Mock(return_value=(0, 0, 1920, 1080)))
+    scroll = Mock(return_value=scroll_finished)
+    monkeypatch.setattr(character.Character, "scroll_support_list", scroll)
+    monkeypatch.setattr(character.Character, "exit_support_list", Mock())
+
+    assert not character.Character.find_and_select_support("standard")
+    scroll.assert_called_once()
+    if detail:
+        log.info.assert_called_once_with(f"找到支援角色「昔涟」，你填的好友名字是「持明上網」，{detail}。")
+    else:
+        log.info.assert_not_called()
+    if warn:
+        log.warning.assert_called_once()
+        assert "把小助手「支援列表」里填的好友名字改成日志里读到的写法" in log.warning.call_args.args[0]
+        assert [entry[0] for entry in log.method_calls] == ["info", "warning"]
+    else:
+        log.warning.assert_not_called()
+    assert auto.click_element_with_pos.call_count == (4 if read_name == "持明上網" else 0)
 
 
 def test_support_avatar_still_skips_when_both_matches_fail(monkeypatch):
@@ -182,6 +246,34 @@ def test_support_avatar_still_skips_when_both_matches_fail(monkeypatch):
     assert not character.Character.find_character_and_click("Cyrene", "", 0, 0, 1920, 1080)
     assert find_element.call_count == 2
     click.assert_not_called()
+
+
+@pytest.mark.parametrize("scrollbar", [True, False])
+def test_support_list_waits_for_scroll_to_settle_with_animated_banners(monkeypatch, scrollbar):
+    thumb_frames = [(100, 230), (130, 260), (130, 225), None, (130, 225), (130, 225), (130, 225)]
+    avatar_frames = [80, 100, 130, 130, 130]
+    frames = []
+    positions = thumb_frames if scrollbar else avatar_frames
+    for i, position in enumerate(positions):
+        frame = Image.new("L", (544, 770), 30)
+        draw = ImageDraw.Draw(frame)
+        draw.rectangle((115, 0, 500, 769), fill=50 if i % 2 else 200)
+        avatar_y = 130 if scrollbar else position
+        draw.rectangle((5, avatar_y, 100, avatar_y + 95), fill=170)
+        if scrollbar and position is not None:
+            top, bottom = position
+            draw.rectangle((534, top, 537, bottom), fill=170)
+        frames.append((frame, None, 1))
+
+    auto = Mock()
+    auto.drag_mouse.return_value = True
+    auto.take_screenshot.side_effect = frames
+    monkeypatch.setattr(character, "auto", auto)
+    monkeypatch.setattr(character.time, "sleep", Mock())
+
+    assert character.Character.scroll_support_list()
+    auto.drag_mouse.assert_called_once()
+    assert auto.take_screenshot.call_count == len(frames)
 
 
 @pytest.mark.parametrize("still_in_list", [False, True])
