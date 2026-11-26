@@ -160,6 +160,86 @@ def test_touch_power_reentry_search(monkeypatch, start_page, target_page, panel_
     assert drags == expected_drags
 
 
+@pytest.mark.parametrize(("kind", "name"), [
+    (power.ECHO, "铁骸的锈冢"),
+    (power.CAVERN, "密伶之径"),
+    (power.CRIMSON_CALYX, "支援舱段"),
+    (power.ORNAMENT, "浴火钢心"),
+])
+def test_touch_entry_confirms_the_target_title_after_transition(monkeypatch, kind, name):
+    """副本图标不可靠时，等待转场并处理传送提示，只识别一次确认成功的副本名。"""
+    auto = Mock()
+    nav = Mock(current_screen=None)
+    enter = Mock()
+    confirm = Mock(return_value=True)
+    attempts = 0
+    now = 0.0
+    title = power.get_raw_instance_names()[kind][name] if kind == power.CRIMSON_CALYX else name
+    crop = power.ORNAMENT_TITLE if kind == power.ORNAMENT else power.INSTANCE_TITLE
+
+    def locate(text, mode, **kwargs):
+        nonlocal attempts
+        assert mode == "text", "进入副本应直接读取副本标题"
+        if text == title:
+            assert kwargs["crop"] == crop
+            attempts += 1
+            return attempts >= 3
+        assert kwargs["crop"] == power.DIALOG
+        return attempts == 1
+
+    def sleep(seconds):
+        nonlocal now
+        now += seconds
+
+    auto.find_element.side_effect = locate
+    monkeypatch.setattr(power, "auto", auto)
+    monkeypatch.setattr(power, "screen", nav)
+    monkeypatch.setattr(power, "_click_instance_entry", enter)
+    monkeypatch.setattr(power, "_click_text", confirm)
+    monkeypatch.setattr("utils.wait.time", SimpleNamespace(monotonic=lambda: now, sleep=sleep))
+
+    power._enter_instance(kind, name)
+
+    assert attempts == 3
+    assert nav.current_screen == power.INSTANCES[kind][0]
+    enter.assert_called_once_with(kind, name)
+    confirm.assert_called_once_with("确认", power.DIALOG_CONFIRM)
+    nav.check_screen.assert_not_called()
+
+
+@pytest.mark.parametrize("stop", [False, True], ids=["title-unavailable", "user-stop"])
+def test_touch_entry_does_not_accept_an_unconfirmed_title(monkeypatch, stop):
+    auto = Mock()
+    nav = Mock(current_screen=None)
+    enter = Mock()
+    now = 0.0
+
+    def sleep(seconds):
+        nonlocal now
+        now += seconds
+
+    def locate(*args, **kwargs):
+        if stop:
+            raise RunStopRequested()
+        return None
+
+    auto.find_element.side_effect = locate
+    monkeypatch.setattr(power, "auto", auto)
+    monkeypatch.setattr(power, "screen", nav)
+    monkeypatch.setattr(power, "_click_instance_entry", enter)
+    monkeypatch.setattr(power, "ENTRY_TIMEOUT", 2)
+    monkeypatch.setattr("utils.wait.time", SimpleNamespace(monotonic=lambda: now, sleep=sleep))
+
+    error = RunStopRequested if stop else power.PowerError
+    with pytest.raises(error):
+        power._enter_instance(power.ECHO, "铁骸的锈冢")
+
+    assert nav.current_screen is None
+    enter.assert_called_once_with(power.ECHO, "铁骸的锈冢")
+    auto.click_element.assert_not_called()
+    auto.click_element_with_pos.assert_not_called()
+
+
 @pytest.mark.parametrize(("requested", "available", "stock", "batch"), [
     (6, 174, 10, (6, 0, 6)),
     (6, 174, 4, (6, 80, 4)),
@@ -982,17 +1062,19 @@ def test_sms_pending_thread_accepts_sticker_reply(monkeypatch):
     auto.click_element_with_pos.assert_called_once_with(sticker, offset=(55, 62))
 
 
-@pytest.mark.parametrize("amounts, increase", [([630, 300, 300], 300), ([0, 7, 5, 5], 300)])
-def test_supplement_uses_maximum_even_above_300_and_checks_zero_reserve(monkeypatch, amounts, increase):
+@pytest.mark.parametrize("stocks,after", [([630], 620), ([630], 380), ([0, 7], 440)])
+def test_supplement_uses_maximum_and_accepts_the_actual_balance(monkeypatch, stocks, after):
     cfg = SimpleNamespace(use_reserved_trailblaze_power=True, use_fuel=True)
     auto = Mock()
     auto.find_element.side_effect = lambda label, *_args, **_kwargs: label if label != "获得物品" else None
-    read = Mock(side_effect=amounts)
+    read = Mock(side_effect=stocks)
     monkeypatch.setattr(supplement, "read_number", read)
     navigate = Mock(check_screen=Mock(return_value=True))
+    read_balance = Mock(return_value=after)
     assert supplement.supplement(auto, navigate, cfg, 320, Mock(return_value="入口"),
-                                 Mock(return_value=320 + increase), return_screen="guide3") == 620
-    assert read.call_count == len(amounts)
+                                 read_balance, return_screen="guide3") == after
+    assert read.call_count == len(stocks)
+    read_balance.assert_called_once_with()
     assert auto.click_element_with_pos.call_args_list.count(call("确认")) == 2
     navigate.check_screen.assert_called_once_with("guide3")
 
@@ -1004,12 +1086,14 @@ def test_supplement_reuses_previous_budget_without_resending_unconfirmed_exchang
     auto.find_element.side_effect = lambda label, *_args, **_kwargs: label if label != "获得物品" else None
     screen = Mock(check_screen=Mock(return_value=True))
     read_balance = Mock(side_effect=[after])
-    monkeypatch.setattr(supplement, "read_number", Mock(side_effect=[30, 20, 20]))
+    stock = Mock(side_effect=[30])
+    monkeypatch.setattr(supplement, "read_number", stock)
 
     assert supplement.supplement(auto, screen, cfg, 80, Mock(return_value="入口"), read_balance,
                                  return_screen="guide3") == 80
     assert auto.click_element_with_pos.call_args_list.count(call("确认")) == 2
     read_balance.assert_called_once_with()
+    stock.assert_called_once()
     screen.check_screen.assert_called_once_with("guide3")
 
 
