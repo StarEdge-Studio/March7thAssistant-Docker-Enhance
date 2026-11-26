@@ -4,6 +4,7 @@ from typing import Optional
 from utils.logger.logger import Logger
 from utils.singleton import SingletonMeta
 from .notifier import Notifier
+from . import results
 
 
 class NotificationLevel:
@@ -277,6 +278,10 @@ class Notification(metaclass=SingletonMeta):
         :param level: 通知级别，默认为 ALL。当 level_filter 为 ERROR 时，只有 ERROR 级别的通知会被发送。
         :param _image_already_processed: 内部参数，标记图片是否已经过处理，避免重复压缩。
         """
+        from module.accounts.messages import collect, context
+        record = context()
+        if record.get("parent_run_id") and collect(self, record, content, image, level):
+            return
         # 合并通知模式：收集内容而不立即发送
         if self._batch_mode:
             if content:
@@ -287,6 +292,9 @@ class Notification(metaclass=SingletonMeta):
                 self._batch_has_error = True
             return
 
+        account = record.get("account")
+        if account:
+            content = f"【{account['name']}】{content}"
         # 检查是否应该发送此通知
         if self.level_filter == NotificationLevel.ERROR and level != NotificationLevel.ERROR:
             if self.logger:
@@ -305,14 +313,16 @@ class Notification(metaclass=SingletonMeta):
                     self.logger.info(
                         f"准备发送 {notifier_name} 通知（级别：{self._localize_level(level)}，图片：{'是' if will_send_image else '否'}）"
                     )
-                if processed_image and notifier.supports_image:
-                    if isinstance(processed_image, io.BytesIO):
-                        processed_image.seek(0)
-                    notifier.send(self.title, content, processed_image)
-                else:
-                    notifier.send(self.title, content)
+                image = processed_image if will_send_image else None
+                if isinstance(image, io.BytesIO):
+                    image.seek(0)
+                result = results.send_one(notifier, self.title, content, image)
+                results.record(notifier_name, result)
                 if self.logger:
-                    self.logger.info(f"{notifier_name} 通知发送完成")
-            except Exception as e:
+                    if result.success:
+                        self.logger.info(f"{notifier_name} 通知发送完成")
+                    else:
+                        self.logger.error(f"{notifier_name} 通知发送失败：{result.reason}")
+            except Exception as exc:
                 if self.logger:
-                    self.logger.error(f"{notifier_name} 通知发送失败: {e}")
+                    self.logger.error(f"{notifier_name} 通知处理失败：{type(exc).__name__}")

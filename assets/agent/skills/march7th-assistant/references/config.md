@@ -1,6 +1,6 @@
 # 常见配置修改
 
-配置文件是安装目录的 `config.yaml`。**每个键的含义、可选值都写在 `assets/config/config.example.yaml` 同名键的注释里**，
+配置文件的完整路径取自 `m7a.exe --status` 的 `config_file`。**每个键的含义、可选值都写在 `assets/config/config.example.yaml` 同名键的注释里**，
 改之前先读那里；这里只列最常被问到的几类。只改需要改的键，保持 YAML 缩进，改完可以重新读一遍确认格式正确。
 
 ## 体力计划（清体力刷什么）
@@ -35,7 +35,7 @@ scheduled_tasks:
     enabled: true
 ```
 
-- 只有图形界面运行时（包括最小化到托盘）定时任务才会触发；提醒用户保持图形界面运行，或开启开机自启（图形界面「设置 → 杂项」）。
+- 只有图形界面运行时（包括最小化到托盘）定时任务才会触发；提醒用户保持图形界面运行，或开启开机自启（图形界面「设置 → 高级」）。
 - 新增时保留已有项与它们的 `id`；`scheduled_on_conflict` 决定触发时已有任务在运行怎么办（`skip` 跳过 / `stop` 停止正在运行的任务）。
 - 流程也可以定时：在图形界面的定时任务里选择流程更稳妥（会写入流程名称等字段）。
 
@@ -56,11 +56,11 @@ scheduled_tasks:
 
 ## 日常、周常与外部工具
 
-- 每日实训、奖励领取、活动等开关分别在「日常任务设置」「奖励领取设置」「活动设置」几段（`daily_*`、`reward_*`、`activity_*`）。
+- 在桌面端打开「任务 → 每日实训」「任务 → 领取奖励」或「任务 → 活动」调整开关。配置文件中对应「日常任务设置」「奖励领取设置」「活动设置」几段（`daily_*`、`reward_*`、`activity_*`）。
 - 差分宇宙 `weekly_divergent_*` / `divergent_*`，货币战争 `currencywars_*`，模拟宇宙 `universe_*`，锄大地 `fight_*`。
   模拟宇宙与锄大地调用外部开源工具，首次使用可能需要在图形界面中下载或更新。
 
 ## 流程编排
 
-流程保存在 `config/workflows/<目录>/workflow.yaml`，说明见 `assets/docs/Workflow.md`。
+`--status` 的 `workflows_dir` 指向流程目录，其中每个流程保存在 `<目录>/workflow.yaml`，说明见 `assets/docs/Workflow.md`。
 包含图片识别、截图模板的步骤建议在图形界面「流程编排」里创建；运行已有流程用 `.\m7a.exe --workflow-name "名称"`。

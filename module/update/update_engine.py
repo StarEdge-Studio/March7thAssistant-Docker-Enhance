@@ -14,10 +14,12 @@ import threading
 import time
 import traceback
 from enum import Enum
+from pathlib import Path
 from typing import Callable
 
 import psutil
 
+from utils import paths
 from module.localization import tr
 from module.logger import log
 from module.update.downloader import Downloader, DownloadError, format_size
@@ -28,7 +30,7 @@ from module.update.version_check import UpdateInfo, check_for_update
 FILE_COMPARE_CHUNK_SIZE = 64 * 1024
 
 # 更新流程中需要重点盯防的用户数据文件（损坏/丢失即用户可感知的故障）
-USER_DATA_MARKERS = ("config.yaml", "config.yaml.bak", "settings", "config/workflows")
+USER_DATA_MARKERS = (*paths.LEGACY_MARKERS, paths.USERDATA)
 
 
 def describe_path(path: str) -> str:
@@ -135,7 +137,7 @@ class UpdateEngine:
         ]
 
         # 路径
-        self.temp_path = os.path.abspath("./temp")
+        self.temp_path = os.path.abspath(paths.cache_dir())
         os.makedirs(self.temp_path, exist_ok=True)
         self.cover_folder_path = os.path.abspath("./")
         self.exe_path = os.path.abspath("./assets/binary/7za.exe")
@@ -371,7 +373,6 @@ class UpdateEngine:
 
         files = self._get_files_to_overwrite()
         self._log("debug", f"需要覆盖 {len(files)} 个文件")
-        self._warn_user_data_in_package(files)
 
         files = self._filter_changed_files(files)
 
@@ -426,9 +427,11 @@ class UpdateEngine:
 
         if self.download_file_path and os.path.exists(self.download_file_path):
             self._check_cancelled()
+            self._check_staging_path(self.download_file_path)
             self._remove_cleanup_file(self.download_file_path)
         if self.extract_folder_path and os.path.exists(self.extract_folder_path):
             self._check_cancelled()
+            self._check_staging_path(self.extract_folder_path)
             self._remove_cleanup_tree(self.extract_folder_path)
 
         self._log("info", "清理临时文件完成")
@@ -444,6 +447,7 @@ class UpdateEngine:
         env = build_independent_process_env()
         # 主程序需要写配置，不能继承更新器的只读角色；仅修改子进程环境。
         env.pop("MARCH7TH_CONFIG_READONLY", None)
+        env.pop(paths.SESSION_ENV, None)
         command = [launcher]
         if start_minimized_to_tray:
             command.append("--start-minimized-to-tray")
@@ -515,44 +519,73 @@ class UpdateEngine:
         except Exception:
             return None
 
+    def _protected_data(self):
+        install = Path(self.cover_folder_path).resolve()
+        storage = paths.layout().storage.resolve()
+        roots = {(install / paths.USERDATA).resolve(), (install / paths.LEGACY_GACHA).resolve(),
+                 (install / paths.legacy_name(paths.OLD_GACHA)).resolve()}
+        if storage != install:
+            roots.add(storage)
+        else:
+            roots.update(install / name.split("/")[0] for name in (*paths.CRITICAL, *paths.OPTIONAL))
+            roots.update(install / name for name in ("backup", "cache", "external", paths.MIGRATION_RECORD))
+        return roots
+
+    def _check_staging_path(self, path):
+        candidate = Path(path).resolve()
+        cache = Path(self.temp_path).resolve()
+        if candidate != cache and candidate.is_relative_to(cache):
+            return
+        install = Path(self.cover_folder_path).resolve()
+        protected = self._protected_data() | {cache}
+        if candidate == install or any(p.is_relative_to(candidate) or candidate.is_relative_to(p) for p in protected):
+            raise UpdateError(tr("更新临时路径与用户数据目录重叠：{path}").format(path=path))
+
     def _get_files_to_overwrite(self) -> list[tuple[str, str]]:
         items = []
         if not self.extract_folder_path or not os.path.isdir(self.extract_folder_path):
             return items
-        for root, _, files in os.walk(self.extract_folder_path):
+        self._check_staging_path(self.extract_folder_path)
+        protected = self._protected_data()
+        staging = Path(self.extract_folder_path).resolve()
+        for root, directories, files in os.walk(self.extract_folder_path):
+            if root == self.extract_folder_path:
+                directories[:] = [d for d in directories if d.casefold() != paths.USERDATA]
             for fname in files:
                 src = os.path.join(root, fname)
+                if not Path(src).resolve().is_relative_to(staging):
+                    continue
                 rel = os.path.relpath(src, self.extract_folder_path)
                 dest = os.path.join(self.cover_folder_path, rel)
+                relative = Path(rel).as_posix().casefold()
+                if (any(relative == key or relative.startswith(key + "/") for key in USER_DATA_MARKERS)
+                        or paths.is_extra_backup(f"{paths.GACHA}/{relative}")):
+                    continue
+                resolved = Path(dest).resolve()
+                if any(resolved.is_relative_to(directory) for directory in protected):
+                    continue
                 items.append((src, dest))
         return items
 
     def _describe_user_data(self) -> str:
         """描述当前用户数据文件（config.yaml 等）的状态，用于更新前后对比"""
         parts = []
-        config_path = os.path.abspath("./config.yaml")
+        config_name = paths.CONFIG
+        config_path = paths.config_path()
         if os.path.exists(config_path):
-            parts.append(f"config.yaml[{describe_path(config_path)}]")
+            parts.append(f"{config_name}[{describe_path(config_path)}]")
         else:
-            parts.append("config.yaml[不存在]")
+            parts.append(f"{config_name}[不存在]")
         try:
             leftovers = [
                 name for name in os.listdir(os.path.dirname(config_path))
-                if name.startswith("config.yaml.") or name.startswith("config.yaml.bak")
+                if name.startswith(f"{config_name}.")
             ]
             if leftovers:
                 parts.append(f"残留文件={sorted(leftovers)}")
         except OSError:
             pass
         return " ".join(parts)
-
-    def _warn_user_data_in_package(self, files: list[tuple[str, str]]):
-        """更新包中若携带用户数据文件（如 config.yaml），覆盖会直接抹掉用户配置，必须告警留痕"""
-        for _, dest in files:
-            rel = os.path.relpath(dest, self.cover_folder_path)
-            rel_norm = rel.replace("\\", "/")
-            if rel_norm == "config.yaml" or rel_norm.startswith(("settings/", "config/workflows/")):
-                self._log("warning", f"更新包包含用户数据文件，覆盖后会覆盖用户现有数据: {rel}")
 
     def _check_target_files_locked(self, files: list[tuple[str, str]]) -> list[str]:
         locked = []

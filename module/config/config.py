@@ -6,8 +6,11 @@ import os
 import shutil
 import tempfile
 import threading
+from contextvars import ContextVar
+from contextlib import contextmanager
 import traceback
 from ruamel.yaml import YAML
+from utils import paths
 from utils.singleton import SingletonMeta
 
 # ── 配置读写诊断日志 ──────────────────────────────────────────────────
@@ -17,7 +20,7 @@ from utils.singleton import SingletonMeta
 # 已初始化则同时转发一份。注意 module.logger 反过来依赖 module.config，
 # 因此这里绝不能主动 import module.logger，只能在它已加载时转发。
 
-_DIAG_FILE = os.path.join("logs", "config_diag.log")
+_DIAG_FILE = paths.config_diag_path()
 _DIAG_FILE_MAX_BYTES = 5 * 1024 * 1024
 _DIAG_FILE_LOCK = threading.Lock()
 
@@ -35,6 +38,11 @@ def _diag_rotated_path():
 
 def _diag(level, message):
     """写诊断日志（绝不抛错）。level: debug/info/warning/error"""
+    if paths.readonly_role():
+        # Keep observer diagnostics off the user's disk, including log rotation.
+        import logging
+        logging.getLogger(__name__).log(getattr(logging, level.upper()), message)
+        return
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     millis = int((time.time() % 1) * 1000)
     thread_name = threading.current_thread().name
@@ -170,20 +178,30 @@ class Config(metaclass=SingletonMeta):
 
     # 只读角色（更新器/清理器等旁观进程）：只读取配置、绝不写入。
     # 进程启动时通过环境变量 MARCH7TH_CONFIG_READONLY=1 声明。
+    _listeners = ()  # Lightweight instances without GUI listeners can skip change tracking.
     _readonly = False
     writes_suspended = False
+    _account_layer = None
+    _suspended_view = None
 
     def __init__(self, version_path, example_path, config_path):
-        Config._readonly = os.environ.get("MARCH7TH_CONFIG_READONLY", "").lower() in ("1", "true")
+        Config._readonly = paths.readonly_role() or os.environ.get(paths.RECOVERY_ENV) == "1"
         if Config._readonly:
             _diag("info", "当前进程以只读模式加载配置（更新器/清理器等旁观进程），不会写入配置文件")
         _diag("info", f"Config 初始化: config_path={os.path.abspath(config_path)} "
                       f"exists={os.path.exists(config_path)} {_file_fingerprint(config_path) if os.path.exists(config_path) else ''}")
+        self._listeners = []
+        self.example_path = example_path
         self.yaml = YAML()
         self.version = self._load_version(version_path)
         self.config = self._load_default_config(example_path)
+        self._account_defaults = copy.deepcopy(self.config)
         self.config_path = config_path
-        self._load_config()
+        try:
+            self._load_config()
+        except OSError as exc:
+            import logging
+            logging.warning("配置暂时无法写入，本次使用已读取的设置：%s", exc)
 
     def _load_version(self, version_path):
         """加载版本信息"""
@@ -211,6 +229,20 @@ class Config(metaclass=SingletonMeta):
                 return self.yaml.load(file) or {}
         except FileNotFoundError:
             sys.exit("默认配置文件未找到")
+
+    def subscribe(self, listener):
+        """Receive (changed keys, external reload) after a completed update."""
+        self._listeners.append(listener)
+        return lambda: self._listeners.remove(listener)
+
+    def _notify_changes(self, before, reloaded=False):
+        keys = frozenset(key for key, value in before.items() if self.get_value(key) != value)
+        if keys:
+            for listener in tuple(self._listeners):
+                try:
+                    listener(keys, reloaded)
+                except Exception as exc:
+                    _diag("warning", f"配置变化通知失败：{type(exc).__name__}")
 
     def _read_config_file(self, path):
         """读取并解析配置文件，区分三种情况并做有限重试
@@ -276,17 +308,23 @@ class Config(metaclass=SingletonMeta):
         if status == "broken":
             _diag("error", f"配置文件损坏: {os.path.abspath(path)} 原因={detail}\n"
                            f"文件内容: {_file_fingerprint(path)}")
-            self._handle_broken_config(path, detail)
+            if not Config._readonly:
+                self._handle_broken_config(path, detail)
             return
 
         # 旧体力循环统一转为定时模式；缺失的定时时间沿用模板默认值。
         if loaded_config.get("loop_mode") == "power":
             loaded_config["loop_mode"] = "scheduled"
             _diag("info", "体力循环模式已移除，自动切换为定时模式")
+        changes = (key for key in loaded_config if key in self.config and self.config[key] != loaded_config[key])
+        before = self._previous_values(changes) if self._listeners else {}
         self._update_config(self.config, loaded_config)
+        self._rebuild_account()
         _diag("debug", f"_load_config 成功: 合并 {len(loaded_config)} 个顶层键")
         if save:
             self.save_config()
+
+        self._notify_changes(before, reloaded=True)
 
     def _handle_broken_config(self, path, reason):
         """处理损坏的配置文件：备份损坏内容并提示用户，避免静默重置为默认配置"""
@@ -302,10 +340,10 @@ class Config(metaclass=SingletonMeta):
     def _backup_broken_config(self, path):
         """备份损坏的配置文件（保留原始字节）；无法移走时退化为复制，返回备份路径；失败返回 None"""
         try:
-            backup_path = f"{path}.bak"
+            backup_path = paths.config_backup_path(path)
             if os.path.exists(backup_path):
                 # 保留更早的备份，改用时间戳命名
-                backup_path = f"{path}.bak-{time.strftime('%Y%m%d-%H%M%S')}"
+                backup_path = f"{backup_path}-{time.strftime('%Y%m%d-%H%M%S')}"
             # 移动可能撞上 Windows 并发占用（WinError 32），短暂重试再降级复制；
             # 挂载点 EBUSY 是永久性的，不空转重试，直接降级复制
             move_error = None
@@ -419,6 +457,7 @@ class Config(metaclass=SingletonMeta):
             _diag("info", f"save_config 跳过（当前进程为只读角色，不写配置文件）: {os.path.abspath(self.config_path)}")
             return
         config_dir = os.path.dirname(os.path.abspath(self.config_path))
+        os.makedirs(config_dir, exist_ok=True)
         self._warn_stale_tmp_files(config_dir)
         # 临时文件名唯一，避免多进程同时保存时互相截断
         tmp_fd, tmp_path = tempfile.mkstemp(
@@ -512,8 +551,21 @@ class Config(metaclass=SingletonMeta):
         except Exception:
             pass
 
+    _task_switches = ContextVar("task_page_switches", default=())
+
+    @contextmanager
+    def standalone_switches(self, keys):
+        """A manually launched task may run with its full-run checkbox off. Never save this override."""
+        token = self._task_switches.set(tuple(keys))
+        try:
+            yield
+        finally:
+            self._task_switches.reset(token)
+
     def get_value(self, key, default=None):
         """获取配置项的值，环境变量优先，如果值是可变对象，则返回其拷贝"""
+        if key in self._task_switches.get():
+            return True
         if key == "cloud_game_enable":
             # 兼容仍读取旧开关的任务和 GUI，保留 YAML 中的原值。
             backend = self.get_value("control_backend")
@@ -523,7 +575,8 @@ class Config(metaclass=SingletonMeta):
         has_override, override_value = _get_env_override(key)
         if has_override:
             return override_value
-        value = self.config.get(key, default)
+        layer = self._account_layer
+        value = layer.values[key] if layer and key in layer.values else self.config.get(key, default)
         # 如果是可变对象（如列表、字典等），返回拷贝
         if isinstance(value, (list, dict, set)):
             return copy.deepcopy(value)  # 使用深拷贝确保嵌套对象安全
@@ -541,15 +594,7 @@ class Config(metaclass=SingletonMeta):
 
     def set_value(self, key, value):
         """设置配置项的值并保存"""
-        logged_value = "***" if key == "github_token" else repr(value)
-        _diag("debug", f"set_value: {key}={logged_value}")
-        # 读取外部改动但不再多写一次：save_config 只在最后落盘一次
-        self._load_config(save=False)
-        if isinstance(value, (list, dict, set)):
-            self.config[key] = copy.deepcopy(value)
-        else:
-            self.config[key] = value
-        self.save_config()
+        self._write_values({key: value})
 
     def set_values(self, values):
         """批量设置配置项并一次性保存。
@@ -557,14 +602,178 @@ class Config(metaclass=SingletonMeta):
         与逐个调用 `set_value` 等价，但只落盘一次：
         `save_config` 带 fsync，逐项保存在批量恢复配置等场景会产生明显卡顿。
         """
+        self._write_values(values)
+
+    def _previous_values(self, keys):
+        keys = set(keys)
+        if (self._account_layer or self._suspended_view) and keys.intersection(("control_backend", "cloud_game_enable")):
+            keys.update(self.config)
+        return {k: self.get_value(k) for k in keys}
+
+    def _rebuild_account(self):
+        layer = self._account_layer or self._suspended_view
+        if layer is None:
+            return
+        from module.connection_values import configured_backend
+        if not layer.runtime and configured_backend(self) != "local":
+            self._suspended_view, self._account_layer = layer, None
+            return
+        if self._suspended_view:
+            index = layer.store.index()
+            row = next((a for a in index["accounts"] if a["uid"] == layer.uid), None)
+            if not index["enabled"] or row is None:
+                self._suspended_view = None
+                return
+            layer.row = row
+            layer.state = layer.store.read(layer.uid, "state.yaml")
+            layer.plan = layer.store.read(layer.uid, "plan.yaml")
+        self._account_layer, self._suspended_view = layer, None
+        layer.rebuild(self.config)
+
+    def _write_values(self, values):
+        layer = self._account_layer
+        if layer is None:
+            return self._write_shared_values(values)
+        if self._readonly or self.writes_suspended:
+            return
+        self._load_config(save=False)
+        before = self._previous_values(values) if self._listeners else {}
+        common = layer.split_write(values, self.config)
+        if common:
+            self._write_shared_values(common, notify=False)
+        self._notify_changes(before)
+
+    @property
+    def bound_account(self):
+        return self._account_layer.uid if self._account_layer else None
+
+    @property
+    def account_inherited(self):
+        return self._inherited_uid if self._account_layer else None
+
+    def bind_account(self, uid, *, runtime=False, store=None):
+        from module.accounts.layers import AccountLayer, supported
+        from module.accounts.store import AccountStore, uid_string
+
+        before = {k: self.get_value(k) for k in self.config} if self._listeners else {}
+        layer = None
+        if uid is not None:
+            store = store or AccountStore(role="task" if runtime else "ui")
+            index = store.index()
+            if not supported(self, index, switching=False):
+                if runtime:
+                    raise ValueError("多账号未启用或运行方式不支持")
+            else:
+                uid = uid_string(uid)
+                row = next((a for a in index["accounts"] if a["uid"] == uid), None)
+                if row is None:
+                    raise ValueError("找不到账号")
+                layer = AccountLayer(store, row, runtime, self._account_defaults)
+                layer.rebuild(self.config)
+                self._inherited_uid = index["inherited"]
+        self._account_layer, self._suspended_view = layer, None
+        self._notify_changes(before)
+
+    def shared_value(self, key, default=None):
+        return copy.deepcopy(self.config.get(key, default))
+
+    def account_overrides(self, uid=None, *, store=None):
+        from module.accounts.store import AccountStore
+        layer = self._account_layer
+        if layer and (uid is None or str(uid) == layer.uid):
+            return copy.deepcopy(layer.plan)
+        if uid is None:
+            return {}
+        return (store or (layer.store if layer else AccountStore())).read(uid, "plan.yaml")
+
+    def account_value(self, uid, key, *, store=None):
+        from module.accounts.layers import AccountLayer
+        from module.accounts.store import AccountStore
+        if self.bound_account == str(uid):
+            return self.get_value(key)
+        store = store or (self._account_layer.store if self._account_layer else AccountStore())
+        row = store.account(uid)
+        if row is None:
+            raise ValueError("找不到账号")
+        layer = AccountLayer(store, row, False, self._account_defaults)
+        layer.rebuild(self.config)
+        return copy.deepcopy(layer.values.get(key, self.config.get(key)))
+
+    def restore_shared(self, key, subkey=None, *, uid=None, store=None):
+        from module.accounts.store import AccountStore
+        layer = self._account_layer
+        store = store or (layer.store if layer else AccountStore(role="ui"))
+        uid = uid or self.bound_account
+        def remove(data):
+            if subkey is None:
+                data.pop(key, None)
+            elif isinstance(data.get(key), dict):
+                data[key].pop(subkey, None)
+                if not data[key]:
+                    del data[key]
+        store.modify(uid, "plan.yaml", remove)
+        if layer and layer.uid == str(uid):
+            self.reload_account_files()
+
+    def account_files(self):
+        from module.accounts.store import AccountStore
+        layer = self._account_layer
+        store = layer.store if layer else AccountStore()
+        files = [store.index_path]
+        if layer:
+            files.extend(store.path(layer.uid, name) for name in ("plan.yaml", "state.yaml"))
+        return tuple(files)
+
+    def reload_account_files(self):
+        layer = self._account_layer
+        if not layer:
+            return
+        if layer.runtime:
+            before = {k: self.get_value(k) for k in self.config} if self._listeners else {}
+            layer.plan = layer.store.read(layer.uid, "plan.yaml")
+            layer.state = layer.store.read(layer.uid, "state.yaml")
+            layer.rebuild(self.config)
+            self._notify_changes(before)
+        else:
+            row = layer.store.account(layer.uid)
+            self.bind_account(layer.uid if row else None, store=layer.store)
+
+    def remaining_power_plan(self):
+        base = self.get_value("power_plan")
+        return self._account_layer.remaining(base) if self._account_layer else base
+
+    def consume_power_plan(self, remaining, *, base):
+        if self._readonly or self.writes_suspended:
+            return
+        layer = self._account_layer
+        if not layer:
+            return self.set_value("power_plan", remaining)
+        layer.guard_state()
+        layer.state = layer.store.modify(layer.uid, "state.yaml",
+            lambda data: data.update(power_progress={"base": base, "remaining": remaining}))
+
+    def _write_shared_values(self, values, *, notify=True):
         _diag("debug", f"set_values: {list(values.keys())}")
         self._load_config(save=False)
+        missing = object()
+        before = {key: self.config.get(key, missing) for key in values}
+        effective_before = self._previous_values(values) if self._listeners and notify else {}
         for key, value in values.items():
             if isinstance(value, (list, dict, set)):
                 self.config[key] = copy.deepcopy(value)
             else:
                 self.config[key] = value
-        self.save_config()
+        try:
+            self.save_config()
+        except Exception:
+            for key, old in before.items():
+                if old is missing:
+                    self.config.pop(key, None)
+                else:
+                    self.config[key] = old
+            raise
+        self._rebuild_account()
+        self._notify_changes(effective_before)
 
     def save_timestamp(self, key):
         """保存当前时间戳到指定的配置项"""

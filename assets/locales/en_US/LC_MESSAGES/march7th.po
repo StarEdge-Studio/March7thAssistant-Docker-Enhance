@@ -58,24 +58,12 @@ msgstr "Log"
 msgid "任务日志"
 msgstr "Task Log"
 
-#: app/log_interface.py:434
-msgid "等待任务..."
-msgstr "Waiting for task..."
-
 #: app/log_interface.py:1809
 msgid "清空日志"
 msgstr "Clear Log"
 
 msgid "配置定时任务"
 msgstr "Configure Scheduled Tasks"
-
-#: app/log_interface.py:996
-msgid "尚未配置定时任务"
-msgstr "No scheduled tasks configured"
-
-#: app/log_interface.py:2357
-msgid "任务完成"
-msgstr "Task Completed"
 
 #: app/log_interface.py:2360
 msgid "任务已停止"
@@ -1016,10 +1004,6 @@ msgstr "QQ Group"
 msgid "检查更新"
 msgstr "Check for Updates"
 
-#: app/setting_interface.py:2558
-msgid "当前版本："
-msgstr "Current Version:"
-
 #: app/setting_interface.py:2563
 msgid "更新源"
 msgstr "Update Source"
@@ -1174,59 +1158,51 @@ msgstr "Launching Game (❁´◡`❁)"
 msgid "程序已最小化到托盘"
 msgstr "Program minimized to tray"
 
-#: app/log_interface.py:449
-msgid "停止任务"
-msgstr "Stop Task"
-
-#: app/home_interface.py:28
 msgid "更换背景图片"
 msgstr "Change Background Image"
 
-#: app/home_interface.py:35
 msgid "恢复默认图片"
 msgstr "Restore Default Image"
 
-#: app/home_interface.py:42
 msgid "三月七小助手"
 msgstr "March7th Assistant"
 
-#: app/home_interface.py:70
+#: app/content/settings/appearance.py:19
 msgid "选择图片"
 msgstr "Select Image"
 
-#: app/home_interface.py:165
 msgid "任务 >"
 msgstr "Task >"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "运行一次"
 msgstr "Run Once"
 
-#: app/card/card_edit_dialog.py:32
+#: module/overview/labels.py:10
 msgid "循环运行"
 msgstr "Loop Run"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "快速启动 ⭐"
 msgstr "Quick Start ⭐"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "原版运行"
 msgstr "Original Run"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "更新锄大地"
 msgstr "Update Fhoe-Rail"
 
-#: app/card/card_edit_dialog.py:32
+#: app/common/home_actions.py:25
 msgid "重置配置文件"
 msgstr "Reset Config"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "打开程序目录"
 msgstr "Open Program Dir"
 
-#: app/card/card_edit_dialog.py:32
+#: module/search/setting_text.py:3
 msgid "打开项目主页"
 msgstr "Open Project Page"
 
@@ -1271,10 +1247,6 @@ msgid "进入剧情页面后自动开始运行，支持大于等于 1920*1080 �
 msgstr ""
 "Auto run in story page. Supports >= 1920*1080 16:9 resolution. Not supported"
 " in Cloud StarRail."
-
-#: app/tools_interface.py:40
-msgid "捕获"
-msgstr "Capture"
 
 #: app/tools_interface.py:42
 msgid "游戏截图"
@@ -1488,34 +1460,6 @@ msgid_plural "已配置 {count} 项计划|plural"
 msgstr[0] "Configured {count} plan"
 msgstr[1] "Configured {count} plans"
 
-#: app/warp_interface.py:24
-msgid "更新数据"
-msgstr "Update Data"
-
-#: app/warp_interface.py:25
-msgid "更新完整数据"
-msgstr "Update Full Data"
-
-#: app/warp_interface.py:26
-msgid "导入数据"
-msgstr "Import Data"
-
-#: app/warp_interface.py:27
-msgid "导出数据"
-msgstr "Export Data"
-
-#: app/warp_interface.py:28
-msgid "导出Excel"
-msgstr "Export Excel"
-
-#: app/warp_interface.py:29
-msgid "复制链接"
-msgstr "Copy Link"
-
-#: app/warp_interface.py:30
-msgid "清空"
-msgstr "Clear"
-
 #: app/warp_interface.py:117
 msgid "导入抽卡记录"
 msgstr "Import Warp History"
@@ -1524,33 +1468,13 @@ msgstr "Import Warp History"
 msgid "UIGF / SRGF 格式 (*.json)"
 msgstr "UIGF / SRGF Format (*.json)"
 
-#: app/warp_interface.py:144
-msgid "导入成功(＾∀＾●)"
-msgstr "Import Success (＾∀＾●)"
-
-#: app/warp_interface.py:154
-msgid "导入失败(╥╯﹏╰╥)"
-msgstr "Import Failed (╥╯﹏╰╥)"
-
 #: app/warp_interface.py:173
 msgid "导出抽卡记录"
 msgstr "Export Warp History"
 
-#: app/warp_interface.py:175
-msgid "UIGF 格式 (*.json);;SRGF 格式 (*.srgf.json)"
-msgstr "UIGF Format (*.json);;SRGF Format (*.srgf.json)"
-
 #: app/warp_interface.py:182
 msgid "UIGF 格式 (*.json)"
 msgstr "UIGF Format (*.json)"
-
-#: app/warp_interface.py:201
-msgid "导出成功(＾∀＾●)"
-msgstr "Export Success (＾∀＾●)"
-
-#: app/warp_interface.py:212
-msgid "导出失败(╥╯﹏╰╥)"
-msgstr "Export Failed (╥╯﹏╰╥)"
 
 #: app/warp_interface.py:228
 msgid "导出为 Excel 文件"
@@ -1612,28 +1536,6 @@ msgstr "Clear Warp History"
 msgid "确定要清空抽卡记录吗？此操作不可撤销。"
 msgstr "Are you sure? This is irreversible."
 
-#: app/warp_interface.py:361
-msgid "清空完成(＾∀＾●)"
-msgstr "Clear Complete (＾∀＾●)"
-
-#: app/warp_interface.py:372
-msgid "清空失败(╥╯﹏╰╥)"
-msgstr "Clear Failed (╥╯﹏╰╥)"
-
-#: app/warp_interface.py:403
-msgid ""
-"抽卡记录为空，请先打开游戏内抽卡记录，再点击更新数据即可。\n"
-"\n"
-"你也可以从其他支持 UIGF/SRGF 数据格式的应用导入数据，例如 StarRail Warp Export 或 Starward 等。\n"
-"\n"
-"复制链接功能可用于小程序或其他软件。"
-msgstr ""
-"Warp history empty. Open in-game history and click Update Data.\n"
-"\n"
-"You can also import from UIGF/SRGF apps like StarRail Warp Export or Starward.\n"
-"\n"
-"Copy Link is for mini-programs or other software."
-
 #: app/sub_interfaces/hotkey_interface.py:20
 msgid "秘技（只对清体力和逐光捡金场景生效）"
 msgstr "Technique (Only for Power/Trotter runs)"
@@ -1658,32 +1560,6 @@ msgstr "Stop Task (Global Hotkey, Background)"
 msgid "按键设置"
 msgstr "Key Settings"
 
-#: app/sub_interfaces/accounts_interface.py:31
-msgid "重要：请完全进入游戏（看到角色）后再进行导出，否则会读取前一个账号的UID，导致文件和账号不对应"
-msgstr ""
-"Important: Enter game fully (see character) before export to avoid reading "
-"previous UID/mismatch."
-
-#: app/sub_interfaces/accounts_interface.py:34
-msgid "该功能不支持云·星穹铁道"
-msgstr "Not supported in Cloud StarRail"
-
-#: app/sub_interfaces/accounts_interface.py:41
-msgid "导出当前游戏账户"
-msgstr "Export Current Account"
-
-#: app/sub_interfaces/accounts_interface.py:42
-msgid "导入选中的账户"
-msgstr "Import Selected Account"
-
-#: app/sub_interfaces/accounts_interface.py:43
-msgid "删除账户"
-msgstr "Delete Account"
-
-#: app/sub_interfaces/accounts_interface.py:44
-msgid "账户更名"
-msgstr "Rename Account"
-
 #: app/sub_interfaces/accounts_interface.py:45
 msgid "自动登录"
 msgstr "Auto Login"
@@ -1692,97 +1568,13 @@ msgstr "Auto Login"
 msgid "刷新"
 msgstr "Refresh"
 
-#: app/sub_interfaces/accounts_interface.py:47
-msgid "清除注册表"
-msgstr "Clear Registry"
-
-#: app/sub_interfaces/accounts_interface.py:72
-msgid "账户列表刷新成功"
-msgstr "Account list refreshed"
-
 #: app/sub_interfaces/accounts_interface.py:77
 msgid "导出"
 msgstr "Export"
 
-#: app/sub_interfaces/accounts_interface.py:77
-msgid "账户导出成功"
-msgstr "Account exported"
-
-#: app/sub_interfaces/accounts_interface.py:82
-msgid "请选择要删除的账户"
-msgstr "Select account to delete"
-
-#: app/sub_interfaces/accounts_interface.py:84
-msgid "确定要删除选中的账户吗？"
-msgstr "Delete selected account?"
-
-#: app/sub_interfaces/accounts_interface.py:94
-msgid "请选择要更名的账户"
-msgstr "Select account to rename"
-
-#: app/sub_interfaces/accounts_interface.py:97
-msgid "只能选择一个账户"
-msgstr "Select only one account"
-
-#: app/sub_interfaces/accounts_interface.py:101
-msgid "请输入新的账户名"
-msgstr "Enter new account name"
-
 #: app/sub_interfaces/accounts_interface.py:105
 msgid "账户名不能为空"
 msgstr "Account name cannot be empty"
-
-#: app/sub_interfaces/accounts_interface.py:113
-msgid "请选择要使用的账户"
-msgstr "Select account to use"
-
-#: app/sub_interfaces/accounts_interface.py:124
-msgid ""
-"当登录过期时尝试自动重新填写账号密码\n"
-" *此功能存在一定风险，请谨慎使用*"
-msgstr ""
-"Try auto-fill user/pass when login expired\n"
-" *Risk involved, use with caution*"
-
-#: app/sub_interfaces/accounts_interface.py:131
-msgid "请输入用户名"
-msgstr "Enter Username"
-
-#: app/sub_interfaces/accounts_interface.py:135
-msgid "用户名不能为空"
-msgstr "Username Required"
-
-#: app/sub_interfaces/accounts_interface.py:138
-msgid "请输入密码"
-msgstr "Enter Password"
-
-#: app/sub_interfaces/accounts_interface.py:142
-msgid "密码不能为空"
-msgstr "Password Required"
-
-#: app/sub_interfaces/accounts_interface.py:150
-msgid "导入"
-msgstr "Import"
-
-#: app/sub_interfaces/accounts_interface.py:158
-msgid "账户导入成功"
-msgstr "Account Imported"
-
-#: app/sub_interfaces/accounts_interface.py:161
-msgid "确定要清除注册表中的账户信息吗？"
-msgstr "Clear account info from registry?"
-
-#: app/sub_interfaces/accounts_interface.py:164
-msgid "注册表中的账户信息已清除"
-msgstr "Account info cleared from registry"
-
-#: app/sub_interfaces/accounts_interface.py:184
-msgid "账户设置"
-msgstr "Account Settings"
-
-#: app/schedule_dialog.py:113
-msgid "添加/编辑定时任务"
-msgstr "Add/Edit Scheduled Task"
 
 #: app/schedule_dialog.py:134
 msgid "例如：完整运行"
@@ -1855,14 +1647,6 @@ msgstr "Executables (*.exe *.bat *.ps1);;All Files (*.*)"
 msgid "{exe} 的完整路径"
 msgstr "Full path of {exe}"
 
-#: app/schedule_dialog.py:725
-msgid "定时任务配置"
-msgstr "Scheduled Task Config"
-
-#: app/schedule_dialog.py:745
-msgid "参数/任务"
-msgstr "Args/Task"
-
 #: app/schedule_dialog.py:745
 msgid "通知"
 msgstr "Notify"
@@ -1871,7 +1655,7 @@ msgstr "Notify"
 msgid "添加"
 msgstr "Add"
 
-#: app/home_interface.py:168
+#: app/overview/cards.py:393
 msgid "编辑"
 msgstr "Edit"
 
@@ -1919,30 +1703,6 @@ msgstr ""
 "Time-based Start: starts this task directly when the scheduled time is reached.\n"
 "Chained Start: does not trigger by time on its own. Place it after a previous task, and it will start immediately in list order after that task finishes normally.\n"
 "Run Now: starts from the current task, and any consecutive chained tasks after it will run as well."
-
-#: app/schedule_dialog.py:1052
-msgid "请先选择要编辑的任务"
-msgstr "Select task to edit first"
-
-#: app/schedule_dialog.py:1068
-msgid "请先选择要删除的任务"
-msgstr "Select task to delete first"
-
-#: app/schedule_dialog.py:1073
-msgid "确认删除选中的定时任务？"
-msgstr "Delete selected scheduled tasks?"
-
-#: app/schedule_dialog.py:1086
-msgid "请先选择要运行的任务"
-msgstr "Select task to run first"
-
-#: app/schedule_dialog.py:1093
-msgid "确认立即运行任务 \"{name}\" 吗？"
-msgstr "Run task \"{name}\" now?"
-
-#: app/schedule_dialog.py:1126
-msgid "无法运行任务：父组件不支持 runScheduledTask"
-msgstr "Cannot run: Parent doesn't support runScheduledTask"
 
 #: app/card/autoplot_setting_card.py:64
 msgid "自动跳过 (当出现跳过按钮时自动点击)"
@@ -2178,27 +1938,7 @@ msgstr "Script/Program Path"
 
 #: app/tools/warp_export.py:193
 msgid "抽"
-msgstr "Pull"
-
-#: app/tools/warp_export.py:193
-msgid "已累计"
-msgstr "Total"
-
-#: app/tools/warp_export.py:193
-msgid "抽未出5星"
-msgstr "pulls without 5-star"
-
-#: app/tools/warp_export.py:197
-msgid "星"
-msgstr "-Star"
-
-#: app/tools/warp_export.py:203
-msgid "5星历史记录"
-msgstr "5-Star History"
-
-#: app/tools/warp_export.py:204
-msgid "五星平均出货次数为"
-msgstr "Average 5-star pity:"
+msgstr "pulls"
 
 #: app/tools/warp_export.py:318
 msgid "请重新打开游戏抽卡记录"
@@ -2240,14 +1980,6 @@ msgstr "URL not found"
 msgid "跃迁数据获取失败(´▔∀▔`)"
 msgstr "Warp data fetch failed(´▔∀▔`)"
 
-#: app/tools/warp_export.py:504
-msgid "正在获取跃迁数据..."
-msgstr "Fetching warp data..."
-
-#: app/tools/warp_export.py:513
-msgid "跃迁数据获取完成(＾∀＾●)"
-msgstr "Warp data fetch complete(＾∀＾●)"
-
 #: module/update/version_check.py:194
 msgid "Mirror酱 CDK 已过期"
 msgstr "MirrorChan CDK expired"
@@ -2267,14 +1999,6 @@ msgstr "MirrorChan CDK type mismatch"
 #: module/update/version_check.py:194
 msgid "Mirror酱 CDK 已被封禁"
 msgstr "MirrorChan CDK banned"
-
-#: app/tools/check_update.py:149
-msgid ""
-"发现新版本：{cfg.version} ——> {version}\n"
-"更新日志 |･ω･)"
-msgstr ""
-"New version found: {cfg.version} -> {version}\n"
-"Changelog |･ω･)"
 
 #: app/tools/check_update.py:237
 msgid "尚未配置 Mirror酱 更新源 (╥╯﹏╰╥)"
@@ -3330,10 +3054,6 @@ msgstr "Yao Guang"
 msgid "火花"
 msgstr "Sparxie"
 
-#: app/tools/warp_export.py:193
-msgid "一共"
-msgstr "Total"
-
 #: assets/config/character_names.json
 msgid "阮·梅「雪绽梅笺」"
 msgstr "Ruan Mei: Plumblossom Letter"
@@ -3412,14 +3132,6 @@ msgstr "Choose image manually"
 #: app/card/messagebox_custom.py:1170
 msgid "上移"
 msgstr "Up"
-
-#: app/schedule_dialog.py:1033
-msgid "请先选择要上移的任务"
-msgstr "Select task to move up first"
-
-#: app/schedule_dialog.py:1039
-msgid "当前任务已经位于最上方"
-msgstr "The selected task is already at the top"
 
 #: app/setting_interface.py:2479
 msgid "优先使用后台截图"
@@ -4159,35 +3871,35 @@ msgstr "Divergent Universe Loop"
 msgid "差分宇宙中途接管"
 msgstr "Divergent Universe Mid-takeover"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "差分宇宙运行一次 ⭐"
 msgstr "Divergent Universe Run Once ⭐"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "差分宇宙循环运行 ⭐"
 msgstr "Divergent Universe Loop Run ⭐"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "模拟宇宙快速启动（停止维护）"
 msgstr "Simulated Universe Quick Start (Stop Maintain)"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "模拟宇宙原版运行（停止维护）"
 msgstr "Simulated Universe Original Run (Stop Maintain)"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "更新模拟宇宙（停止维护）"
 msgstr "Update Simulated Universe (Stop Maintain)"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "重置模拟宇宙配置文件（停止维护）"
 msgstr "Reset Simulated Universe Config (Stop Maintain)"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "打开模拟宇宙目录（停止维护）"
 msgstr "Open Simulated Universe Dir (Stop Maintain)"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "打开模拟宇宙项目主页（停止维护）"
 msgstr "Open Simulated Universe Project Homepage (Stop Maintain)"
 
@@ -4278,83 +3990,78 @@ msgstr "Zero / Thousand Stars"
 msgid "鎏金追忆"
 msgstr "Gilded Reminiscence"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "重置模拟宇宙配置文件"
 msgstr "Reset Simulated Universe Config"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "打开模拟宇宙目录"
 msgstr "Open Simulated Universe Directory"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "打开模拟宇宙项目主页"
 msgstr "Open Simulated Universe Project Homepage"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "重置锄大地配置文件"
 msgstr "Reset Fhoe-Rail Config"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "打开锄大地程序目录"
 msgstr "Open Fhoe-Rail Directory"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "打开锄大地项目主页"
 msgstr "Open Fhoe-Rail Project Homepage"
 
-#: app/card/card_edit_dialog.py:425
 msgid "编辑主页卡片"
 msgstr "Edit Home Cards"
 
-#: app/card/card_edit_dialog.py:280
+#: app/overview/shortcut_dialog.py:77
 msgid "图标"
 msgstr "Icon"
 
-#: app/card/card_edit_dialog.py:292
 msgid "标题："
 msgstr "Title:"
 
-#: app/card/card_edit_dialog.py:295
 msgid "卡片标题"
 msgstr "Card Title"
 
-#: app/card/card_edit_dialog.py:323
+#: app/overview/shortcut_dialog.py:76
 msgid "操作类型："
 msgstr "Action Type:"
 
-#: app/card/card_edit_dialog.py:325
+#: app/overview/shortcut_dialog.py:64
 msgid "单个任务"
 msgstr "Single Task"
 
-#: app/card/card_edit_dialog.py:325
+#: app/overview/shortcut_dialog.py:64
 msgid "任务菜单"
 msgstr "Task Menu"
 
-#: app/card/card_edit_dialog.py:229
+#: app/overview/shortcut_dialog.py:77
 msgid "任务："
 msgstr "Task:"
 
-#: app/card/card_edit_dialog.py:353
+#: app/overview/shortcut_dialog.py:75
 msgid "添加菜单项"
 msgstr "Add Menu Item"
 
-#: app/card/card_edit_dialog.py:207
 msgid "菜单项名称"
 msgstr "Menu Item Name"
 
-#: app/card/card_edit_dialog.py:227
+#: app/card/messagebox_custom.py:1215
 msgid "名称："
 msgstr "Name:"
 
-#: app/card/card_edit_dialog.py:460
 msgid "添加卡片"
 msgstr "Add Card"
 
-#: app/card/card_edit_dialog.py:462
+#: app/card/stationprioritysettingcard.py:181
 msgid "恢复默认"
 msgstr "Restore Defaults"
 
-#: app/card/card_edit_dialog.py:465
+#: app/warp_interface.py:196
 msgid "确定"
 msgstr "Confirm"
 
@@ -4389,7 +4096,6 @@ msgstr "Download Proxy"
 msgid "留空则使用系统代理；支持 http:// 和 socks5://"
 msgstr "Leave empty to use system proxy; supports http:// and socks5://"
 
-#: app/card/card_edit_dialog.py:379
 msgid "选择图标"
 msgstr "Select Icon"
 
@@ -4916,7 +4622,7 @@ msgstr "Press Duration"
 msgid "请选择模板图片"
 msgstr "Please select a template image"
 
-#: app/card/card_edit_dialog.py:530
+#: app/overview/shortcut_dialog.py:267
 msgid "保存失败"
 msgstr "Save Failed"
 
@@ -5329,11 +5035,10 @@ msgstr "Extracting update package..."
 msgid "检测到新版本：{version}"
 msgstr "Update available: {version}"
 
-#: app/card/card_edit_dialog.py:543
+#: module/overview/shortcuts.py:229
 msgid "任务菜单中的菜单项名称不能为空"
 msgstr "Menu item name in task menu cannot be empty"
 
-#: app/card/card_edit_dialog.py:531
 msgid "卡片标题不能为空"
 msgstr "Card title cannot be empty"
 
@@ -5815,23 +5520,9 @@ msgstr "Select workflow:"
 msgid "启动参数："
 msgstr "Args:"
 
-#: app/schedule_dialog.py:780
-msgid "冲突："
-msgstr "Conflict:"
-
-#: app/schedule_dialog.py:802
-msgid "链式失败后："
-msgstr "After Chain Failure:"
-
-#: app/schedule_dialog.py:1131
-msgid "启动任务失败：{error}"
-msgstr "Start Task Failed: {error}"
-
-#: app/card/samplecardview1.py:61
 msgid "执行完成(＾∀＾●)"
 msgstr "Completed(＾∀＾●)"
 
-#: app/card/samplecardview1.py:73
 msgid "执行出错"
 msgstr "Execution Failed"
 
@@ -5990,16 +5681,6 @@ msgstr "Paused"
 #: app/log_interface.py:212
 msgid "按下 {stop} 停止 · {pause} 暂停"
 msgstr "Press {stop} to stop · {pause} to pause"
-
-#: app/log_interface.py:458
-msgid "暂停任务"
-msgstr "Pause Task"
-
-#: app/log_interface.py:463
-msgid "仅内置任务支持暂停，暂停后脚本将停止一切操作"
-msgstr ""
-"Only built-in tasks support pausing; the script stops all actions while "
-"paused"
 
 #: app/log_interface.py:1750
 msgid "继续任务"
@@ -6458,10 +6139,6 @@ msgstr ""
 msgid "未选择"
 msgstr "Not selected"
 
-#: app/log_interface.py:989
-msgid "{date}（{weekday}）{time}"
-msgstr "{date} ({weekday}) {time}"
-
 #: app/schedule_dialog.py:269
 msgid "执行星期："
 msgstr "Run on:"
@@ -6490,20 +6167,8 @@ msgstr ""
 "Chained start: Does not start independently at a set time. Place it after another task. When the preceding task finishes normally, chained tasks start immediately in list order, without checking the day of the week.\n"
 "Run now: Ignores day-of-week restrictions. Starts the current task and then runs any consecutive chained tasks that follow."
 
-#: app/schedule_dialog.py:745
-msgid "执行计划"
-msgstr "Execution Schedule"
-
 msgid "游戏内日志"
 msgstr "In-Game Log"
-
-#: app/log_interface.py:975
-msgid "定时任务({count})"
-msgstr "Scheduled Tasks ({count})"
-
-#: app/log_interface.py:977
-msgid "已启用 {count} 个按时任务，点击配置"
-msgstr "{count} scheduled tasks enabled. Click to configure"
 
 #: app/log_interface.py:994
 msgid "下次：{time}"
@@ -8287,25 +7952,11 @@ msgstr "Divine Skull of Indulgence"
 msgid "星神★阿哈·群星乐透"
 msgstr "Aeon ★ Aha • Star Lotto"
 
-#: app/sub_interfaces/accounts_interface.py:80
-msgid "账户导出失败，请确认已登录游戏后重试。"
-msgstr ""
-"Could not export the account. Make sure you are logged in to the game and "
-"try again."
-
-#: app/sub_interfaces/accounts_interface.py:166
-msgid "账户导入失败，请重试。"
-msgstr "Could not import the account. Please try again."
-
 #: app/sub_interfaces/accounts_interface.py:171
 msgid "这会清除该游戏的登录信息和画质、分辨率等设置。确定继续吗？"
 msgstr ""
 "This will clear the game’s login information and settings such as graphics "
 "quality and resolution. Continue?"
-
-#: app/sub_interfaces/accounts_interface.py:177
-msgid "清除失败，请重试。"
-msgstr "Could not clear the game data. Please try again."
 
 #: app/sub_interfaces/accounts_interface.py:179
 msgid "游戏登录信息和设置已清除"
@@ -8379,26 +8030,6 @@ msgstr "Backup validation failed. Existing records are unchanged."
 msgid "确认导入抽卡记录"
 msgstr "Confirm warp record import"
 
-#: app/warp_interface.py:144
-msgid ""
-"账号 UID：{uid}\n"
-"导入方式：保留已有记录，补充新记录，自动跳过重复内容。\n"
-"\n"
-"现有记录：{existing} 条\n"
-"文件记录：{incoming} 条\n"
-"新增记录：{added} 条\n"
-"重复记录：{duplicates} 条\n"
-"合并后：{total} 条"
-msgstr ""
-"Account UID: {uid}\n"
-"Method: Keep existing records and add new ones, skipping duplicates.\n"
-"\n"
-"Existing: {existing}\n"
-"In file: {incoming}\n"
-"New: {added}\n"
-"Duplicates: {duplicates}\n"
-"After merge: {total}"
-
 #: app/warp_interface.py:150
 msgid "确认合并"
 msgstr "Confirm merge"
@@ -8429,30 +8060,6 @@ msgstr "Next"
 msgid "警告：替换现有抽卡记录"
 msgstr "Warning: Replace existing warp records"
 
-#: app/warp_interface.py:168
-msgid ""
-"当前账号：{existing_uid}\n"
-"导入账号：{uid}\n"
-"导入方式：替换现有记录。\n"
-"\n"
-"现有记录数量：{existing}\n"
-"替换后记录数量：{total}\n"
-"\n"
-"此操作会用导入文件中的记录替换目前保存的全部记录。原有记录不会保留在当前列表中。\n"
-"\n"
-"确定要替换吗？"
-msgstr ""
-"Current account: {existing_uid}\n"
-"Imported account: {uid}\n"
-"Method: Replace existing records.\n"
-"\n"
-"Existing record count: {existing}\n"
-"Record count after replacement: {total}\n"
-"\n"
-"This replaces all currently saved records with the imported file. The original records will no longer appear in the current list.\n"
-"\n"
-"Continue with replacement?"
-
 #: app/warp_interface.py:173
 msgid "确认替换"
 msgstr "Confirm replacement"
@@ -8462,10 +8069,6 @@ msgid "现有记录无法读取，不能合并。请重新导入并选择替换�
 msgstr ""
 "Existing records cannot be read or merged. Import again and choose "
 "replacement."
-
-#: app/warp_interface.py:173
-msgid "无法读取"
-msgstr "Unreadable"
 
 #: app/warp_interface.py:174
 msgid "无法统计"
@@ -8499,11 +8102,10 @@ msgstr "Uncollected entries first"
 msgid "忆灵「长夜」"
 msgstr "Memosprite: Evey"
 
-#: app/home_interface.py:54
+#: app/overview/greeting.py:150
 msgid "别晃啦！本姑娘头好晕( ꩜ ᯅ ꩜;)"
 msgstr "Stop shaking me! I'm getting dizzy! ( ꩜ ᯅ ꩜;)"
 
-#: app/home_interface.py:123
 msgid "长夜月小助手"
 msgstr "Evernight Assistant"
 
@@ -8693,6 +8295,4637 @@ msgstr "Couldn’t change the Desktop Twin password. Try again shortly."
 msgid "分身凭据已在其他位置更改，请核对后再操作。"
 msgstr "The saved credentials changed elsewhere. Check the account before continuing."
 
+#: app/data_settings.py:30
+msgid "数据已移到 userdata 文件夹"
+msgstr "Your data has moved to the userdata folder"
+
+#: app/data_settings.py:31
+msgid "设置、账号、流程编排和记录现在都保存在这个文件夹里，迁移前的副本在 userdata\\backup。"
+msgstr "Settings, accounts, workflows and records are now in this folder. The original backup is in userdata\\backup."
+
+#: app/data_settings.py:32 app/data_settings.py:62
+msgid "打开文件夹"
+msgstr "Open folder"
+
+#: app/data_settings.py:61
+msgid "数据与备份"
+msgstr "Data and backups"
+
+#: app/data_settings.py:62
+msgid "数据文件夹"
+msgstr "Data folder"
+
+#: app/data_settings.py:63
+msgid "备份到文件"
+msgstr "Save backup"
+
+#: app/data_settings.py:63 app/data_settings.py:85
+msgid "备份数据"
+msgstr "Back up data"
+
+#: app/data_settings.py:64
+msgid "把设置、账号、流程编排和各种记录打包成一个 zip 文件，不含日志和云游戏浏览器数据"
+msgstr "Save settings, accounts, workflows and records in a ZIP file. Logs and cloud gaming browser data are excluded."
+
+#: app/data_settings.py:105 app/data_settings.py:65
+msgid "选择备份文件"
+msgstr "Choose backup file"
+
+#: app/data_settings.py:65
+msgid "从备份恢复"
+msgstr "Restore from backup"
+
+#: app/data_settings.py:66
+msgid "恢复前会自动备份当前数据，恢复后需要重启小助手"
+msgstr "Your current data is backed up before restoring. Restart the assistant afterward."
+
+#: app/data_settings.py:67
+msgid "选择文件夹"
+msgstr "Choose folder"
+
+#: app/data_settings.py:103 app/data_settings.py:67
+msgid "从旧版文件夹导入"
+msgstr "Import from an older installation"
+
+#: app/data_settings.py:68
+msgid "选择以前的小助手文件夹，把其中的设置、账号、流程编排和记录复制过来，导入前会自动备份当前数据"
+msgstr "Choose a previous installation to copy its settings, accounts, workflows and records. Your current data is backed up first."
+
+#: app/data_settings.py:69 app/data_settings.py:85
+msgid "导出排查包"
+msgstr "Export diagnostic bundle"
+
+#: app/data_settings.py:70
+msgid "隐藏 Token、密码、Cookie 和推送密钥后，导出设置和最近一次运行的日志，可以直接发到群里或 Issue"
+msgstr "Export settings and the latest run log with tokens, passwords, cookies and notification keys masked for sharing in a group or issue."
+
+#: app/data_settings.py:37
+msgid "截图"
+msgstr "Screenshots"
+
+#: app/data_settings.py:37
+msgid "云游戏浏览器数据"
+msgstr "Cloud gaming browser data"
+
+#: app/data_settings.py:38
+msgid "部分数据还在原来的位置"
+msgstr "Some data is still in its original location"
+
+#: app/data_settings.py:100 app/data_settings.py:115
+msgid "请先停止正在运行的任务"
+msgstr "Stop the running task first"
+
+#: app/data_settings.py:123
+msgid "请重新启动小助手以使用这份数据。"
+msgstr "Restart the assistant to use this data."
+
+#: app/data_settings.py:124
+msgid "关闭小助手"
+msgstr "Close assistant"
+
+#: app/data_settings.py:50
+msgid "数据迁移没有完成"
+msgstr "Data migration did not finish"
+
+#: app/data_settings.py:23
+msgid "无法打开数据文件夹"
+msgstr "Could not open the data folder"
+
+#: app/data_settings.py:94
+msgid "文件已保存"
+msgstr "File saved"
+
+#: app/data_settings.py:117 app/data_settings.py:45
+msgid "数据操作没有完成"
+msgstr "The data operation did not finish"
+
+#: app/data_settings.py:122
+msgid "数据已导入"
+msgstr "Data imported"
+
+#: app/data_settings.py:122
+msgid "数据已恢复"
+msgstr "Data restored"
+
+#: app/data_settings.py:39
+msgid "{items}暂时沿用原位置，下次启动会再试。"
+msgstr "{items} will use their original location for now. Migration will be retried on the next launch."
+
+#: app/data_settings.py:92
+msgid "文件保存失败"
+msgstr "Could not save file"
+
+#: app/data_settings.py:51
+msgid "这次继续使用原来的位置，下次启动会再试。原因：{reason}"
+msgstr "The assistant will use the original location and try again on the next launch. Reason: {reason}"
+
+#: utils/data_backup.py:106
+msgid "请选择 ZIP 文件"
+msgstr "Choose a ZIP file"
+
+#: utils/data_backup.py:104
+msgid "请选择数据文件以外的位置保存压缩包"
+msgstr "Save the archive outside the data being backed up"
+
+#: app/data_settings.py:113 app/data_settings.py:42 utils/data_backup.py:199
+msgid "上次还原尚未完成，请重启小助手后重试"
+msgstr "Restart the assistant to finish the previous recovery, then try again"
+
+#: utils/data_backup.py:50
+msgid "备份中有无法恢复的项目：{name}"
+msgstr "Unsupported backup item: {name}"
+
+#: utils/data_backup.py:213
+msgid "没有找到可以恢复的数据文件"
+msgstr "No data files were found to restore"
+
+#: utils/data_backup.py:215
+msgid "备份中的设置文件无效"
+msgstr "The settings file in the backup is invalid"
+
+#: utils/data_backup.py:317
+msgid "运行日志路径是链接"
+msgstr "The run log path is a link"
+
+#: utils/data_backup.py:67
+msgid "数据目录中包含链接：{path}"
+msgstr "The data folder contains a link: {path}"
+
+#: utils/data_backup.py:146
+msgid "无法导入文件：{name}"
+msgstr "Could not import file: {name}"
+
+#: utils/data_backup.py:151
+msgid "导入期间文件发生了变化：{name}"
+msgstr "A file changed during import: {name}"
+
+#: utils/data_backup.py:126
+msgid "备份中包含无效或重复的文件：{name}"
+msgstr "Invalid or duplicate file in the backup: {name}"
+
+#: utils/data_backup.py:169 utils/data_backup.py:241
+msgid "恢复校验失败：{name}"
+msgstr "Restored file failed verification: {name}"
+
+#: app/setting_interface.py:2976
+msgid "数据"
+msgstr "Data"
+
+#: utils/data_migration.py:21
+msgid "另一个小助手进程正在使用原来的数据位置"
+msgstr "Another assistant process is using the original data location."
+
+#: utils/data_migration.py:22
+msgid "此安装的其他界面或任务仍在运行"
+msgstr "Another window or task from this installation is still running."
+
+#: utils/data_migration.py:23
+msgid "其他进程仍在处理数据文件"
+msgstr "Another process is still processing the data files."
+
+#: utils/data_migration.py:24
+msgid "设置文件不是有效的 YAML 配置"
+msgstr "The settings file does not contain a valid YAML configuration."
+
+#: utils/data_migration.py:25
+msgid "userdata 与原数据目录重叠，无法安全移动文件"
+msgstr "The userdata folder overlaps the original data folder, so the files cannot be moved safely."
+
+#: utils/data_migration.py:26
+msgid "迁移记录格式无效"
+msgstr "The migration record has an invalid format."
+
+#: utils/data_migration.py:27
+msgid "迁移记录中含有未知项目"
+msgstr "The migration record contains an unknown item."
+
+#: utils/data_migration.py:28
+msgid "迁移备份路径错误"
+msgstr "The migration backup path is invalid."
+
+#: utils/data_migration.py:29
+msgid "迁移记录中的目录无效"
+msgstr "The migration record contains an invalid folder."
+
+#: utils/data_migration.py:30
+msgid "迁移后的设置文件与原文件不同"
+msgstr "The migrated settings file differs from the original."
+
+#: utils/data_backup.py:120
+msgid "请选择备份文件，排查包仅用于分享。"
+msgstr "Choose a backup file. Diagnostic bundles are for sharing."
+
+#: module/update/extractor.py:136 module/update/update_engine.py:541
+msgid "更新临时路径与用户数据目录重叠：{path}"
+msgstr "The update staging path overlaps the user data folder: {path}"
+
+#: utils/data_backup.py:62
+msgid "文件名与现有目录冲突：{path}"
+msgstr "A file name conflicts with an existing folder: {path}"
+
+#: utils/data_migration.py:33
+msgid "上次还原尚未完成，请在设置的「数据」标签重新选择备份文件或导入文件夹。"
+msgstr "The previous restore did not finish. In Settings, open the Data tab and select the backup file or import folder again."
+
+#: module/overview/snapshot.py
+msgid "{name}没有完成"
+msgstr "{name} did not finish"
+
+#: module/overview/plan.py:18
+msgid "三星光锥叠加"
+msgstr "Superimpose 3-star Light Cones"
+
+#: module/overview/snapshot.py
+msgid "下午好，开拓者"
+msgstr "Good afternoon, Trailblazer"
+
+#: module/overview/snapshot.py
+msgid "中午好，开拓者"
+msgstr "Good afternoon, Trailblazer"
+
+#: module/overview/cards.py:10
+msgid "仅检查奖励"
+msgstr "Check rewards only"
+
+#: module/overview/snapshot.py
+msgid "今天的任务都做完了"
+msgstr "All of today's tasks are complete"
+
+#: module/overview/cards.py:10
+msgid "今日已完成"
+msgstr "Done today"
+
+#: module/overview/snapshot.py
+msgid "任务已暂停"
+msgstr "Task paused"
+
+#: module/overview/cards.py
+msgid "体力计划 · {count} 项"
+msgstr "Power plan · {count} entries"
+
+#: module/overview/plan.py:18
+msgid "余烬兑换"
+msgstr "Embers Exchange"
+
+#: module/overview/snapshot.py
+msgid "停止"
+msgstr "Stop"
+
+#: module/overview/snapshot.py:11
+msgid "准备"
+msgstr "Prepare"
+
+#: module/overview/cards.py:15
+msgid "叠加三星光锥"
+msgstr "Superimpose 3-star Light Cones"
+
+#: module/overview/cards.py
+msgid "可以设置自动启动任务的时间。"
+msgstr "Choose when tasks should start automatically."
+
+#: module/overview/plan.py:18
+msgid "合成自塑尘脂"
+msgstr "Synthesize Self-Modeling Resin"
+
+#: module/overview/cards.py
+msgid "周{day}起执行"
+msgstr "From weekday {day}"
+
+#: module/overview/plan.py:18
+msgid "培养目标"
+msgstr "Training goals"
+
+#: module/overview/samples.py
+msgid "完整运行后检查每周积分奖励与日常领取情况"
+msgstr "Check weekly points rewards and daily claims after the full run"
+
+#: app/setting_interface.py
+msgid "定时计划"
+msgstr "Schedule"
+
+#: module/overview/cards.py:10
+msgid "将执行"
+msgstr "Will run"
+
+#: module/overview/cards.py
+msgid "尚未设置远程推送"
+msgstr "Remote notifications are not configured"
+
+#: module/overview/snapshot.py
+msgid "就绪"
+msgstr "Ready"
+
+#: module/overview/plan.py:18
+msgid "差分宇宙固定次数"
+msgstr "Divergent Universe run quota"
+
+#: module/overview/plan.py:18
+msgid "差分宇宙积分奖励"
+msgstr "Divergent Universe point rewards"
+
+#: module/overview/snapshot.py
+msgid "已停止"
+msgstr "Stopped"
+
+#: module/overview/snapshot.py
+msgid "已完成"
+msgstr "Completed"
+
+#: module/overview/snapshot.py
+msgid "开始完整运行"
+msgstr "Start full run"
+
+#: module/overview/cards.py:10
+msgid "当前环境不支持"
+msgstr "Unsupported in this environment"
+
+#: module/overview/snapshot.py
+msgid "待设置"
+msgstr "Setup needed"
+
+#: module/overview/snapshot.py:11
+msgid "执行任务"
+msgstr "Run tasks"
+
+#: module/overview/cards.py
+msgid "找不到本地游戏"
+msgstr "Local game not found"
+
+#: module/overview/cards.py:15
+msgid "按配置路线运行"
+msgstr "Follow the configured routes"
+
+#: module/overview/cards.py
+msgid "挑战第 {level} 层"
+msgstr "Challenge stage {level}"
+
+#: module/overview/snapshot.py:11
+msgid "收尾"
+msgstr "Finish up"
+
+#: module/overview/plan.py:18
+msgid "日常准备"
+msgstr "Daily preparation"
+
+#: module/overview/plan.py:18
+msgid "日常领奖"
+msgstr "Claim daily rewards"
+
+#: module/overview/snapshot.py
+msgid "早上好，开拓者"
+msgstr "Good morning, Trailblazer"
+
+#: app/setting_interface.py
+msgid "星轨背景"
+msgstr "Star trail background"
+
+#: app/setting_interface.py
+msgid "显示 Q 版小人"
+msgstr "Show chibi mascot"
+
+#: module/overview/snapshot.py
+msgid "晚上好，开拓者"
+msgstr "Good evening, Trailblazer"
+
+#: module/overview/snapshot.py
+msgid "暂停"
+msgstr "Pause"
+
+#: module/overview/cards.py:10
+msgid "未到执行日"
+msgstr "Not due yet"
+
+#: module/overview/cards.py:10
+msgid "未开启"
+msgstr "Disabled"
+
+#: module/overview/cards.py:10
+msgid "本周已完成"
+msgstr "Done this week"
+
+#: module/overview/cards.py:10
+msgid "本月已完成"
+msgstr "Done this month"
+
+#: module/overview/snapshot.py
+msgid "本次完整运行有 {count} 项待执行。"
+msgstr "The full run has {count} pending tasks."
+
+#: module/overview/snapshot.py
+msgid "本次完整运行的结果已保存。"
+msgstr "The full run results have been saved."
+
+#: module/overview/snapshot.py
+msgid "查看原因"
+msgstr "View cause"
+
+#: module/overview/snapshot.py
+msgid "查看本次结果"
+msgstr "View run results"
+
+#: module/overview/snapshot.py
+msgid "查看运行"
+msgstr "View run"
+
+#: module/overview/snapshot.py
+msgid "查看运行日志了解原因。"
+msgstr "Check the run log for the cause."
+
+#: module/overview/plan.py:18
+msgid "查询支援实训"
+msgstr "Check support training"
+
+#: module/overview/cards.py:15
+msgid "检查实训活跃度"
+msgstr "Check training activity"
+
+#: module/overview/cards.py:15
+msgid "检查已开启的活动"
+msgstr "Check enabled events"
+
+#: module/overview/cards.py:15
+msgid "检查支援角色需求"
+msgstr "Check support character needs"
+
+#: module/overview/cards.py:15
+msgid "检查新兑换码"
+msgstr "Check for new codes"
+
+#: module/overview/cards.py
+msgid "每周 {count} 次"
+msgstr "{count} runs per week"
+
+#: module/overview/cards.py
+msgid "每周积分奖励"
+msgstr "Weekly point rewards"
+
+#: module/overview/plan.py:18
+msgid "每周遗器清理"
+msgstr "Weekly relic cleanup"
+
+#: module/overview/cards.py
+msgid "每天 {count} 次"
+msgstr "{count} runs per day"
+
+#: module/overview/cards.py:15
+msgid "每月合成"
+msgstr "Monthly synthesis"
+
+#: module/overview/cards.py:15
+msgid "每月购买所选物品"
+msgstr "Buy selected items monthly"
+
+#: module/overview/cards.py
+msgid "没有可运行的定时计划"
+msgstr "No upcoming scheduled runs"
+
+#: module/overview/plan.py:18
+msgid "活动"
+msgstr "Events"
+
+#: module/overview/cards.py
+msgid "游戏连接设置需要调整"
+msgstr "Game connection needs attention"
+
+#: app/setting_interface.py
+msgid "管理"
+msgstr "Manage"
+
+#: module/overview/snapshot.py
+msgid "继续设置"
+msgstr "Continue setup"
+
+#: module/overview/snapshot.py
+msgid "继续运行"
+msgstr "Continue run"
+
+#: module/overview/snapshot.py
+msgid "继续运行时会重新检查已完成的项目。"
+msgstr "Completed tasks will be checked again when the run starts."
+
+#: module/overview/cards.py
+msgid "要在其他设备收到任务通知，请开启推送并设置渠道。"
+msgstr "Enable notifications and set up a channel to receive task updates on another device."
+
+#: module/overview/cards.py:15
+msgid "读取培养目标"
+msgstr "Read training goals"
+
+#: module/overview/snapshot.py
+msgid "运行中"
+msgstr "Running"
+
+#: module/overview/snapshot.py
+msgid "运行单项"
+msgstr "Run one task"
+
+#: module/overview/snapshot.py
+msgid "还差一步就能开始"
+msgstr "One more step before starting"
+
+#: module/overview/cards.py:10
+msgid "进行中"
+msgstr "In progress"
+
+#: module/overview/samples.py
+msgid "连续几次未能识别副本结算画面，已保存日志供检查。"
+msgstr "The challenge results screen could not be recognized after several attempts. The log is available for review."
+
+#: module/overview/cards.py
+msgid "选择游戏的可执行文件后即可开始。"
+msgstr "Select the game executable to get started."
+
+#: module/overview/cards.py
+msgid "速通模式"
+msgstr "Speedrun mode"
+
+#: module/overview/snapshot.py
+msgid "重新运行"
+msgstr "Run again"
+
+#: module/overview/snapshot.py
+msgid "重试这一项"
+msgstr "Retry this task"
+
+#: app/setting_interface.py
+msgid "问候区背景图"
+msgstr "Greeting background"
+
+#: module/overview/cards.py
+msgid "难度 {level} · 周积分"
+msgstr "Difficulty {level} · Weekly points"
+
+#: module/overview/snapshot.py
+msgid "需要处理"
+msgstr "Needs attention"
+
+#: module/overview/cards.py:15
+msgid "领取已开启的奖励"
+msgstr "Claim enabled rewards"
+
+#: module/overview/cards.py
+msgid "上次启动时游戏要求重新登录，请打开本地客户端登录。"
+msgstr "The game requested sign-in on its last launch. Open the local client and sign in."
+
+#: module/overview/cards.py
+msgid "上次运行需要登录"
+msgstr "Sign-in was required on the last run"
+
+#: module/overview/cards.py
+msgid "云游戏等待登录超时，请打开云游戏完成登录。"
+msgstr "Cloud gaming timed out waiting for sign-in. Open the cloud client and sign in."
+
+#: module/overview/cards.py:24
+msgid "合成材料"
+msgstr "Synthesize materials"
+
+#: module/overview/labels.py:4
+msgid "命令行"
+msgstr "Command line"
+
+#: module/overview/cards.py:24
+msgid "回忆一"
+msgstr "Memory 1"
+
+#: module/overview/labels.py:4
+msgid "图形界面"
+msgstr "Desktop interface"
+
+#: module/overview/labels.py:4
+msgid "定时"
+msgstr "Scheduled"
+
+#: module/overview/labels.py:4
+msgid "容器"
+msgstr "Container"
+
+#: module/overview/labels.py:8
+msgid "已中断"
+msgstr "Interrupted"
+
+#: module/overview/labels.py:8
+msgid "已跳过"
+msgstr "Skipped"
+
+#: module/overview/labels.py:8
+msgid "异常结束"
+msgstr "Exited unexpectedly"
+
+#: module/overview/shortcuts.py
+msgid "快捷启动已在其他窗口修改，请重新打开编辑。"
+msgstr "Shortcuts changed in another window. Reopen the editor."
+
+#: module/overview/shortcuts.py
+msgid "快捷启动的名称、图标或操作无效。"
+msgstr "The shortcut name, icon, or action is invalid."
+
+#: module/overview/labels.py:4
+msgid "手动"
+msgstr "Manual"
+
+#: module/overview/cards.py:24
+msgid "支援礼盒"
+msgstr "Support gift"
+
+#: module/overview/cards.py:24
+msgid "试用姬子"
+msgstr "Trial Himeko"
+
+#: module/overview/labels.py:8
+msgid "部分失败"
+msgstr "Partially failed"
+
+#: module/overview/labels.py:4
+msgid "非交互运行"
+msgstr "Non-interactive run"
+
+#: module/overview/snapshot.py
+msgid "{phase} · 已运行 {minutes} 分钟"
+msgstr "{phase} · {minutes} min elapsed"
+
+#: module/overview/snapshot.py
+msgid "暂时无法读取运行计划。"
+msgstr "The run plan is temporarily unavailable."
+
+#: module/overview/cards.py
+msgid "计划次数为零"
+msgstr "Zero runs scheduled"
+
+#: app/overview/cards.py:213
+msgid "完整运行将执行"
+msgstr "Full Run checklist"
+
+#: app/overview/cards.py:214
+msgid "按当前设置，已完成和未开启的会自动跳过"
+msgstr "Completed and disabled tasks are skipped automatically."
+
+#: app/overview/cards.py:321
+msgid "上次运行"
+msgstr "Last run"
+
+#: app/overview/cards.py:392
+msgid "快捷启动"
+msgstr "Shortcuts"
+
+#: app/overview/cards.py:450
+msgid "去设置"
+msgstr "Open settings"
+
+#: app/overview/cards.py:489
+msgid "建议检查"
+msgstr "Settings to check"
+
+#: app/overview/cards.py:502
+msgid "暂时无法检查设置"
+msgstr "Settings are temporarily unavailable"
+
+#: app/overview/cards.py:244
+msgid "暂时读不到完整运行清单"
+msgstr "The Full Run checklist is temporarily unavailable"
+
+#: app/overview/cards.py:244
+msgid "完整运行没有要执行的项目"
+msgstr "No tasks to run in Full Run"
+
+#: app/overview/cards.py:248
+msgid "收起未开启的项目"
+msgstr "Hide disabled tasks"
+
+#: app/overview/cards.py:322
+msgid "查看日志"
+msgstr "View log"
+
+#: app/overview/cards.py:409
+msgid "暂时读不到快捷启动"
+msgstr "Shortcuts are temporarily unavailable"
+
+#: app/overview/cards.py:335
+msgid "暂时读不到运行记录"
+msgstr "Run history is temporarily unavailable"
+
+#: app/overview/cards.py:335
+msgid "还没有运行记录，完成一次运行后会显示每一项的结果"
+msgstr "After the first run, each task’s result will appear here."
+
+#: app/overview/cards.py:357
+msgid "以及另外 {count} 项"
+msgstr "and {count} more"
+
+#: app/overview/cards.py:411
+msgid "还没有快捷启动，点「编辑」添加常用操作"
+msgstr "Select Edit to add your first shortcut."
+
+#: app/overview/cards.py:411
+msgid "还没有快捷启动"
+msgstr "No shortcuts yet"
+
+#: app/overview/cards.py:250
+msgid "显示未开启的 {count} 项"
+msgstr "Show disabled tasks ({count})"
+
+#: app/overview/cards.py:348
+msgid "用时 {duration}"
+msgstr "Took {duration}"
+
+#: app/overview/cards.py:350
+msgid "{trigger}触发"
+msgstr "Trigger: {trigger}"
+
+#: app/main_window.py:555 app/main_window.py:912 app/overview/greeting.py:270
+msgid "总览"
+msgstr "Overview"
+
+#: app/overview/greeting.py:270
+msgid "暂时读不到运行状态"
+msgstr "Run status is temporarily unavailable"
+
+#: app/overview/greeting.py:270
+msgid "稍后会自动重试。"
+msgstr "Trying again shortly."
+
+#: app/overview/shortcut_dialog.py:23
+msgid "相机"
+msgstr "Camera"
+
+#: app/overview/shortcut_dialog.py:23
+msgid "运行"
+msgstr "Run"
+
+#: app/overview/shortcut_dialog.py:23 app/overview_interface.py:113
+msgid "开拓力"
+msgstr "Trailblaze Power"
+
+#: app/overview/shortcut_dialog.py:24
+msgid "任务清单"
+msgstr "Task list"
+
+#: app/overview/shortcut_dialog.py:25
+msgid "宇宙"
+msgstr "Universe"
+
+#: app/overview/shortcut_dialog.py:25
+msgid "奖杯"
+msgstr "Trophy"
+
+#: app/overview/shortcut_dialog.py:26
+msgid "指南针"
+msgstr "Compass"
+
+#: app/overview/shortcut_dialog.py:27
+msgid "发送"
+msgstr "Send"
+
+#: app/overview/shortcut_dialog.py:28
+msgid "下载"
+msgstr "Download"
+
+#: app/overview/shortcut_dialog.py:28
+msgid "礼物"
+msgstr "Gift"
+
+#: app/overview/shortcut_dialog.py:29
+msgid "列表"
+msgstr "List"
+
+#: app/overview/shortcut_dialog.py:29
+msgid "星星"
+msgstr "Star"
+
+#: app/overview/shortcut_dialog.py:38
+msgid "编辑快捷启动"
+msgstr "Edit shortcuts"
+
+#: app/overview/style.py:104
+msgid "不到 1 分钟"
+msgstr "Less than 1 min"
+
+#: app/overview/style.py:111
+msgid "{hours} 小时 {minutes} 分钟"
+msgstr "{hours} hr {minutes} min"
+
+#: app/overview/style.py:92
+msgid "今天 {time}"
+msgstr "Today {time}"
+
+#: app/overview/style.py:94
+msgid "明天 {time}"
+msgstr "Tomorrow {time}"
+
+#: app/overview/style.py:96
+msgid "昨天 {time}"
+msgstr "Yesterday {time}"
+
+#: app/overview/style.py:107
+msgid "{minutes} 分钟"
+msgstr "{minutes} min"
+
+#: app/overview/style.py:110
+msgid "{hours} 小时"
+msgstr "{hours} hr"
+
+#: app/overview_interface.py:115
+msgid "本周周常"
+msgstr "Weekly tasks"
+
+#: app/overview_interface.py:116
+msgid "下次定时运行"
+msgstr "Next scheduled run"
+
+#: app/overview_interface.py:216
+msgid "管理定时"
+msgstr "Manage schedule"
+
+#: app/overview_interface.py:170
+msgid "暂时读不到每日实训"
+msgstr "Daily Training is temporarily unavailable"
+
+#: app/overview_interface.py:189
+msgid "暂时读不到周常进度"
+msgstr "Weekly progress is temporarily unavailable"
+
+#: app/overview_interface.py:206
+msgid "暂时读不到定时计划"
+msgstr "The schedule is temporarily unavailable"
+
+#: app/overview_interface.py:209
+msgid "未安排"
+msgstr "Unscheduled"
+
+#: app/overview_interface.py:210
+msgid "还没有定时运行"
+msgstr "No runs scheduled"
+
+#: app/overview_interface.py:210
+msgid "添加定时"
+msgstr "Add schedule"
+
+#: app/overview_interface.py:303
+msgid "更换问候区背景"
+msgstr "Change greeting background"
+
+#: app/overview_interface.py:153
+msgid "暂时读不到开拓力"
+msgstr "Trailblaze Power is temporarily unavailable"
+
+#: app/overview_interface.py:153
+msgid "运行一次清体力后显示"
+msgstr "Run Spend Power once to see your balance"
+
+#: app/overview_interface.py:182
+msgid "今天还没有完成"
+msgstr "Not completed today"
+
+#: app/overview_interface.py:193
+msgid "/ {count} 项"
+msgstr "/ {count}"
+
+#: app/overview_interface.py:199
+msgid "本周的都完成了"
+msgstr "All done this week"
+
+#: app/overview_interface.py:199
+msgid "没有开启每周任务"
+msgstr "No weekly tasks enabled"
+
+#: app/overview_interface.py:305
+msgid "恢复默认背景"
+msgstr "Restore default background"
+
+#: app/overview_interface.py:308
+msgid "隐藏 Q 版小人"
+msgstr "Hide chibi mascot"
+
+#: app/overview_interface.py:178
+msgid "{time} 完成"
+msgstr "Completed at {time}"
+
+#: app/overview_interface.py:197
+msgid "剩余：{names}"
+msgstr "Remaining: {names}"
+
+#: app/overview_interface.py:162
+msgid "约{time} 回满"
+msgstr "Full around {time}"
+
+#: app/overview_interface.py:180
+msgid "今天还差 {points} 活跃度"
+msgstr "{points} Activity points to go today"
+
+#: module/overview/shortcuts.py:231
+msgid "配置写入已暂停，请恢复后再保存。"
+msgstr "Saving settings is paused. Try again after it resumes."
+
+#: app/overview/shortcut_dialog.py:77
+msgid "操作类型"
+msgstr "Action Type"
+
+#: app/overview/shortcut_dialog.py:78
+msgid "任务"
+msgstr "Task"
+
+#: module/channel_catalog.py:95
+msgid "Bark"
+msgstr "Bark"
+
+#: module/channel_catalog.py:121
+msgid "Discord"
+msgstr "Discord"
+
+#: module/search/setting_text.py:3
+msgid "GitHub API 认证 Token，选填"
+msgstr "Optional GitHub API token"
+
+#: module/channel_catalog.py:158
+msgid "Go-cqhttp"
+msgstr "Go-cqhttp"
+
+#: module/channel_catalog.py:130
+msgid "Gotify"
+msgstr "Gotify"
+
+#: module/channel_catalog.py:135
+msgid "KOOK"
+msgstr "KOOK"
+
+#: module/channel_catalog.py:145
+msgid "Matrix"
+msgstr "Matrix"
+
+#: module/channel_catalog.py:127
+msgid "MeoW"
+msgstr "MeoW"
+
+#: module/search/setting_text.py:3
+msgid "MirrorChyan CDK"
+msgstr "MirrorChyan CDK"
+
+#: module/channel_catalog.py:84
+msgid "OneBot"
+msgstr "OneBot"
+
+#: module/channel_catalog.py:154
+msgid "Pushdeer"
+msgstr "Pushdeer"
+
+#: module/channel_catalog.py:115
+msgid "Pushplus"
+msgstr "Pushplus"
+
+#: module/channel_catalog.py:140
+msgid "Qmsg"
+msgstr "Qmsg"
+
+#: module/channel_catalog.py:49
+msgid "SMTP"
+msgstr "SMTP"
+
+#: module/channel_catalog.py:70
+msgid "Telegram"
+msgstr "Telegram"
+
+#: module/channel_catalog.py:165
+msgid "Webhook"
+msgstr "Webhook"
+
+#: module/channel_catalog.py:37
+msgid "Windows"
+msgstr "Windows"
+
+#: module/search/setting_text.py:3
+msgid "adb 可执行文件"
+msgstr "ADB executable"
+
+#: module/search/setting_text.py:3
+msgid "上次完成3次「历战余响」的时间戳"
+msgstr "Time when all three Echo of War attempts were last completed"
+
+#: module/search/setting_text.py:3
+msgid "上次运行模拟宇宙的时间戳，用于记录和控制运行频率"
+msgstr "Last Simulated Universe run, used to determine when to run again"
+
+#: app/content/settings_state.py:62
+msgid "主题切换由主窗口管理"
+msgstr "The main window manages theme changes"
+
+#: module/search/setting_text.py:3
+msgid "云崩铁是否全屏运行"
+msgstr "Run the cloud game in full screen"
+
+#: module/content_pages.py:34
+msgid "任务结束后"
+msgstr "After tasks finish"
+
+#: module/notification/channels.py
+msgid "保存失败，请稍后重试"
+msgstr "Could not save. Try again later."
+
+#: module/content_pages.py:43
+msgid "全局热键"
+msgstr "Global hotkeys"
+
+#: module/search/__init__.py
+msgid "共 {count} 项"
+msgstr "Items: {count}"
+
+#: module/task_catalog.py:57
+msgid "分别配置混沌回忆、虚构叙事和末日幻影。"
+msgstr ""
+"Configure Memory of Chaos, Pure Fiction, and Apocalyptic Shadow "
+"individually."
+
+#: app/content/settings_state.py:62
+msgid "切换更新源会检查更新"
+msgstr "Changing the update source checks for updates"
+
+#: module/content_pages.py:67
+msgid "刷什么"
+msgstr "What to farm"
+
+#: module/content_pages.py:66
+msgid "加入完整运行"
+msgstr "Include in full run"
+
+#: module/search/setting_text.py:3
+msgid "单次触摸点按的毫秒数"
+msgstr "Duration of each tap in milliseconds"
+
+#: module/content_pages.py:95
+msgid "博弈策略"
+msgstr "Strategies"
+
+#: module/task_catalog.py:53
+msgid "参加货币战争并获取每周积分。"
+msgstr "Play Currency Wars to earn weekly points."
+
+#: app/content/notify_model.py
+msgid "发送失败"
+msgstr "Sending failed"
+
+#: module/notification/results.py:12
+msgid "发送失败，请检查渠道配置"
+msgstr "Sending failed. Check the channel settings."
+
+#: module/notification/results.py
+msgid "发送成功"
+msgstr "Sent successfully"
+
+#: module/content_pages.py:59
+msgid "启动与权限"
+msgstr "Startup and permissions"
+
+#: module/search/setting_text.py:3
+msgid "启动器类型及窗口标题，可选 米哈游启动器、HoYoPlay"
+msgstr ""
+"Launcher type and window title, either the miHoYo launcher or HoYoPlay"
+
+#: module/settings_registry.py:163
+msgid "启用「每月自动购买命运的足迹」"
+msgstr "Automatically buy Tracks of Destiny each month"
+
+#: module/settings_registry.py:157
+msgid "启用「每月自动购买星轨专票」"
+msgstr "Automatically buy Star Rail Special Passes each month"
+
+#: module/settings_registry.py:160
+msgid "启用「每月自动购买星轨通票」"
+msgstr "Automatically buy Star Rail Passes each month"
+
+#: module/notification/channels.py
+msgid "启用图片时请填写此项"
+msgstr "Required when images are enabled"
+
+#: module/search/setting_text.py:3
+msgid "周几开始执行「历战余响」，假设值为4，那么周1、2、3不执行「历战余响」，周4、5、6、7则执行"
+msgstr ""
+"Earliest weekday for Echo of War. For example, 4 allows Thursday through "
+"Sunday."
+
+#: module/settings_registry.py:125
+msgid "周几开始执行历战余响"
+msgstr "First weekday for Echo of War"
+
+#: module/search/setting_text.py:3
+msgid "在总览问候区显示 Q 版小人"
+msgstr "Show the chibi illustration in the overview greeting"
+
+#: app/content/backend.py
+msgid "在这台电脑上运行 PC 版游戏。"
+msgstr "Run the PC game on this computer."
+
+#: module/content_pages.py:85
+msgid "地图与队伍"
+msgstr "Maps and teams"
+
+#: module/task_catalog.py:60
+msgid "处理每月兑换、光锥叠加和遗器清理。"
+msgstr ""
+"Handle monthly exchanges, Light Cone superimposition, and relic cleanup."
+
+#: module/content_pages.py:54
+msgid "备份与恢复"
+msgstr "Backup and restore"
+
+#: module/content_pages.py:46
+msgid "外观"
+msgstr "Appearance"
+
+#: module/content_pages.py:45
+msgid "外观与窗口"
+msgstr "Appearance and window"
+
+#: module/content_pages.py:35
+msgid "完成后操作"
+msgstr "Completion action"
+
+#: module/task_catalog.py:47
+msgid "完成当天的每日实训。"
+msgstr "Complete today's Daily Training."
+
+#: app/content/settings_state.py:62
+msgid "定时计划由运行页管理"
+msgstr "Manage schedules on the Run page"
+
+#: module/content_pages.py:73
+msgid "实训项目"
+msgstr "Training activities"
+
+#: app/content/settings_state.py
+msgid "密钥由编辑表单管理"
+msgstr "Manage credentials in the edit form"
+
+#: module/tool_catalog.py:20
+msgid "导出角色的属性、光锥、星魂、技能和遗器。"
+msgstr "Export character stats, Light Cones, Eidolons, skills, and relics."
+
+#: module/notification/channels.py
+msgid "已填写 {count} 个字段"
+msgstr "Fields filled: {count}"
+
+#: module/content_pages.py:39
+msgid "已添加的渠道"
+msgstr "Added channels"
+
+#: module/search/__init__.py
+msgid "已设置"
+msgstr "Configured"
+
+#: module/content_pages.py:68
+msgid "开拓力不够时"
+msgstr "When Trailblaze Power is low"
+
+#: app/content/settings_state.py
+msgid "当前值由运行环境指定"
+msgstr "The runtime environment sets this value"
+
+#: module/search/setting_text.py:3
+msgid "当日成功通关差分宇宙的次数，任何方式运行并成功通关都会记录此值"
+msgstr "Today's successful Divergent Universe runs across all run modes"
+
+#: module/content_pages.py:42
+msgid "快捷键"
+msgstr "Hotkeys"
+
+#: module/content_pages.py:69
+msgid "战斗与高级"
+msgstr "Combat and advanced settings"
+
+#: module/search/setting_text.py:3
+msgid "战斗内角色详情键"
+msgstr "Key for character details in combat"
+
+#: module/search/setting_text.py:3
+msgid "战斗外交互键"
+msgstr "Interaction key outside combat"
+
+#: module/search/setting_text.py:3
+msgid "执行差分宇宙时的难度等级，取值范围 1-6，数值越大难度越高，其中难度 6 对应常规演算星阶模式"
+msgstr ""
+"Divergent Universe difficulty from 1 to 6. Level 6 selects the higher-"
+"difficulty mode of Ordinary Extrapolation."
+
+#: module/content_pages.py:91
+msgid "执行时间"
+msgstr "Run time"
+
+#: module/search/setting_text.py:3
+msgid "投资环境和投资策略的选择优先级"
+msgstr "Priority for investment environments and strategies"
+
+#: module/task_catalog.py:50
+msgid "按地图路线清理大世界敌人。"
+msgstr "Defeat overworld enemies along the chosen route."
+
+#: module/task_catalog.py:52
+msgid "按所选星期挑战历战余响。"
+msgstr "Challenge Echo of War from the selected weekday."
+
+#: module/content_pages.py:108
+msgid "按月和其他"
+msgstr "Monthly and other"
+
+#: module/content_pages.py:40
+msgid "推送内容"
+msgstr "Notification content"
+
+#: module/notification/results.py:12
+msgid "推送参数无效，请检查渠道配置"
+msgstr "Invalid notification parameters. Check the channel settings."
+
+#: module/notification/results.py:12
+msgid "推送服务拒绝了身份验证。请打开此渠道的编辑窗口，核对机器人密钥和收件人，再发送一条测试消息。"
+msgstr ""
+"The service rejected authentication. Edit this channel, verify the bot "
+"credentials and recipient, then send a test message."
+
+#: app/content/settings_state.py
+msgid "操作或进度没有可恢复的设置"
+msgstr "This action or progress indicator has no setting to reset"
+
+#: module/search/setting_text.py:3
+msgid "支援列表滚动查找次数"
+msgstr "Number of scrolls when searching for support characters"
+
+#: module/notification/results.py:12
+msgid "无法连接推送服务"
+msgstr "Cannot connect to the notification service"
+
+#: module/search/setting_text.py:3
+msgid "是否体力优先完成3次「历战余响」"
+msgstr "Spend Trailblaze Power on three Echo of War attempts first"
+
+#: module/search/setting_text.py:3
+msgid "是否使用支援角色"
+msgstr "Use a support character"
+
+#: module/search/setting_text.py:3
+msgid "是否使用镜像下载浏览器和驱动"
+msgstr "Download the browser and driver from a mirror"
+
+#: module/search/setting_text.py:3
+msgid "是否允许浏览器保存数据（登录状态/游戏本地数据）"
+msgstr "Allow the browser to save login and local game data"
+
+#: module/search/setting_text.py:3
+msgid "是否启用「差分宇宙」积分奖励"
+msgstr "Enable Divergent Universe point rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否启用「货币战争」积分奖励"
+msgstr "Enable Currency Wars point rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否启用日常任务"
+msgstr "Enable daily tasks"
+
+#: module/search/setting_text.py:3
+msgid "是否启用每月自动购买余烬兑换中的「命运的足迹」"
+msgstr "Buy Tracks of Destiny in the Embers Exchange each month"
+
+#: module/search/setting_text.py:3
+msgid "是否启用每月自动购买余烬兑换中的「星轨专票」"
+msgstr "Buy Star Rail Special Passes in the Embers Exchange each month"
+
+#: module/search/setting_text.py:3
+msgid "是否启用每月自动购买余烬兑换中的「星轨通票」"
+msgstr "Buy Star Rail Passes in the Embers Exchange each month"
+
+#: module/search/setting_text.py:3
+msgid "是否启用活动功能"
+msgstr "Enable event checks"
+
+#: module/search/setting_text.py:3
+msgid "是否启用清体力总开关"
+msgstr "Include Trailblaze Power farming in full runs"
+
+#: module/search/setting_text.py:3
+msgid "是否启用资产管理功能"
+msgstr "Enable asset management"
+
+#: module/search/setting_text.py:3
+msgid "是否启用锄大地功能"
+msgstr "Enable field farming"
+
+#: module/search/setting_text.py:3
+msgid "是否启用领取奖励功能"
+msgstr "Enable reward collection"
+
+#: module/search/setting_text.py:3
+msgid "是否在打副本时自动切换队伍"
+msgstr "Switch teams automatically in instances"
+
+#: module/search/setting_text.py:3
+msgid "是否在进入副本前进行传送至任意锚点"
+msgstr "Teleport to a Space Anchor before entering an instance"
+
+#: module/search/setting_text.py:3
+msgid "是否在锄大地时自动切换队伍"
+msgstr "Switch teams automatically during field farming"
+
+#: module/search/setting_text.py:3
+msgid "是否检查更新"
+msgstr "Check for updates"
+
+#: module/search/setting_text.py:3
+msgid "是否通过启动器更新游戏"
+msgstr "Update the game through the launcher"
+
+#: module/search/setting_text.py:3
+msgid "是否领取兑换码奖励"
+msgstr "Claim redemption code rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否领取委托奖励"
+msgstr "Claim assignment rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否领取成就奖励"
+msgstr "Claim achievement rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否领取支援奖励"
+msgstr "Claim support rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否领取无名勋礼奖励"
+msgstr "Claim Nameless Honor rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否领取每日实训奖励"
+msgstr "Claim Daily Training rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否领取短信奖励"
+msgstr "Claim message rewards"
+
+#: module/search/setting_text.py:3
+msgid "是否领取邮件奖励"
+msgstr "Claim mail rewards"
+
+#: module/search/__init__.py
+msgid "暂时无法读取"
+msgstr "Currently unavailable"
+
+#: module/content_pages.py:49
+msgid "更新"
+msgstr "Updates"
+
+#: module/search/setting_text.py:3
+msgid "更新下载代理，留空则使用系统代理"
+msgstr "Download proxy for updates. Leave blank to use the system proxy."
+
+#: module/notification/results.py:12
+msgid "服务未接受消息，请检查渠道配置"
+msgstr "The service did not accept the message. Check the channel settings."
+
+#: module/notification/results.py
+msgid "服务返回 HTTP {status}"
+msgstr "The service returned HTTP {status}"
+
+#: module/notification/channels.py
+msgid "未知字段"
+msgstr "Unknown field"
+
+#: module/search/__init__.py
+msgid "未设置"
+msgstr "Not configured"
+
+#: module/search/setting_text.py:3
+msgid "末日幻影关卡范围，设置允许尝试的关卡等级范围"
+msgstr "Apocalyptic Shadow stage range to attempt"
+
+#: module/search/setting_text.py:150
+msgid "本地客户端"
+msgstr "Local client"
+
+#: module/task_catalog.py:49
+msgid "检查并领取已选的日常奖励。"
+msgstr "Check and collect the selected daily rewards."
+
+#: module/task_catalog.py:48
+msgid "检查签到、双倍掉落和活动热点。"
+msgstr "Check sign-in rewards, double drops, and event highlights."
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙使用的命途"
+msgstr "Simulated Universe path"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙使用的难度"
+msgstr "Simulated Universe difficulty"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙类型，可选 \"差分宇宙\"（divergent）或 \"模拟宇宙\"（universe）"
+msgstr ""
+"Choose Divergent Universe (divergent) or Simulated Universe (universe)"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙运行方式，可选 \"源码\"（source）或 \"集成\"（exe）"
+msgstr ""
+"Run Simulated Universe from source (source) or the bundled executable (exe)"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙运行频率，可选 \"每周\"（weekly）或 \"每天\"（daily）"
+msgstr "Run Simulated Universe weekly (weekly) or daily (daily)"
+
+#: module/content_pages.py:101
+msgid "模拟宇宙（外部工具，停止维护）"
+msgstr "Simulated Universe (external tool, discontinued)"
+
+#: module/search/setting_text.py:3
+msgid "每周所选日期清理四星及以下遗器；可在展开项启用智能弃置"
+msgstr ""
+"Clear four-star and lower relics on the selected weekday. Expand to enable "
+"smart discard."
+
+#: module/content_pages.py:110
+msgid "每月兑换"
+msgstr "Monthly exchange"
+
+#: module/content_pages.py:77
+msgid "活动项目"
+msgstr "Event activities"
+
+#: module/search/setting_text.py:3
+msgid "浏览器启动的额外参数，如 \"--auto-open-devtools-for-tabs\""
+msgstr "Extra browser launch arguments, e.g. \"--auto-open-devtools-for-tabs\""
+
+#: module/search/setting_text.py:3
+msgid "混沌回忆关卡范围，设置允许尝试的关卡等级范围"
+msgstr "Memory of Chaos stage range to attempt"
+
+#: app/content/settings_state.py:62
+msgid "清空路径会影响完成后操作"
+msgstr "Clearing this path affects the completion action"
+
+#: app/content/settings_state.py:62
+msgid "清空路径可能使任务无法启动"
+msgstr "Clearing this path may prevent tasks from starting"
+
+#: app/content/settings_state.py
+msgid "渠道字段需要一起校验"
+msgstr "Channel fields must be validated together"
+
+#: module/content_pages.py:29
+msgid "游戏与启动"
+msgstr "Game and launch"
+
+#: module/content_pages.py:31
+msgid "游戏优化"
+msgstr "Game optimization"
+
+#: module/content_pages.py:32
+msgid "游戏内按键"
+msgstr "In-game keys"
+
+#: module/search/setting_text.py:3
+msgid "游戏安装路径"
+msgstr "Game installation path"
+
+#: app/content/notify_model.py
+msgid "点击「开始监听」后，请在 {seconds} 秒内在群聊中 @ 机器人发送验证码 {code}，或将机器人拉进目标群"
+msgstr ""
+"After selecting Start listening, mention the bot with code {code} in the "
+"group or invite it to the group within {seconds} seconds."
+
+#: module/content_pages.py:86
+msgid "特殊物品领取"
+msgstr "Special item collection"
+
+#: module/search/setting_text.py:3
+msgid "用于“回忆一”的队伍配置"
+msgstr "Team for Memory Stage 1"
+
+#: module/settings_registry.py:370
+msgid "界面语言 / 界面語言 / 日本語 / 인터페이스 언어 / UI Language"
+msgstr "界面语言 / 界面語言 / 日本語 / 인터페이스 언어 / UI Language"
+
+#: module/content_pages.py:100
+msgid "积分奖励"
+msgstr "Point rewards"
+
+#: module/content_pages.py:47
+msgid "窗口"
+msgstr "Window"
+
+#: module/notification/channels.py
+msgid "端口应在 1 到 65535 之间"
+msgstr "Use a port between 1 and 65535"
+
+#: module/search/setting_text.py:3
+msgid "米哈游启动器安装路径"
+msgstr "miHoYo launcher installation path"
+
+#: app/content/notify_model.py
+msgid "绑定失败，请检查机器人凭据和网络"
+msgstr "Binding failed. Check the bot credentials and network."
+
+#: app/content/notify_model.py
+msgid "绑定超时，请重新发起绑定"
+msgstr "Binding timed out. Start binding again."
+
+#: module/search/setting_text.py:3
+msgid "自动识别 Windows 本地客户端的按键，缺失时使用以下设置"
+msgstr ""
+"Detect local Windows game key bindings. Use the following settings for any "
+"keys that are not detected."
+
+#: module/task_catalog.py:55
+msgid "获取差分宇宙积分，或按配置运行模拟宇宙。"
+msgstr ""
+"Earn Divergent Universe points or run Simulated Universe as configured."
+
+#: module/search/setting_text.py:3
+msgid "虚构叙事关卡范围，设置允许尝试的关卡等级范围"
+msgstr "Pure Fiction stage range to attempt"
+
+#: module/search/setting_text.py:3
+msgid "设备序列号或 IP:端口"
+msgstr "Device serial number or IP:port"
+
+#: app/content/settings_state.py:62
+msgid "设备连接由运行方式页面管理"
+msgstr "Manage device connections on the Run Mode page"
+
+#: module/search/setting_text.py:3
+msgid "设置停止任务的全局快捷键（支持后台）"
+msgstr "Global hotkey to stop a task, including in the background"
+
+#: module/search/setting_text.py:3
+msgid "设置切换自动对话的全局快捷键（支持后台）"
+msgstr ""
+"Global hotkey to toggle automatic dialogue, including in the background"
+
+#: module/search/setting_text.py:3
+msgid "设置打开地图的按键"
+msgstr "Key to open the map"
+
+#: module/search/setting_text.py:3
+msgid "设置打开短信的按键"
+msgstr "Key to open messages"
+
+#: module/search/setting_text.py:3
+msgid "设置打开跃迁的按键"
+msgstr "Key to open Warp"
+
+#: module/search/setting_text.py:3
+msgid "设置暂停/继续任务的全局快捷键（支持后台，仅内置任务有效）"
+msgstr ""
+"Global pause/resume hotkey for built-in tasks, including in the background"
+
+#: module/search/setting_text.py:3
+msgid "设置游戏内使用秘技的按键"
+msgstr "Key to use a Technique"
+
+#: module/search/setting_text.py:3
+msgid "设置自动战斗的按键"
+msgstr "Key for auto-battle"
+
+#: app/content/settings_state.py:62
+msgid "语言切换需要重建界面"
+msgstr "Changing language requires rebuilding the interface"
+
+#: module/notification/channels.py
+msgid "请填写此项"
+msgstr "Fill in this field"
+
+#: module/notification/channels.py
+msgid "请求头应为 JSON 对象"
+msgstr "Request headers must be a JSON object"
+
+#: module/notification/channels.py
+msgid "请至少填写其中一项"
+msgstr "Fill in at least one of these fields"
+
+#: module/notification/channels.py
+msgid "请输入完整的 HTTP 或 HTTPS 地址"
+msgstr "Enter a complete HTTP or HTTPS address"
+
+#: module/notification/channels.py
+msgid "请输入整数"
+msgstr "Enter an integer"
+
+#: module/notification/channels.py
+msgid "请输入有效的 JSON"
+msgstr "Enter valid JSON"
+
+#: module/notification/channels.py
+msgid "请选择列表中的选项"
+msgstr "Select an option from the list"
+
+#: module/notification/channels.py
+msgid "请选择开或关"
+msgstr "Select on or off"
+
+#: module/content_pages.py:111
+msgid "资产处理"
+msgstr "Asset processing"
+
+#: module/content_pages.py:108
+msgid "资产管理"
+msgstr "Asset management"
+
+#: module/content_pages.py:23
+msgid "运行方式"
+msgstr "Run mode"
+
+#: app/content/settings_state.py:62
+msgid "运行方式需要检查任务状态"
+msgstr "Check task status before changing run mode"
+
+#: module/notification/results.py:12
+msgid "连接超时，请检查网络或代理"
+msgstr "Connection timed out. Check your network or proxy."
+
+#: app/content/backend.py
+msgid "通过 ADB 连接手机或模拟器。"
+msgstr "Connect a phone or emulator via ADB."
+
+#: app/content/backend.py
+msgid "通过浏览器运行云游戏。"
+msgstr "Play the cloud game in a browser."
+
+#: module/search/setting_text.py:3
+msgid "遇到未完成对局时，\"restart\" 结算后重新开局，\"resume\" 按配置的策略继续进度"
+msgstr ""
+"For an unfinished game, restart settles it and starts over, while resume "
+"continues it using the selected strategy."
+
+#: module/content_pages.py:112
+msgid "遗器清理"
+msgstr "Relic cleanup"
+
+#: module/search/setting_text.py:3
+msgid "锄大地运行方式，可选 \"源码\"（source）或 \"集成\"（exe）"
+msgstr ""
+"Run field farming from source (source) or the bundled executable (exe)"
+
+#: module/search/setting_text.py:3
+msgid "问候区自选背景；留空时使用当前主题的星轨"
+msgstr ""
+"Custom greeting background. Leave blank for the current theme's star trail."
+
+#: module/content_pages.py:60
+msgid "隐私"
+msgstr "Privacy"
+
+#: app/content/settings_state.py:62
+msgid "需要同步系统计划任务"
+msgstr "The system scheduled task must be updated"
+
+#: module/content_pages.py:79
+msgid "领取奖励"
+msgstr "Collect rewards"
+
+#: module/content_pages.py:81
+msgid "领取项目"
+msgstr "Rewards to collect"
+
+#: module/content_pages.py:57
+msgid "高级"
+msgstr "Advanced"
+
+#: module/task_catalog.py
+msgid "，另可挑战 {count} 轮"
+msgstr ", plus {count} more waves"
+
+#: module/search/setting_text.py:216
+msgid "使用截图、兑换码和角色面板导出等工具。"
+msgstr "Take screenshots, redeem codes, and export character stats."
+
+#: module/search/setting_text.py:3
+msgid "切换后即时生效"
+msgstr "Takes effect immediately"
+
+#: module/search/setting_text.py:216
+msgid "创建、编辑和运行自定义流程。"
+msgstr "Create, edit, and run custom workflows."
+
+#: module/search/setting_text.py:216
+msgid "创建第一个流程"
+msgstr "Create your first workflow"
+
+#: module/search/setting_text.py:3
+msgid "刷周积分 / 刷晋升点 / 冲职级"
+msgstr "Weekly points / Promotion points / Rank up"
+
+#: module/search/setting_text.py:3
+msgid "加入用户交流群"
+msgstr "Join the user community"
+
+#: module/search/__init__.py
+msgid "可选项包括 {items}"
+msgstr "Options include {items}"
+
+#: module/search/setting_text.py:3
+msgid "向所有已启用的渠道发送测试消息。"
+msgstr "Send a test message to all enabled channels."
+
+#: module/search/setting_text.py:3
+msgid "数据保存在哪里"
+msgstr "Where data is stored"
+
+#: module/search/setting_text.py:216
+msgid "查看、导入和导出跃迁记录。"
+msgstr "View, import, and export Warp records."
+
+#: module/search/setting_text.py:216
+msgid "查看各版本的改动。"
+msgstr "See what changed in each version."
+
+#: module/search/setting_text.py:216
+msgid "查看开拓力、完整运行清单与最近结果。"
+msgstr "View Trailblaze Power, the full run plan, and recent results."
+
+#: module/search/setting_text.py:216
+msgid "查看本地后台模式与云游戏的使用条件。"
+msgstr "Check the requirements for local background mode and cloud gaming."
+
+#: module/search/setting_text.py:216
+msgid "查看运行日志、控制任务或管理定时计划。"
+msgstr "View logs, control running tasks, or manage schedules."
+
+#: module/search/setting_text.py:216
+msgid "查阅使用教程和常见问题。"
+msgstr "Read the user guide and frequently asked questions."
+
+#: module/search/setting_text.py:216
+msgid "检查版本，访问项目主页和社区。"
+msgstr "Check the version and open the project homepage or community."
+
+#: module/search/setting_text.py:3
+msgid "管理已添加的推送渠道。"
+msgstr "Manage your notification channels."
+
+#: module/search/setting_text.py:216
+msgid "管理更新源、下载代理和版本检测。"
+msgstr "Manage update sources, the download proxy, and version checks."
+
+#: module/search/setting_text.py:216
+msgid "管理本地游戏账号。"
+msgstr "Manage local game accounts."
+
+#: module/search/setting_text.py:3
+msgid "设备运行状态"
+msgstr "Device status"
+
+#: module/search/setting_text.py:216
+msgid "设置停止、暂停和自动对话的全局热键。"
+msgstr "Set global hotkeys for stopping, pausing, and automatic dialogue."
+
+#: module/search/setting_text.py:216
+msgid "设置日志、启动权限和隐私选项。"
+msgstr "Configure logs, startup permissions, and privacy options."
+
+#: module/search/setting_text.py:3
+msgid "设置通知的标题和正文。"
+msgstr "Set the notification title and body."
+
+#: module/search/setting_text.py:216
+msgid "调整助手的程序与环境设置。"
+msgstr "Adjust the assistant and its runtime environment."
+
+#: module/search/setting_text.py:216
+msgid "运行前准备"
+msgstr "Before you run"
+
+#: module/search/setting_text.py:3
+msgid "远程一号位锄地 / 黄泉一号位锄地 / 仅获取特殊物品"
+msgstr "Ranged lead / Acheron lead / Special items only"
+
+#: module/search/setting_text.py:216
+msgid "选择任务并调整完整运行的内容。"
+msgstr "Choose tasks and configure what to include in a full run."
+
+msgid " 任务相关的内容请到「任务」页查看。"
+msgstr " See the Task page for task-specific options."
+
+msgid "ADB"
+msgstr "ADB"
+
+msgid "HDR"
+msgstr "HDR"
+
+msgid "Windows / macOS / Linux"
+msgstr "Windows / macOS / Linux"
+
+msgid "proxy"
+msgstr "proxy"
+
+msgid "{count} 个渠道"
+msgstr "Channels: {count}"
+
+msgid "{count} 次"
+msgstr "{count} runs"
+
+msgid "{enabled} / {total} 已开启"
+msgstr "{enabled} / {total} enabled"
+
+msgid "{name} 测试失败"
+msgstr "{name} test failed"
+
+msgid "{name} 测试消息已发出"
+msgstr "Test message sent to {name}"
+
+msgid "、"
+msgstr ", "
+
+msgid "上次发送失败：{reason}"
+msgstr "Last delivery failed: {reason}"
+
+msgid "上次发送成功"
+msgstr "Last delivery succeeded"
+
+msgid "上次完成历战余响"
+msgstr "Last Echo of War completion"
+
+msgid "上次完成每日实训"
+msgstr "Last Daily Training completion"
+
+msgid "上次完成锄大地"
+msgstr "Last Fhoe-Rail completion"
+
+msgid "上次拿满本周积分"
+msgstr "Last time weekly points were maxed out"
+
+msgid "上次运行模拟宇宙"
+msgstr "Last Simulated Universe run"
+
+msgid "不占鼠标"
+msgstr "Without taking over the mouse"
+
+msgid "也匹配了：{words}"
+msgstr "Also matched: {words}"
+
+msgid "仅 Windows"
+msgstr "Windows only"
+
+msgid "从未完成"
+msgstr "Never completed"
+
+msgid "代理"
+msgstr "Proxy"
+
+msgid "任务完成或失败时通知你。先添加一个常用的渠道，再点「测试」确认能收到。"
+msgstr ""
+"Get notified when a task finishes or fails. Add a channel, then select Test "
+"to check delivery."
+
+msgid "全部"
+msgstr "All"
+
+msgid "全部任务结束后要做什么，例如关机、退出小助手或运行脚本。"
+msgstr ""
+"Choose what happens after all tasks finish, such as shutting down, exiting "
+"the assistant, or running a script."
+
+msgid "分辨率"
+msgstr "Resolution"
+
+msgid "切换分类"
+msgstr "Switch category"
+
+msgid "刷本"
+msgstr "Farm stages"
+
+msgid "前往任务页 ›"
+msgstr "Go to Task page ›"
+
+msgid "副本"
+msgstr "Stage"
+
+msgid "发送测试"
+msgstr "Send test"
+
+msgid "可后台"
+msgstr "Background mode supported"
+
+msgid "启动游戏的方式和等待时间，以及运行期间对画面和按键的调整。"
+msgstr ""
+"Adjust how the game starts, how long to wait, and the graphics and keys used"
+" while running."
+
+msgid "和默认值不同，悬停卡片可以恢复默认"
+msgstr "Changed from its default. Hover over the card to restore it."
+
+msgid "在帮助中查看这项设置的说明"
+msgstr "View this setting in Help"
+
+msgid "在浏览器中运行云游戏，可以无窗口运行，也能用 Docker 部署。"
+msgstr ""
+"Run the cloud game in a browser. Headless mode and Docker deployments are "
+"supported."
+
+msgid "在这台电脑上运行 PC 版游戏，支持全部任务。"
+msgstr "Run the PC game on this computer with support for all tasks."
+
+msgid "差分宇宙今日已完成"
+msgstr "Divergent Universe completions today"
+
+msgid "已修改"
+msgstr "Modified"
+
+msgid "已停用"
+msgstr "Disabled"
+
+msgid "已添加"
+msgstr "Added"
+
+msgid "已添加，点击编辑"
+msgstr "Already added. Click to edit."
+
+msgid "开机自启"
+msgstr "Start at login"
+
+msgid "当前系统不支持这种运行方式"
+msgstr "This operating system does not support this run mode"
+
+msgid "当前运行方式不支持这项任务，或者已有任务正在运行"
+msgstr ""
+"This run mode does not support the task, or another task is already running"
+
+msgid "当前配置无法识别：{error}。请重新选择运行方式。"
+msgstr "Unrecognized configuration: {error}. Select a run mode again."
+
+msgid "想找什么？"
+msgstr "What are you looking for?"
+
+msgid "截屏"
+msgstr "Screen capture"
+
+msgid "打开并定位"
+msgstr "Open result"
+
+msgid "打开开关的任务会加入「完整运行」，每项也可以单独立即运行"
+msgstr ""
+"Enabled tasks are included in Full Run. You can also run any task on its "
+"own."
+
+msgid "抽卡"
+msgstr "Warp pulls"
+
+msgid "挂机"
+msgstr "AFK"
+
+msgid "按键"
+msgstr "Keys"
+
+msgid "换个说法试试，比如用功能的名字，或者下面这些常用词："
+msgstr "Try the feature name or one of these common searches."
+
+msgid "换个说法试试：{words}"
+msgstr "Try another term: {words}"
+
+msgid "搜索「{query}」"
+msgstr "Search for “{query}”"
+
+msgid "搜索功能、设置、帮助"
+msgstr "Search features, settings, and help"
+
+msgid "搜索设置"
+msgstr "Search settings"
+
+msgid "搜索设置、任务、帮助和工具"
+msgstr "Search settings, tasks, help, and tools"
+
+msgid "搜索（Ctrl+K）"
+msgstr "Search (Ctrl+K)"
+
+msgid "收起"
+msgstr "Show less"
+
+msgid "无法停用这个渠道"
+msgstr "Could not disable this channel"
+
+msgid "无法启用这个渠道"
+msgstr "Could not enable this channel"
+
+msgid "无窗口"
+msgstr "Headless"
+
+msgid "更多 {count} 个"
+msgstr "Show {count} more"
+
+msgid "更新策略"
+msgstr "Update strategy"
+
+msgid "最小化"
+msgstr "Minimize"
+
+msgid "查看教程"
+msgstr "View guide"
+
+msgid "检查更新的时机、下载来源和代理。"
+msgstr ""
+"Choose when to check for updates, where to download them, and which proxy to"
+" use."
+
+msgid "正在发送测试消息……"
+msgstr "Sending test message…"
+
+msgid "正在测试"
+msgstr "Testing"
+
+msgid "每个任务做什么，在「任务」页设置。"
+msgstr "Choose what each task does on the Task page."
+
+msgid "没有恢复默认"
+msgstr "Default could not be restored"
+
+msgid "没有找到「{query}」"
+msgstr "No results for “{query}”"
+
+msgid "没有找到相关设置。"
+msgstr "No matching settings found."
+
+msgid "测试消息已发出，请确认是否收到"
+msgstr "Test message sent. Check that it arrived."
+
+msgid "添加 {name}"
+msgstr "Add {name}"
+
+msgid "添加渠道"
+msgstr "Add channel"
+
+msgid "清除记录后，下次运行会重新执行这一项"
+msgstr "Clearing this record makes the item run again next time"
+
+msgid "热键"
+msgstr "Hotkeys"
+
+msgid "版本信息、项目主页和社区。"
+msgstr "Version information, project homepage, and community."
+
+msgid "现在无法运行"
+msgstr "Cannot run now"
+
+msgid "画面"
+msgstr "Graphics"
+
+msgid "界面语言、主题、总览的问候区，以及关闭和记忆窗口的方式。"
+msgstr ""
+"Change the language, theme, overview greeting, and how the window closes or "
+"remembers its position."
+
+msgid "等 {count} 项"
+msgstr "and more ({count} total)"
+
+msgid "筛选任务"
+msgstr "Filter tasks"
+
+msgid "编辑 {name}"
+msgstr "Edit {name}"
+
+msgid "自动绑定单聊用户"
+msgstr "Bind direct-message recipient"
+
+msgid "自动绑定群聊"
+msgstr "Bind group chat"
+
+msgid "自启动"
+msgstr "Autostart"
+
+msgid "设置、账号、运行记录和日志都放在数据文件夹里，可以在这里备份、恢复或导出排查包。"
+msgstr ""
+"The data folder holds your settings, accounts, run history, and logs. Back "
+"up, restore, or export diagnostics here."
+
+msgid "请到对应应用里确认是否收到"
+msgstr "Check the receiving app for the message"
+
+msgid "请在这张卡片上手动修改"
+msgstr "Edit this setting on the card"
+
+msgid "输入功能、设置或问题里的词。用平时的说法也行，比如「挂机」「体力」「刷本」。"
+msgstr ""
+"Search by feature, setting, or question. Try everyday terms such as “AFK”, "
+"“power”, or “farming”."
+
+msgid "还没有添加渠道。从下面选一个你常用的，填好后点「测试」确认能收到。"
+msgstr ""
+"No channels added yet. Choose one below, fill in its details, and select "
+"Test to check delivery."
+
+msgid "这个渠道不需要填写任何内容。"
+msgstr "No information is needed for this channel."
+
+msgid "选择游戏在哪里运行，以及小助手怎样操作它。切换后从下一次任务开始生效。"
+msgstr ""
+"Choose where the game runs and how the assistant controls it. Changes apply "
+"from the next task."
+
+msgid "通常不需要修改，排查问题时再来调整。"
+msgstr "These settings usually only need changing for troubleshooting."
+
+msgid "通过 ADB 连接手机或模拟器，支持清体力、每日实训、领奖和历战余响。"
+msgstr ""
+"Connect a phone or emulator via ADB for Spend Power, Daily Training, "
+"rewards, and Echo of War."
+
+msgid "部分任务"
+msgstr "Some tasks"
+
+msgid "重置"
+msgstr "Reset"
+
+msgid "随时停止、暂停任务或切换自动对话的全局快捷键，小助手在后台时也能用。"
+msgstr ""
+"Global hotkeys let you stop or pause tasks and toggle auto-dialogue, even "
+"while the assistant is in the background."
+
+msgid "请在「设置 → 运行方式 → 游戏路径」中选择正确的游戏文件"
+msgstr ""
+"Select the correct game executable under Settings → Run Mode → Game Path."
+
+msgid "请按提示处理后重试。仍然失败时，把运行页的日志发给开发者。"
+msgstr ""
+"Follow the instructions and try again. If it still fails, send the log from "
+"the Run page to the developer."
+
+msgid "工具"
+msgstr "Tools"
+
+msgid "页面"
+msgstr "Pages"
+
+#: module/docs/catalog.py:22
+msgid "每日实训对照表"
+msgstr "Daily Training Reference"
+
+#: module/docs/catalog.py:26
+msgid "安卓版教程"
+msgstr "Android Guide"
+
+#: module/docs/catalog.py:29
+msgid "Docker 部署"
+msgstr "Docker Deployment"
+
+#: module/docs/catalog.py:30
+msgid "Termux 安卓部署"
+msgstr "Android Deployment with Termux"
+
+#: app/help_interface.py:41
+msgid "搜索帮助文档"
+msgstr "Search help"
+
+#: app/help_interface.py:43
+msgid "本页目录"
+msgstr "On this page"
+
+#: app/help_interface.py:264
+msgid "新"
+msgstr "New"
+
+#: app/help/page.py:56
+msgid "返回"
+msgstr "Back"
+
+#: app/help/page.py:54
+msgid "随 {version} 更新"
+msgstr "Updated with {version}"
+
+#: app/help/page.py:103
+msgid "这篇文档的排版出了问题，下面按原文显示。"
+msgstr "We couldn’t format this document. The original text appears below."
+
+#: app/help/page.py:161
+msgid "已复制本节的官网链接"
+msgstr "Website link to this section copied"
+
+#: app/help/blocks.py:87
+msgid "图片"
+msgstr "Image"
+
+#: app/help/blocks.py:87
+msgid "图片：{name}"
+msgstr "Image: {name}"
+
+#: app/help/blocks.py:102
+msgid "复制本节的官网链接"
+msgstr "Copy website link to this section"
+
+#: app/help/blocks.py:369
+msgid "已复制"
+msgstr "Copied"
+
+#: app/help/blocks.py:493
+msgid "详细信息"
+msgstr "Details"
+
+#: app/help/richtext.py:322
+msgid "前往"
+msgstr "Go"
+
+#: app/help/richtext.py:454
+msgid "前往：{path}"
+msgstr "Go to {path}"
+
+#: app/help/richtext.py:63
+msgid "部分"
+msgstr "Partial"
+
+#: app/help/richtext.py:518
+msgid "复制链接地址"
+msgstr "Copy link address"
+
+#: app/help/search.py:111
+msgid "没有找到相关内容"
+msgstr "No results found"
+
+#: app/help/search.py:113
+msgid "换个说法试试："
+msgstr "Try searching for"
+
+#: app/help/search.py:113
+msgid "换个说法，或者少输入几个字试试。"
+msgstr "Try different or fewer keywords."
+
+#: app/help/search.py:190
+msgid "找到 {count} 个相关小节"
+msgstr "Matching sections: {count}"
+
+#: app/help/sections.py:173
+msgid "当前版本"
+msgstr "Current version"
+
+#: app/help/sections.py:175
+msgid "测试版"
+msgstr "Beta"
+
+#: app/help/sections.py:183
+msgid "这个版本的说明暂时无法显示。"
+msgstr "The notes for this version are temporarily unavailable."
+
+#: app/help/side.py:254
+msgid "没找到答案？"
+msgstr "Need help?"
+
+#: app/help/side.py:263
+msgid "换个说法搜索，或带上日志去 QQ 群提问"
+msgstr "Try other keywords, or share your Log in the QQ group."
+
+#: app/help/side.py:255
+msgid "打开常见问题"
+msgstr "Open FAQ"
+
+#: app/help/side.py:265
+msgid "QQ 群"
+msgstr "QQ group"
+
+#: module/channel_catalog.py:37
+msgid "启用 Windows 通知"
+msgstr "Enable Windows Notification"
+
+#: module/channel_catalog.py:39
+msgid "启用 企业微信机器人 通知"
+msgstr "Enable WeCom bot Notification"
+
+#: module/channel_catalog.py:43
+msgid "启用 QQ 官方机器人 通知"
+msgstr "Enable QQ Official Bot Notification"
+
+#: module/channel_catalog.py:49
+msgid "启用 SMTP 通知"
+msgstr "Enable SMTP Notification"
+
+#: module/channel_catalog.py:61
+msgid "启用 飞书 通知"
+msgstr "Enable Feishu Notification"
+
+#: module/channel_catalog.py:70
+msgid "启用 Telegram 通知"
+msgstr "Enable Telegram Notification"
+
+#: module/channel_catalog.py:77
+msgid "启用 钉钉 通知"
+msgstr "Enable DingTalk Notification"
+
+#: module/channel_catalog.py:81
+msgid "启用 Server酱³ 通知"
+msgstr "Enable ServerChan 3 Notification"
+
+#: module/channel_catalog.py:84
+msgid "启用 OneBot 通知"
+msgstr "Enable OneBot Notification"
+
+#: module/channel_catalog.py:90
+msgid "启用 Server酱·Turbo版 通知"
+msgstr "Enable ServerChan Turbo Notification"
+
+#: module/channel_catalog.py:95
+msgid "启用 Bark 通知"
+msgstr "Enable Bark Notification"
+
+#: module/channel_catalog.py:108
+msgid "启用 企业微信应用 通知"
+msgstr "Enable WeCom app Notification"
+
+#: module/channel_catalog.py:115
+msgid "启用 Pushplus 通知"
+msgstr "Enable Pushplus Notification"
+
+#: module/channel_catalog.py:121
+msgid "启用 Discord 通知"
+msgstr "Enable Discord Notification"
+
+#: module/channel_catalog.py:127
+msgid "启用 MeoW 通知"
+msgstr "Enable MeoW Notification"
+
+#: module/channel_catalog.py:130
+msgid "启用 Gotify 通知"
+msgstr "Enable Gotify Notification"
+
+#: module/channel_catalog.py:135
+msgid "启用 KOOK 通知"
+msgstr "Enable KOOK Notification"
+
+#: module/channel_catalog.py:140
+msgid "启用 Qmsg 通知"
+msgstr "Enable Qmsg Notification"
+
+#: module/channel_catalog.py:145
+msgid "启用 Matrix 通知"
+msgstr "Enable Matrix Notification"
+
+#: module/channel_catalog.py:154
+msgid "启用 Pushdeer 通知"
+msgstr "Enable Pushdeer Notification"
+
+#: module/channel_catalog.py:158
+msgid "启用 Go-cqhttp 通知"
+msgstr "Enable Go-cqhttp Notification"
+
+#: module/channel_catalog.py:165
+msgid "启用 Webhook 通知"
+msgstr "Enable Webhook Notification"
+
+#: module/channel_catalog.py:171
+msgid "启用 自定义通知 通知"
+msgstr "Enable custom notifications"
+
+#: module/gacha/pools.py
+msgid "角色池"
+msgstr "Character Warp"
+
+#: module/gacha/pools.py
+msgid "光锥池"
+msgstr "Light Cone Warp"
+
+#: module/gacha/pools.py
+msgid "常驻池"
+msgstr "Standard Warp"
+
+#: module/gacha/pools.py
+msgid "新手池"
+msgstr "Departure Warp"
+
+#: app/content/gacha_model.py
+msgid "类型"
+msgstr "Type"
+
+#: app/content/gacha_model.py
+msgid "第几抽（保底内）"
+msgstr "Pull within pity"
+
+#: module/gacha/store.py:44
+msgid "{date} 更新"
+msgstr "Updated {date}"
+
+#: module/gacha/store.py:41
+msgid "今天 {time} 更新"
+msgstr "Updated today at {time}"
+
+#: module/gacha/store.py:41
+msgid "昨天 {time} 更新"
+msgstr "Updated yesterday at {time}"
+
+#: module/gacha/update.py:22
+msgid "从游戏更新抽卡记录仅支持 Windows。"
+msgstr "Updating warp records from the game is available only on Windows."
+
+#: utils/gacha_transaction.py:33
+msgid "导入中断后文件又发生了变化，请核对原件与备份：{path}"
+msgstr "The file changed after the import was interrupted. Check it against its backup: {path}"
+
+#: module/gacha/transfer.py:31
+msgid "导入文件中有重复的星铁 UID，请核对文件。"
+msgstr "The file lists the same Star Rail UID more than once. Check the file and try again."
+
+#: app/content/gacha_dialogs.py:45
+msgid "导入方式：保留已有记录，补充新记录，自动跳过重复内容。"
+msgstr "Merge keeps existing records, adds new ones, and skips duplicates."
+
+#: module/gacha/store.py:102
+msgid "当前以只读方式运行，无法修改抽卡记录。"
+msgstr "Warp records cannot be changed in read-only mode."
+
+#: utils/gacha_transaction.py:39
+msgid "抽卡导入备份名称无效：{path}"
+msgstr "The warp import backup has an invalid name: {path}"
+
+#: module/gacha/store.py:115
+msgid "抽卡导入尚未完成，请在正常启动小助手后重试。"
+msgstr "A warp import is unfinished. Start the assistant normally and try again."
+
+#: utils/gacha_transaction.py:28
+msgid "抽卡导入恢复记录无效：{path}"
+msgstr "The warp import recovery file is invalid: {path}"
+
+#: utils/gacha_transaction.py:43
+msgid "抽卡记录备份校验失败：{path}"
+msgstr "Could not verify the warp record backup: {path}"
+
+#: module/gacha/transfer.py:25
+msgid "文件中没有可导入的星铁账号。"
+msgstr "The file contains no Star Rail accounts to import."
+
+#: module/gacha/store.py:66
+msgid "文件名中的 UID 与记录中的 UID 不一致。"
+msgstr "The UID in the filename differs from the UID in the records."
+
+#: app/content/gacha_dialogs.py:99
+msgid "文件已导出，无法打开所在文件夹。"
+msgstr "The file was exported, but its folder could not be opened."
+
+#: module/gacha/store.py:131
+msgid "旧抽卡记录尚未合并，请先在抽卡页查看文件：{path}"
+msgstr "The old warp records have not been merged. Check the file on the warp records page: {path}"
+
+#: module/gacha/update.py:50
+msgid "未知的更新方式。"
+msgstr "Unknown update mode."
+
+#: module/gacha/fetch.py:220
+msgid "本页记录的账号、语言或卡池不一致，已停止更新。"
+msgstr "The account, language, or warp type differs on this page. The update stopped."
+
+#: app/content/gacha_dialogs.py:44
+msgid "此操作会用导入文件中的记录替换目前保存的全部记录。原有记录不会保留在当前列表中。"
+msgstr "Importing will replace all saved records for the listed accounts. Their previous records will be removed from the current list."
+
+#: module/gacha/transfer.py:155
+msgid "没有可导出的抽卡记录。"
+msgstr "There are no warp records to export."
+
+#: module/gacha/update.py:58
+msgid "游戏未返回含 UID 的抽卡记录。"
+msgstr "The game returned no warp records with a UID."
+
+#: module/gacha/fetch.py:214
+msgid "记录分页没有前进，请重新打开游戏抽卡记录后重试。"
+msgstr "The next page of records could not be reached. Reopen the in-game warp history and try again."
+
+#: module/gacha/transfer.py:28
+msgid "请选择 UIGF v4 格式的文件。"
+msgstr "Select a UIGF v4 file."
+
+#: module/gacha/transfer.py:143
+msgid "请选择抽卡记录数据目录以外的位置导出。"
+msgstr "Choose an export location outside the warp records folder."
+
+#: module/gacha/transfer.py:145
+msgid "请选择要导出的格式和 UID。"
+msgstr "Select the export format and UID."
+
+#: module/gacha/store.py:97
+msgid "请选择要操作的 UID。"
+msgstr "Select a UID to continue."
+
+#: app/content/gacha_dialogs.py:109
+msgid "账号 UID：{uid}"
+msgstr "Account UID: {uid}"
+
+#: app/content/gacha_dialogs.py:36
+msgid "账号 UID：{uid}\n现有记录：{existing} 条\n文件记录：{incoming} 条\n新增记录：{added} 条\n重复记录：{duplicates} 条\n导入后：{total} 条"
+msgstr "Account UID: {uid}\nExisting records: {existing}\nRecords in file: {incoming}\nNew records: {added}\nDuplicates: {duplicates}\nTotal after import: {total}"
+
+#: app/content/gacha_update.py:71
+msgid "还没有成功更新过抽卡记录。"
+msgstr "Warp records have not been updated successfully yet."
+
+#: module/gacha/store.py:83
+msgid "抽卡记录文件无法解析，请检查文件或从备份恢复。"
+msgstr "The warp records file could not be read. Check the file or restore a backup."
+
+#: module/gacha/update.py:70
+msgid "游戏返回的抽卡记录不完整，请重新打开跃迁记录后重试。"
+msgstr "The game returned incomplete warp records. Reopen the in-game warp history and try again."
+
+#: utils/data_backup.py:151
+msgid "所选目录的抽卡导入尚未完成，请先在原安装中打开抽卡页。"
+msgstr "A warp import is unfinished in the selected folder. Open the warp records page in the original installation first."
+
+#: app/gacha/cards.py:135
+msgid "当前保底"
+msgstr "Current pity"
+
+#: app/gacha/cards.py:136
+msgid "{category} · {limit} 抽保底"
+msgstr "{category} · Pity at {limit}"
+
+#: app/gacha/cards.py:137
+msgid "四星 {count} / {limit}"
+msgstr "4★ {count} / {limit}"
+
+#: app/gacha/cards.py:140
+msgid "抽 · 已结束"
+msgstr "warps · complete"
+
+#: app/gacha/cards.py:142
+msgid "新手跃迁最多 {limit} 抽，已经抽完"
+msgstr "All {limit} Departure Warps used"
+
+#: app/gacha/cards.py:146
+msgid "抽 · 已获得五星"
+msgstr "warps · 5★ obtained"
+
+#: app/gacha/cards.py:148
+msgid "还能再抽 {pulls} 抽"
+msgstr "Warps left: {pulls}"
+
+#: app/gacha/cards.py:150
+msgid "抽未出五星"
+msgstr "warps since last 5★"
+
+#: app/gacha/cards.py:152
+msgid "距离保底 {pulls} 抽（约 {jade} 星琼）"
+msgstr "{pulls} to pity (≈ {jade} Stellar Jade)"
+
+#: app/gacha/cards.py:183
+msgid "五星出货分布"
+msgstr "5★ pity distribution"
+
+#: app/gacha/cards.py:184
+msgid "按出金时的抽数分段"
+msgstr "Warps per 5★"
+
+#: app/gacha/cards.py:189
+msgid "另有 {count} 个五星超过 {limit} 抽，可能是记录不完整"
+msgstr "5★ results beyond {limit} warps: {count}. Some records may be missing."
+
+#: app/gacha/cards.py:218
+msgid "五星记录"
+msgstr "5★ history"
+
+#: app/gacha/cards.py:218
+msgid "最近在前"
+msgstr "Newest first"
+
+#: app/gacha/cards.py:219
+msgid "打开明细表 ›"
+msgstr "View details ›"
+
+#: app/gacha/cards.py:230
+msgid "这个卡池还没有记录"
+msgstr "No records for this banner yet"
+
+#: app/gacha/cards.py:232
+msgid "还没有五星，表格中可按星级、名称筛选"
+msgstr "No 5★ yet · Filter by rarity or name in Details"
+
+#: app/gacha/cards.py:234
+msgid "共 {count} 个五星，这里显示最近 {shown} 个"
+msgstr "Showing the latest {shown} of {count} 5★ results"
+
+#: app/gacha/cards.py:236
+msgid "共 {count} 个五星 · 表格中可按星级、名称筛选"
+msgstr "5★ total: {count} · Filter by rarity or name in Details"
+
+#: app/gacha/cards.py:282
+msgid "还没有记录"
+msgstr "No records yet"
+
+#: app/gacha/cards.py:283
+msgid "{start} 至 {end}"
+msgstr "{start} to {end}"
+
+#: app/gacha/cards.py:285
+msgid "总抽数"
+msgstr "Total warps"
+
+#: app/gacha/cards.py:287
+msgid "最近一次：{date}"
+msgstr "Latest: {date}"
+
+#: app/gacha/cards.py:289
+msgid "还没有五星"
+msgstr "No 5★ yet"
+
+#: app/gacha/cards.py:290
+msgid "五星"
+msgstr "5-star"
+
+#: app/gacha/cards.py:291
+msgid "出率 {rate}"
+msgstr "{rate} rate"
+
+#: app/gacha/cards.py:293
+msgid "平均出金"
+msgstr "Warps per 5★"
+
+#: app/gacha/cards.py:294
+msgid "最快 {fast} 抽 · 最慢 {slow} 抽"
+msgstr "Min {fast} · Max {slow}"
+
+#: app/gacha/cards.py:296
+msgid "出过五星后显示"
+msgstr "Shown after your first 5★"
+
+#: app/gacha/cards.py:298
+msgid "平均每 {pulls} 抽一个四星"
+msgstr "{pulls} warps per 4★"
+
+#: app/gacha/cards.py:300
+msgid "还没有四星"
+msgstr "No 4★ yet"
+
+#: app/gacha/cards.py:301
+msgid "四星"
+msgstr "4-star"
+
+#: app/gacha/charts.py:123
+msgid "{pulls} 概率提升"
+msgstr "Odds rise at {pulls}"
+
+#: app/gacha/charts.py:147
+msgid "{first}～{last} 抽：{count} 个五星"
+msgstr "Warps {first}–{last}: {count} × 5★"
+
+#: app/gacha/charts.py:296
+msgid "日期"
+msgstr "Date"
+
+#: app/gacha/charts.py:297
+msgid "抽数"
+msgstr "Warps"
+
+#: app/gacha/charts.py:320
+msgid "用了多少抽（竖线为 {pulls} 抽）"
+msgstr "Warps used (line at {pulls})"
+
+#: app/gacha/charts.py:320
+msgid "用了多少抽"
+msgstr "Warps used"
+
+#: app/gacha/charts.py:380
+msgid "{name}：用了 {pulls} 抽，{time}"
+msgstr "{name} · Warp {pulls} · {time}"
+
+#: app/gacha/charts.py:91
+msgid "第 {soft} 抽起五星概率提升，第 {limit} 抽必定获得五星"
+msgstr "5★ odds rise at warp {soft}. A 5★ is guaranteed by warp {limit}."
+
+#: app/gacha/charts.py:93
+msgid "{limit} 抽内必定获得一个五星"
+msgstr "A 5★ is guaranteed within {limit} warps"
+
+#: app/gacha/chips.py:135
+msgid "{count} · 已结束"
+msgstr "{count} · Complete"
+
+#: app/gacha/detail.py:111
+msgid "返回统计"
+msgstr "Back to stats"
+
+#: app/gacha/detail.py:112
+msgid "三星"
+msgstr "3-star"
+
+#: app/gacha/detail.py:114
+msgid "搜索名称"
+msgstr "Search by name"
+
+#: app/gacha/detail.py:118
+msgid "全部时间"
+msgstr "All time"
+
+#: app/gacha/detail.py:118
+msgid "最近 30 天"
+msgstr "Last 30 days"
+
+#: app/gacha/detail.py:118
+msgid "最近 90 天"
+msgstr "Last 90 days"
+
+#: app/gacha/detail.py:118
+msgid "最近一年"
+msgstr "Past 365 days"
+
+#: app/gacha/detail.py:121
+msgid "全部卡池"
+msgstr "All banners"
+
+#: app/gacha/detail.py:122
+msgid "没有符合条件的记录"
+msgstr "No matching records"
+
+#: app/gacha/detail.py:153
+msgid "共 {count} 条"
+msgstr "Total: {count}"
+
+#: app/gacha/detail.py:155
+msgid "筛选出 {count} 条，共 {total} 条"
+msgstr "{count} of {total}"
+
+#: app/gacha/empty.py:111
+msgid "还没有抽卡记录"
+msgstr "No Warp records yet"
+
+#: app/gacha/empty.py:113
+msgid "小助手读取的是游戏里的跃迁记录页，不会改动游戏数据。三步就好："
+msgstr "The assistant reads your in-game Warp history without changing game data. Follow these three steps."
+
+#: app/gacha/empty.py:115
+msgid "这台电脑上不能从游戏更新抽卡记录，可以导入其他工具导出的文件。"
+msgstr "This computer cannot update Warp records from the game. You can import a file from another tool."
+
+#: app/gacha/empty.py:116
+msgid "在游戏里打开「跃迁」→「查看详情」→「跃迁记录」，等记录页加载出来"
+msgstr "In the game, open Warp → View Details → Records and wait for your history to load."
+
+#: app/gacha/empty.py:117
+msgid "回到这里点「更新记录」，第一次会读取全部历史，可能需要一两分钟"
+msgstr "Return here and select Update records. The first update reads your full history and may take a minute or two."
+
+#: app/gacha/empty.py:118
+msgid "换过电脑？也可以导入其他工具导出的 UIGF / SRGF 文件"
+msgstr "Changed computers? You can also import a UIGF or SRGF file from another tool."
+
+#: app/gacha/empty.py:122
+msgid "更新记录"
+msgstr "Update records"
+
+#: app/gacha/empty.py:124
+msgid "导入 UIGF / SRGF 文件"
+msgstr "Import UIGF / SRGF file"
+
+#: app/warp_interface.py:114
+msgid "导入 / 导出"
+msgstr "Import / Export"
+
+#: app/warp_interface.py:115
+msgid "更多操作"
+msgstr "More actions"
+
+#: app/warp_interface.py:177
+msgid "UID {uid}"
+msgstr "UID {uid}"
+
+#: app/warp_interface.py:179
+msgid "还没有数据"
+msgstr "No data yet"
+
+#: app/warp_interface.py:199
+msgid "有 {count} 个抽卡记录文件没能读取，记录暂时不会显示："
+msgstr "Unreadable Warp files: {count}. Their records are unavailable for now."
+
+#: app/warp_interface.py:202
+msgid "还有 {count} 个"
+msgstr "{count} more"
+
+#: app/warp_interface.py:204
+msgid "打开所在文件夹"
+msgstr "Open containing folder"
+
+#: app/warp_interface.py:225
+msgid "只获取新记录"
+msgstr "Get new records only"
+
+#: app/warp_interface.py:226
+msgid "重新获取全部记录"
+msgstr "Fetch all records again"
+
+#: app/warp_interface.py:229
+msgid "导入 UIGF / SRGF 文件…"
+msgstr "Import UIGF / SRGF file…"
+
+#: app/warp_interface.py:232
+msgid "导出 UIGF"
+msgstr "Export UIGF"
+
+#: app/warp_interface.py:234
+msgid "导出全部 {count} 个 UID（UIGF）"
+msgstr "Export all {count} UIDs (UIGF)"
+
+#: app/warp_interface.py:235
+msgid "导出 SRGF"
+msgstr "Export SRGF"
+
+#: app/warp_interface.py:235
+msgid "导出 Excel"
+msgstr "Export to Excel"
+
+#: app/warp_interface.py:242
+msgid "复制抽卡链接"
+msgstr "Copy Warp history link"
+
+#: app/warp_interface.py:245
+msgid "更新一次记录后可以复制"
+msgstr "Update records once to copy the link"
+
+#: app/warp_interface.py:248
+msgid "打开数据文件夹"
+msgstr "Open data folder"
+
+#: app/warp_interface.py:250
+msgid "清空这个 UID 的记录…"
+msgstr "Clear records for this UID…"
+
+#: app/warp_interface.py:255
+msgid "UID {uid} · {count} 抽"
+msgstr "UID {uid} · Warps: {count}"
+
+#: app/warp_interface.py:276
+msgid "不能从游戏更新"
+msgstr "Cannot update from the game"
+
+#: app/warp_interface.py:284
+msgid "正在更新…"
+msgstr "Updating…"
+
+#: app/warp_interface.py:289
+msgid "正在获取跃迁记录…"
+msgstr "Fetching Warp records…"
+
+#: app/warp_interface.py:295
+msgid "{title}：{text}"
+msgstr "{title}: {text}"
+
+#: app/warp_interface.py:302
+msgid "UID {uid} 新增 {count} 条记录"
+msgstr "UID {uid} · New records: {count}"
+
+#: app/warp_interface.py:303
+msgid "UID {uid} 没有新记录"
+msgstr "No new records for UID {uid}"
+
+#: app/warp_interface.py:304
+msgid "抽卡记录已更新"
+msgstr "Warp records updated"
+
+#: app/warp_interface.py:315
+msgid "导入成功"
+msgstr "Import complete"
+
+#: app/warp_interface.py:315
+msgid "UID {uids}"
+msgstr "UID {uids}"
+
+#: app/warp_interface.py:340
+msgid "已清空"
+msgstr "Records cleared"
+
+#: app/warp_interface.py:340
+msgid "UID {uid} 的记录已清空，原文件的备份留在数据文件夹里"
+msgstr "Records for UID {uid} have been cleared. A backup is in the data folder."
+
+#: app/warp_interface.py:342
+msgid "清空失败"
+msgstr "Could not clear records"
+
+#: app/warp_interface.py:348
+msgid "复制失败"
+msgstr "Could not copy"
+
+#: app/warp_interface.py:350
+msgid "已复制抽卡链接"
+msgstr "Warp history link copied"
+
+#: app/warp_interface.py:350
+msgid "链接里有临时登录凭据，只发给你信任的工具"
+msgstr "This link contains temporary sign-in credentials. Share it only with tools you trust."
+
+#: app/run/history.py:83
+msgid "{count} 个账号"
+msgstr "Accounts: {count}"
+
+#: app/accounts/detail.py:449
+msgid "{day} 日"
+msgstr "Day {day}"
+
+#: module/overview/snapshot.py:40
+msgid "{name} · 第 {index} / {total} 个账号"
+msgstr "{name} · Account {index}/{total}"
+
+#: module/accounts/differences.py:46
+msgid "{name} · 队伍 {number}"
+msgstr "{name} · Team {number}"
+
+#: module/accounts/differences.py:54
+msgid "{name} × {count}"
+msgstr "{name} × {count}"
+
+#: utils/runs.py:418
+msgid "{name} 第 {index} / {total} 次"
+msgstr "{name} · Run {index}/{total}"
+
+#: module/overview/run_data.py:190
+msgid "{name}（{reason}）"
+msgstr "{name} ({reason})"
+
+#: app/content/run_models.py:362
+msgid "{name}（副本）"
+msgstr "{name} (copy)"
+
+#: module/accounts/messages.py:86
+msgid "{result}（{reason}）"
+msgstr "{result} ({reason})"
+
+#: app/accounts/dialogs.py:159
+msgid "· 「{name}」沿用现在的完成状态，其他账号从空的状态开始。"
+msgstr "· {name} keeps the current progress. Other accounts start fresh."
+
+#: app/accounts/dialogs.py:160
+msgid "· 现在的任务设置成为共享方案，每个账号可以改用独立方案。"
+msgstr ""
+"· Current task settings become the shared plan. Each account can use an "
+"independent plan."
+
+#: app/accounts/dialogs.py:161
+msgid "· 轮流运行时按顺序切换：关闭游戏、写回登录、重新启动并核对 UID。"
+msgstr ""
+"· For each switch, rotation closes the game, restores the login, restarts "
+"and checks the UID."
+
+#: app/content/settings/after_run.py:42
+msgid "“退出”会关闭游戏。需要定时运行时，请打开「运行」页的「定时计划」。"
+msgstr "Exit closes the game. Set schedules under Run → Schedule."
+
+#: app/accounts/editing.py:37
+msgid "「{name}」使用共享方案"
+msgstr "{name} uses the shared plan"
+
+#: app/accounts/dialogs.py:136
+msgid "「{name}」的登录过期时，小助手会在登录界面自动输入下面的账号密码。"
+msgstr ""
+"If the login for {name} expires, the assistant will fill in these "
+"credentials on the login screen."
+
+#: app/content/run_models.py:274
+msgid "上一项完成后"
+msgstr "After the previous task"
+
+#: app/run_interface.py:112
+msgid "上次：{detail}"
+msgstr "Last: {detail}"
+
+#: app/content/run_models.py:315
+msgid "下次定时：{time} {name}"
+msgstr "Next: {time} {name}"
+
+#: app/accounts/detail.py:174
+msgid "不参与轮流"
+msgstr "Outside rotation"
+
+#: app/run/cards.py:363
+msgid "不执行完成后操作"
+msgstr "Skip finish action"
+
+#: app/run/cards.py:27
+msgid "中断"
+msgstr "Interrupted"
+
+#: module/accounts/reasons.py:5
+msgid "临时画质尚未恢复"
+msgstr "Temporary graphics settings are still active"
+
+#: app/run/history.py:27
+msgid "今天"
+msgstr "Today"
+
+#: module/accounts/status.py:15
+msgid "今日失败"
+msgstr "Failed today"
+
+#: module/accounts/status.py:135
+msgid "今日失败（{reason}）"
+msgstr "Failed today ({reason})"
+
+#: module/accounts/status.py:15
+msgid "今日完成"
+msgstr "Done today"
+
+#: module/accounts/status.py:15
+msgid "今日未运行"
+msgstr "No run today"
+
+#: module/accounts/status.py:15
+msgid "今日部分完成"
+msgstr "Partly done today"
+
+#: app/accounts_interface.py:111
+msgid "从另一个游戏客户端导入…"
+msgstr "Import from another client…"
+
+#: app/accounts/switcher.py:134
+msgid "从当前游戏登录导入"
+msgstr "Import current login"
+
+#: app/content/account_model.py:302
+msgid "任务或账号操作正在运行，请稍后再试"
+msgstr "A task or account operation is in progress. Try again shortly."
+
+#: app/accounts/detail.py:359
+msgid "任务方案"
+msgstr "Task plan"
+
+#: app/accounts/detail.py:154
+msgid "任务方案：共享"
+msgstr "Shared plan"
+
+#: app/accounts/detail.py:154
+msgid "任务方案：独立"
+msgstr "Independent plan"
+
+#: app/content/account_model.py:328
+msgid "任务正在运行，结束后才能更改多账号开关"
+msgstr "Wait for the task to finish before changing rotation."
+
+#: app/run_interface.py:57
+msgid "任务运行时，日志会显示在这里"
+msgstr "The log appears here during a run"
+
+#: app/accounts/detail.py:160
+msgid "任务页和总览改为查看、编辑这个账号；游戏没在运行时，同时切换登录"
+msgstr ""
+"Show and edit this account in Tasks and Overview. If the game is closed, "
+"switch its login too."
+
+#: app/accounts/dialogs.py:168
+msgid "会删除它的登录快照、保存的密码、独立方案和完成状态。抽卡记录和运行记录不受影响，游戏账号本身也不受影响。"
+msgstr ""
+"Deletes the login snapshot, saved password, independent plan and progress. "
+"The game account, Warp history and run history are kept."
+
+#: app/accounts/detail.py:246
+msgid "使用 Windows 加密保存在本机，仅当前 Windows 用户可以解密"
+msgstr "Encrypted on this PC. Only the current Windows user can decrypt it."
+
+#: app/accounts/dialogs.py:142
+msgid "使用 Windows 加密保存在本机，仅当前 Windows 用户可以解密。自动输入密码有一定风险，需要验证码时仍要你自己处理。"
+msgstr ""
+"Windows encrypts this on this PC for the current user. Autofill carries a "
+"risk. Enter any verification code yourself."
+
+#: app/accounts/detail.py:259
+msgid "使用「运行方式」里设置的游戏路径"
+msgstr "Use the game path from Run mode"
+
+#: app/accounts/detail.py:360
+msgid "使用哪套任务设置"
+msgstr "Choose the task settings to use"
+
+#: app/accounts/dialogs.py:90
+msgid "例如：小号"
+msgstr "e.g. Alt account"
+
+#: app/run/log_view.py:22
+msgid "信息"
+msgstr "Info"
+
+#: app/accounts/dialogs.py:120
+msgid "修改备注名"
+msgstr "Rename"
+
+#: app/run/cards.py:323
+msgid "停止整轮；箭头里可以只跳过当前账号"
+msgstr "Stop the rotation. Use the arrow to skip only this account."
+
+#: app/accounts_interface.py:218
+msgid "先添加至少一个账号，再打开多账号轮流"
+msgstr "Add at least one account before enabling rotation"
+
+#: app/run/cards.py:363
+msgid "全部完成后：{action}"
+msgstr "After all runs: {action}"
+
+#: app/run/history.py:252
+msgid "全部结果"
+msgstr "All results"
+
+#: app/run/history.py:248
+msgid "全部账号"
+msgstr "All accounts"
+
+#: app/content/run_models.py:272
+msgid "全部账号轮流"
+msgstr "All accounts in rotation"
+
+#: app/accounts/detail.py:363
+msgid "共享方案"
+msgstr "Shared plan"
+
+#: app/accounts/detail.py:311
+msgid "共享方案：{value}"
+msgstr "Shared plan: {value}"
+
+#: app/pages/decorations.py:91
+msgid "共享方案：{value}。悬停卡片可以恢复共享"
+msgstr "Shared plan: {value}. Hover over the card to restore it."
+
+#: app/content/run_controller.py:2216
+msgid "关闭助手"
+msgstr "Close assistant"
+
+#: app/accounts/detail.py:268
+msgid "其他服务器的刷新时间换算成本机时间后可能不同"
+msgstr "Other servers may reset at a different local time"
+
+#: app/content/run_controller.py:2220
+msgid "切换到「{name}」继续"
+msgstr "Continue with {name}"
+
+#: app/content/run_controller.py:2219
+msgid "切换到「{name}」继续，最后{action}"
+msgstr "Continue with {name}, then {action}"
+
+#: app/accounts/detail.py:158
+msgid "切换到此账号"
+msgstr "Switch to this account"
+
+#: app/accounts/detail.py:163
+msgid "切换登录"
+msgstr "Switch login"
+
+#: module/accounts/reasons.py:5
+msgid "切换登录失败"
+msgstr "Could not switch login"
+
+#: app/content/account_model.py:400
+msgid "切换登录需要 Windows 本地客户端"
+msgstr "Switching logins requires the Windows local client"
+
+#: app/accounts/switcher.py:93
+msgid "切换要查看和编辑的账号"
+msgstr "Choose an account to view and edit"
+
+#: app/accounts/editing.py:39
+msgid "切换账号"
+msgstr "Switch account"
+
+#: app/accounts/detail.py:239
+msgid "切换账号时写回游戏的登录信息 · 上次保存于{time}"
+msgstr "Restored when switching accounts · Last saved {time}"
+
+#: app/run/schedule.py:420
+msgid "删除…"
+msgstr "Delete…"
+
+#: app/accounts/dialogs.py:167
+msgid "删除「{name}」？"
+msgstr "Delete {name}?"
+
+#: app/run/schedule.py:403
+msgid "删除定时计划"
+msgstr "Delete schedule"
+
+#: app/accounts_interface.py:290
+msgid "删除账号"
+msgstr "Delete account"
+
+#: app/accounts/detail.py:178
+msgid "删除账号…"
+msgstr "Delete account…"
+
+#: app/accounts_interface.py:100
+msgid "刷新时间"
+msgstr "Reset time"
+
+#: module/accounts/differences.py:86
+msgid "助燃券连续挑战"
+msgstr "Repeat with Fuel Vouchers"
+
+#: app/accounts/detail.py:174
+msgid "参与轮流"
+msgstr "Include in rotation"
+
+#: app/accounts/detail.py:167
+msgid "只运行此账号"
+msgstr "Run this account"
+
+#: module/accounts/reasons.py:5
+msgid "启动或运行账号时出错"
+msgstr "Could not start or run this account"
+
+#: module/overview/labels.py:4
+msgid "启动时自动运行"
+msgstr "Run at startup"
+
+#: app/accounts/empty.py:84
+msgid "启动游戏，登录要添加的账号，完全进入游戏（看到角色）"
+msgstr "Start the game, sign in and wait until your character appears."
+
+#: app/run/log_view.py:217
+msgid "回到最新"
+msgstr "Jump to latest"
+
+#: app/accounts/empty.py:85
+msgid "回到这里点「添加账号」，保存它的登录"
+msgstr "Return here and choose Add account to save the login."
+
+#: app/accounts/account_list.py:24
+msgid "国服"
+msgstr "China"
+
+#: app/accounts/account_list.py:24
+msgid "国际服"
+msgstr "Global"
+
+#: app/accounts/empty.py:86
+msgid "在游戏里换一个账号，再添加一次；全部添加好后打开多账号轮流"
+msgstr ""
+"Sign in to the next account and add it here. Enable rotation when all "
+"accounts are saved."
+
+#: app/accounts/detail.py:251
+msgid "填写账号密码"
+msgstr "Enter login details"
+
+#: app/accounts/dialogs.py:92
+msgid "备注名"
+msgstr "Nickname"
+
+#: app/run/schedule.py:418
+msgid "复制一份"
+msgstr "Duplicate"
+
+#: app/content/run_models.py:280
+msgid "外部程序 {name}"
+msgstr "External program: {name}"
+
+#: module/search/__init__.py:100
+msgid "多账号轮流"
+msgstr "Account rotation"
+
+#: app/content/account_model.py:234
+msgid "多账号轮流仅支持 Windows 本地客户端，当前按单账号运行"
+msgstr ""
+"Rotation requires the Windows local client. Runs use a single account here."
+
+#: app/accounts/panel.py:56
+msgid "多账号轮流运行"
+msgstr "Account rotation"
+
+#: module/accounts/messages.py:79
+msgid "多账号轮流运行结束"
+msgstr "Rotation finished"
+
+#: app/run/history.py:253
+msgid "失败和异常"
+msgstr "Failures and exceptions"
+
+#: module/accounts/differences.py:86
+msgid "姬子试用"
+msgstr "Trial Himeko"
+
+#: module/accounts/reasons.py:5
+msgid "子运行记录缺失"
+msgstr "Child run record missing"
+
+#: module/accounts/reasons.py:5
+msgid "子进程意外退出"
+msgstr "Child process exited unexpectedly"
+
+#: app/content/run_models.py:282
+msgid "完成后{action}"
+msgstr "Then {action}"
+
+#: app/run_interface.py:106
+msgid "完成后操作：{action}，{seconds} 秒后执行"
+msgstr "After run: {action} in {seconds}s"
+
+#: app/content/run_models.py:388
+msgid "定时计划已删除"
+msgstr "Schedule deleted"
+
+#: app/accounts/dialogs.py:141
+msgid "密码"
+msgstr "Password"
+
+#: module/accounts/differences.py:86
+msgid "差分宇宙队伍类型"
+msgstr "Divergent Universe team type"
+
+#: app/accounts/detail.py:247
+msgid "已保存"
+msgstr "Saved"
+
+#: app/accounts/switcher.py:93
+msgid "已保存的账号"
+msgstr "Saved accounts"
+
+#: app/content/account_model.py:411
+msgid "已切换查看的账号，下次运行时切换登录"
+msgstr "Now viewing this account. Its login will switch on the next run."
+
+#: app/content/account_model.py:418
+msgid "已切换登录"
+msgstr "Login switched"
+
+#: app/accounts_interface.py:277
+msgid "已加密保存"
+msgstr "Saved and encrypted"
+
+#: app/content/run_models.py:319
+msgid "已启用 {count} 个按时计划"
+msgstr "Active timed schedules: {count}"
+
+#: module/accounts/reasons.py:5
+msgid "已有任务在运行"
+msgstr "A task is already running"
+
+#: app/run/schedule.py:331
+msgid "已有任务在运行时"
+msgstr "If a task is running"
+
+#: app/accounts/dialogs.py:109
+msgid "已经保存过，会更新它的登录快照"
+msgstr "Already saved. Its login snapshot will be updated."
+
+#: app/run/cards.py:384
+msgid "已运行 {time}"
+msgstr "Elapsed: {time}"
+
+#: app/content/account_model.py:268
+msgid "开拓者"
+msgstr "Trailblazer"
+
+#: module/accounts/differences.py:86
+msgid "开拓者名称"
+msgstr "Trailblazer name"
+
+#: app/content/account_model.py:432
+msgid "当前没有可轮流运行的账号"
+msgstr "No accounts available for rotation"
+
+#: app/accounts/detail.py:163
+msgid "当前登录"
+msgstr "Signed in"
+
+#: app/run_interface.py:182
+msgid "当前运行"
+msgstr "Current run"
+
+#: module/accounts/reasons.py:5
+msgid "当前运行方式不支持按账号运行"
+msgstr "This run mode does not support account selection"
+
+#: app/run/stepper.py:18
+msgid "待执行"
+msgstr "Pending"
+
+#: app/run/cards.py:364
+msgid "恢复"
+msgstr "Restore"
+
+#: app/accounts/detail.py:312
+msgid "恢复共享"
+msgstr "Restore shared"
+
+#: app/accounts/dialogs.py:138
+msgid "手机号、邮箱或用户名"
+msgstr "Phone, email or username"
+
+#: app/accounts/dialogs.py:157
+msgid "打开多账号轮流？"
+msgstr "Enable account rotation?"
+
+#: app/run/history.py:232
+msgid "打开日志文件"
+msgstr "Open log file"
+
+#: app/accounts/detail.py:176
+msgid "打开账号文件夹"
+msgstr "Open account folder"
+
+#: app/content/account_model.py:387
+msgid "找不到指定账号"
+msgstr "Account not found"
+
+#: app/accounts/empty.py:79
+msgid "把登录保存下来，换号时不用重新登录；保存两个以上就可以按顺序轮流运行。只支持本地客户端。"
+msgstr ""
+"Save logins to switch without signing in again. Save two or more for "
+"rotation. Local client only."
+
+#: app/accounts/detail.py:165
+msgid "把这个账号的登录信息写回游戏，需要先退出游戏"
+msgstr "Close the game before restoring this account’s login"
+
+#: app/accounts/panel.py:73
+msgid "拖动调整顺序。一个账号失败后会记录原因并继续下一个账号，全部结束后合并发送一条通知。多账号只支持本地客户端。"
+msgstr ""
+"Drag to reorder. If an account fails, rotation records the reason and "
+"continues. One summary is sent at the end. Local client only."
+
+#: module/accounts/differences.py:86
+msgid "拟造花萼（金）偏好地区"
+msgstr "Preferred Calyx (Golden) region"
+
+#: app/schedule_dialog.py:320
+msgid "指定的账号不可用"
+msgstr "Selected account unavailable"
+
+#: app/content/run_controller.py:606
+msgid "指定的账号不可用，本次任务已跳过"
+msgstr "Selected account unavailable. Task skipped."
+
+#: app/content/run_models.py:270
+msgid "指定的账号不可用，计划将跳过"
+msgstr "Selected account unavailable. This schedule will be skipped."
+
+#: app/content/run_models.py:284
+msgid "推送通知"
+msgstr "Push notification"
+
+#: app/accounts_interface.py:193
+msgid "操作没有完成，详情见日志"
+msgstr "Operation incomplete. See the log for details."
+
+#: app/run/cards.py:26
+msgid "收尾中"
+msgstr "Finishing"
+
+#: app/content/account_model.py:286
+msgid "无法读写账号文件或登录信息：{error}"
+msgstr "Could not access account files or login data: {error}"
+
+#: app/accounts/detail.py:238
+msgid "时间未知"
+msgstr "Unknown time"
+
+#: app/run/history.py:29
+msgid "昨天"
+msgstr "Yesterday"
+
+#: app/run/schedule.py:226
+msgid "更多"
+msgstr "More"
+
+#: app/accounts/detail.py:471
+msgid "最近 7 天"
+msgstr "Last 7 days"
+
+#: app/content/account_model.py:272
+msgid "未保存账号"
+msgstr "Unsaved account"
+
+#: module/overview/run_data.py:190
+msgid "未完成"
+msgstr "Incomplete"
+
+#: app/run/cards.py:364
+msgid "本次不执行"
+msgstr "Skip this time"
+
+#: app/pages/decorations.py:100
+msgid "本账号独有"
+msgstr "Account only"
+
+#: app/run/history.py:226
+msgid "查看截图"
+msgstr "View screenshot"
+
+#: app/run/history.py:227
+msgid "查看整轮"
+msgstr "View rotation"
+
+#: app/run_interface.py:113
+msgid "查看记录"
+msgstr "View record"
+
+#: app/content/account_model.py:231
+msgid "桌面分身中账号页只读，请在主桌面管理账号"
+msgstr ""
+"Accounts are read-only in Desktop Twin. Manage them on the main desktop."
+
+#: app/accounts/detail.py:158
+msgid "正在使用"
+msgstr "In use"
+
+#: app/run/cards.py:25
+msgid "正在停止"
+msgstr "Stopping"
+
+#: app/content/account_model.py:313
+msgid "正在处理账号操作"
+msgstr "Processing account…"
+
+#: app/content/account_model.py:293
+msgid "正在处理账号操作，请稍后再试"
+msgstr "An account operation is in progress. Try again shortly."
+
+#: app/run/cards.py:25
+msgid "正在暂停"
+msgstr "Pausing"
+
+#: app/main_window.py:850
+msgid "正在查看「{name}」"
+msgstr "Viewing {name}"
+
+#: app/accounts/editing.py:37
+msgid "正在编辑「{name}」的独立方案"
+msgstr "{name} · Editing independent plan"
+
+#: module/accounts/status.py:15
+msgid "正在运行"
+msgstr "Running"
+
+#: app/content/account_model.py:373
+msgid "此账号正在运行或等待轮流，暂时无法删除"
+msgstr "This account is running or queued. Delete it after the rotation."
+
+#: app/content/account_model.py:426
+msgid "此账号现在无法运行"
+msgstr "This account cannot run now"
+
+#: app/accounts/panel.py:57
+msgid "每个账号使用自己的任务方案和完成状态，定时运行按下面的顺序依次切换"
+msgstr ""
+"Each account keeps its own plan and progress. Scheduled runs follow the "
+"order below."
+
+#: app/accounts_interface.py:108
+msgid "每个账号有自己的登录和任务方案，可以按顺序轮流运行"
+msgstr "Each account has its own login and plan. Run them in order."
+
+#: app/run/cards.py:337
+msgid "没有任务在运行"
+msgstr "No task running"
+
+#: app/accounts/detail.py:429
+msgid "没有完整运行"
+msgstr "No full runs"
+
+#: app/pages/decorations.py:118
+msgid "没有恢复共享"
+msgstr "Shared plan not restored"
+
+#: app/accounts/dialogs.py:103
+msgid "没有检测到登录"
+msgstr "No login detected"
+
+#: module/accounts/reasons.py:5
+msgid "没有检测到账号登录"
+msgstr "No signed-in account found"
+
+#: app/accounts_interface.py:141
+msgid "没有登录快照"
+msgstr "No login snapshot"
+
+#: app/run/schedule.py:330
+msgid "添加后，到点会自动运行任务、流程或外部程序"
+msgstr "Schedules run tasks, workflows or programs at the time you choose."
+
+#: app/run/schedule.py:328
+msgid "添加定时计划"
+msgstr "Add schedule"
+
+#: app/accounts/dialogs.py:68
+msgid "添加账号"
+msgstr "Add account"
+
+#: app/accounts/dialogs.py:174
+msgid "清除"
+msgstr "Clear"
+
+#: app/accounts/detail.py:221
+msgid "清除保存的密码"
+msgstr "Clear saved password"
+
+#: app/accounts_interface.py:242
+msgid "清除游戏登录信息"
+msgstr "Clear game login"
+
+#: app/accounts_interface.py:112
+msgid "清除游戏登录信息…"
+msgstr "Clear game login…"
+
+#: app/accounts/dialogs.py:174
+msgid "清除游戏登录信息？"
+msgstr "Clear game login?"
+
+#: module/accounts/reasons.py:5
+msgid "游戏仍在运行"
+msgstr "Game still running"
+
+#: app/accounts/detail.py:262
+msgid "游戏客户端"
+msgstr "Game client"
+
+#: app/accounts/dialogs.py:109
+msgid "游戏当前登录的账号"
+msgstr "Account signed in to the game"
+
+#: app/content/account_model.py:412
+msgid "游戏或任务仍在运行，请结束后再切换登录"
+msgstr "Close the game or finish the task before switching logins."
+
+#: app/accounts/detail.py:268
+msgid "游戏每日刷新时间"
+msgstr "Daily reset time"
+
+#: app/accounts/detail.py:242
+msgid "游戏登录快照"
+msgstr "Game login snapshot"
+
+#: app/accounts/detail.py:472
+msgid "点击某天查看当次运行"
+msgstr "Select a day to view its run"
+
+#: app/accounts/detail.py:364
+msgid "独立方案"
+msgstr "Independent plan"
+
+#: app/accounts/detail.py:361
+msgid "独立方案从共享方案复制而来，只记录与共享方案不同的地方；共享方案更新时，未改动的项目会一起更新"
+msgstr ""
+"An independent plan inherits shared settings. It saves only your changes and"
+" follows shared updates elsewhere."
+
+#: app/run/history.py:318
+msgid "用时 {time}"
+msgstr "Took {time}"
+
+#: app/accounts/detail.py:232
+msgid "登录"
+msgstr "Login"
+
+#: module/accounts/reasons.py:5
+msgid "登录信息写入失败"
+msgstr "Could not write login data"
+
+#: app/accounts_interface.py:228
+msgid "登录已保存"
+msgstr "Login saved"
+
+#: app/accounts/detail.py:236
+msgid "登录已过期。在游戏里重新登录这个账号，完全进入游戏后点「重新保存」。"
+msgstr ""
+"Login expired. Sign in again, wait until your character appears, then select"
+" Save again."
+
+#: module/accounts/reasons.py:5
+msgid "登录快照损坏或不属于这个账号"
+msgstr "Login snapshot is damaged or belongs to another account"
+
+#: module/accounts/reasons.py:5
+msgid "登录的 UID 与指定账号不符"
+msgstr "Signed-in UID does not match the selected account"
+
+#: app/content/account_model.py:264
+msgid "登录过期"
+msgstr "Login expired"
+
+#: app/accounts/detail.py:245
+msgid "登录过期时自动填写账号密码"
+msgstr "Autofill login when it expires"
+
+#: app/run/schedule.py:403
+msgid "确定删除「{name}」吗？"
+msgstr "Delete {name}?"
+
+#: module/accounts/differences.py:31
+msgid "第 {level} 层"
+msgstr "Floor {level}"
+
+#: app/run/cards.py:28
+msgid "等待中"
+msgstr "Waiting"
+
+#: app/accounts/switcher.py:136
+msgid "管理账号与轮流顺序"
+msgstr "Manage accounts and rotation"
+
+#: app/run/cards.py:375
+msgid "继续"
+msgstr "Resume"
+
+#: app/content/run_controller.py:2212
+msgid "继续执行：{task}"
+msgstr "Resuming: {task}"
+
+#: app/schedule_dialog.py:111
+msgid "编辑定时计划"
+msgstr "Edit schedule"
+
+#: app/accounts/detail.py:387
+msgid "编辑此账号的任务"
+msgstr "Edit account tasks"
+
+#: app/accounts_interface.py:97
+msgid "自动填写"
+msgstr "Autofill"
+
+#: app/run/log_view.py:22
+msgid "警告"
+msgstr "Warning"
+
+#: app/run/log_view.py:249
+msgid "警告和错误"
+msgstr "Warnings and errors"
+
+#: app/content/run_models.py:392
+msgid "计划未能启动，请查看运行日志"
+msgstr "Schedule could not start. See the run log."
+
+#: app/main_window.py:1396
+msgid "请为这个账号设置同一服务器的游戏路径"
+msgstr "Choose a game path for this account’s server"
+
+#: app/accounts/dialogs.py:104
+msgid "请先启动游戏并登录要添加的账号，进入游戏后点「重新检测」。"
+msgstr ""
+"Start the game and sign in to the account you want to add. Once in the game,"
+" select Check again."
+
+#: app/accounts/dialogs.py:93
+msgid "请先完全进入游戏（看到角色）再添加。否则读到的是上一个账号的 UID，保存的登录和账号会对不上。"
+msgstr ""
+"Wait until your character appears before adding the account. Otherwise the "
+"previous UID could be saved with this login."
+
+#: app/pages/decorations.py:118
+msgid "请在账号页的任务方案里恢复"
+msgstr "Restore this in the account’s task plan"
+
+#: app/accounts_interface.py:55
+msgid "调整顺序"
+msgstr "Reorder"
+
+#: app/run/log_view.py:22
+msgid "调试"
+msgstr "Debug"
+
+#: module/accounts/reasons.py:5
+msgid "账号任务失败"
+msgstr "Account task failed"
+
+#: app/accounts/account_list.py:132
+msgid "账号列表"
+msgstr "Account list"
+
+#: module/accounts/reasons.py:5
+msgid "账号和客户端服务器不符"
+msgstr "Account and client servers differ"
+
+#: app/content/account_model.py:356
+msgid "账号和密码都需要填写"
+msgstr "Enter both the account and password"
+
+#: app/accounts_interface.py:96
+msgid "账号密码"
+msgstr "Login details"
+
+#: module/search/__init__.py:101
+msgid "账号密码自动填写"
+msgstr "Login autofill"
+
+#: app/accounts_interface.py:290
+msgid "账号已删除"
+msgstr "Account deleted"
+
+#: app/content/account_model.py:309
+msgid "账号操作未完成"
+msgstr "Account operation incomplete"
+
+#: app/content/account_model.py:291
+msgid "账号资料当前只读"
+msgstr "Account data is read-only"
+
+#: module/accounts/reasons.py:5
+msgid "账号运行超时"
+msgstr "Account run timed out"
+
+#: app/schedule_dialog.py:308
+msgid "账号："
+msgstr "Account:"
+
+#: app/run/cards.py:28
+msgid "超时"
+msgstr "Timeout"
+
+#: app/content/run_models.py:286
+msgid "超时 {minutes} 分钟"
+msgstr "Timeout: {minutes} min"
+
+#: app/accounts/detail.py:271
+msgid "跟随设置（{hour}:00）"
+msgstr "Use settings ({hour}:00)"
+
+#: app/run/cards.py:320
+msgid "跳过当前账号"
+msgstr "Skip current account"
+
+#: app/accounts_interface.py:110
+msgid "轮流运行全部"
+msgstr "Run all accounts"
+
+#: module/accounts/reasons.py:5
+msgid "轮流运行收尾失败"
+msgstr "Rotation could not finish cleanly"
+
+#: module/accounts/reasons.py:5
+msgid "轮流运行进程已退出"
+msgstr "Rotation process exited"
+
+#: app/accounts/switcher.py:96
+msgid "轮流运行：关"
+msgstr "Rotation off"
+
+#: app/accounts/switcher.py:96
+msgid "轮流运行：开"
+msgstr "Rotation on"
+
+#: module/accounts/reasons.py:35
+msgid "运行未完成"
+msgstr "Run incomplete"
+
+#: app/navigation.py:78
+msgid "运行记录"
+msgstr "Run history"
+
+#: app/run/history.py:229
+msgid "运行过的任务会按天列在这里，可以查看步骤、原因和日志。"
+msgstr ""
+"Runs are listed by day. Select one for its steps, result details and log."
+
+#: module/overview/run_data.py:193
+msgid "运行进程已退出"
+msgstr "Run process exited"
+
+#: app/run/schedule.py:120
+msgid "还有 {count} 项"
+msgstr "{count} more"
+
+#: app/accounts/detail.py:234
+msgid "还没有保存登录。在游戏里登录这个账号，完全进入游戏后点「保存」。"
+msgstr ""
+"No login saved. Sign in to this account and select Save once your character "
+"appears."
+
+#: app/accounts/empty.py:82
+msgid "还没有保存账号"
+msgstr "No saved accounts"
+
+#: app/content/run_models.py:320
+msgid "还没有启用的计划"
+msgstr "No active schedules"
+
+#: app/accounts/detail.py:382
+msgid "还没有和共享方案不同的设置。在任务页修改的内容只对这个账号生效。"
+msgstr "No differences yet. Changes made in Tasks apply only to this account."
+
+#: app/run/schedule.py:329
+msgid "还没有定时计划"
+msgstr "No schedules yet"
+
+#: app/run/history.py:228
+msgid "还没有运行记录"
+msgstr "No run history yet"
+
+#: app/pages/tasks.py:90
+msgid "这个账号改过，和共享方案不同"
+msgstr "Changed for this account"
+
+#: app/accounts/detail.py:261
+msgid "这个账号是{server}，和「运行方式」里的游戏客户端不同，需要单独选择。"
+msgstr ""
+"This account uses {server}, a different server from the client in Run mode. "
+"Select its client separately."
+
+#: app/accounts/detail.py:380
+msgid "这个账号有 {count} 项独立设置，切回独立方案后会恢复。"
+msgstr ""
+"This account has {count} overrides. Switching back to its independent plan "
+"will restore them."
+
+#: app/navigation.py:78
+msgid "这条运行记录已清理"
+msgstr "This run record has been removed"
+
+#: app/accounts/panel.py:74
+msgid "这里保存的是本地客户端的登录快照，换号时不用重新登录。打开上面的开关后，可以按顺序轮流运行。"
+msgstr ""
+"Saved logins let you switch local accounts without signing in again. Enable "
+"rotation to run them in order."
+
+#: module/overview/labels.py:10
+msgid "退出游戏"
+msgstr "Exit game"
+
+#: app/accounts/detail.py:267
+msgid "选择…"
+msgstr "Choose…"
+
+#: app/accounts_interface.py:232
+msgid "选择游戏客户端"
+msgstr "Choose game client"
+
+#: app/accounts/detail.py:428
+msgid "部分完成"
+msgstr "Partially completed"
+
+#: app/accounts/detail.py:243
+msgid "重新保存"
+msgstr "Save again"
+
+#: app/accounts/detail.py:220
+msgid "重新填写…"
+msgstr "Re-enter…"
+
+#: app/accounts/dialogs.py:76
+msgid "重新检测"
+msgstr "Check again"
+
+#: app/run/log_view.py:247
+msgid "重要信息"
+msgstr "Important"
+
+#: app/run/schedule.py:332
+msgid "链式任务失败后"
+msgstr "If a chained task fails"
+
+#: module/accounts/differences.py:79
+msgid "队伍 {number}"
+msgstr "Team {number}"
+
+#: module/accounts/reasons.py:5
+msgid "需要先完成首次使用确认"
+msgstr "Complete the first-run confirmation first"
+
+#: module/accounts/status.py:15
+msgid "需要设置游戏路径"
+msgstr "Game path required"
+
+#: app/accounts/detail.py:247
+msgid "需要重新保存"
+msgstr "Save again on this PC"
+
+#: app/run/cards.py:357
+msgid "（{index} / {total}）"
+msgstr "({index}/{total})"
+
+#: app/accounts/detail.py:241
+msgid "，运行结束后自动更新"
+msgstr ". Updates after each run."
+
+#: module/accounts/store.py:22
+msgid "账号列表曾经损坏，已按登录快照重建，损坏的副本留在账号文件夹里"
+msgstr "The account list was damaged and has been rebuilt from login snapshots. The damaged copy is in the account folder."
+
+#: module/accounts/store.py:23
+msgid "{account} 的 {name} 曾经损坏，已从空数据开始，损坏的副本留在账号文件夹里"
+msgstr "{name} for {account} was damaged and now starts empty. The damaged copy is in the account folder."
+
+#: module/accounts/store.py:24
+msgid "旧账号名称无法读取，可重新命名"
+msgstr "The old account name could not be read. Rename the account."
+
+#: module/accounts/store.py:25
+msgid "部分登录快照无法校验，请在客户端重新保存"
+msgstr "Some login snapshots could not be verified. Save them again from the game client."
+
+#: module/accounts/store.py:26
+msgid "旧快照损坏，已保留此前可用的备份"
+msgstr "The old snapshot is damaged. The last working backup has been kept."
+
+#: module/accounts/store.py:27
+msgid "暂时无法整理账号目录，本次按只读方式显示资料"
+msgstr "The account folder can't be updated right now. Showing it as read-only."
+
+#: module/accounts/store.py:28
+msgid "部分旧账号文件尚未转换，原件已保留，下次打开时重试"
+msgstr "Some old account files weren't converted. The originals are kept and will be retried next time."
+
+#: module/accounts/store.py:29
+msgid "旧账号缺少登录快照，相关文件已保留"
+msgstr "An old account has no login snapshot. Its files have been kept."
+
+#: module/accounts/store.py:30
+msgid "{name} 损坏，已按空数据读取"
+msgstr "{name} is damaged and was read as empty."
+
+#: module/accounts/store.py:31
+msgid "{name} 暂时无法留存损坏副本，请稍后重试"
+msgstr "Couldn't keep a damaged copy of {name} right now. Try again later."
+
+#: app/setup/steps.py:205
+msgid "Epic 渠道版需要从 Epic 启动，请提前在 Epic 里登录"
+msgstr "Sign in to Epic first to launch the Epic edition."
+
+#: app/content/setup_model.py:52
+msgid "Epic 游戏商城"
+msgstr "Epic Games Store"
+
+#: app/setup/steps.py:26
+msgid "Windows、macOS、Linux 都能用"
+msgstr "Works on Windows, macOS and Linux"
+
+#: app/content/setup_model.py:404
+msgid "{days} {time}"
+msgstr "{days} at {time}"
+
+#: module/setup/run_plan.py:228
+msgid "{error}；恢复原开机启动设置失败：{reason}"
+msgstr "{error}. Could not restore startup settings: {reason}"
+
+#: module/setup/tasks.py:108
+msgid "{minutes} 分钟–{hours} 小时"
+msgstr "{minutes} min–{hours} hr"
+
+#: app/content/setup_model.py:428
+msgid "{names}等 {count} 项"
+msgstr "{count} tasks, including {names}"
+
+#: app/content/setup_model.py:424
+msgid "{task}（{category} · {name}）"
+msgstr "{task} ({category} · {name})"
+
+#: app/content/setup_model.py:432
+msgid "{when} 自动运行"
+msgstr "{when} (automatic)"
+
+#: app/content/setup_model.py:436
+msgid "{when}，完成后{action}"
+msgstr "{when}, then {action}"
+
+#: app/setup/dialog.py:84
+msgid "上一步"
+msgstr "Back"
+
+#: app/setup/steps.py:417
+msgid "云·星穹铁道在浏览器里运行，登录一次就能一直用。"
+msgstr "Cloud StarRail runs in a browser and remembers your login."
+
+#: app/content/setup_model.py:413
+msgid "什么时候运行"
+msgstr "Run time"
+
+#: app/setup/steps.py:564
+msgid "什么时候运行？"
+msgstr "When should it run?"
+
+#: app/setup/dialog.py:79
+msgid "以后再设置"
+msgstr "Set up later"
+
+#: app/setup/steps.py:118
+msgid "以后可以在「设置 › 运行方式」更换。"
+msgstr "You can change this in Settings › Run mode."
+
+#: app/setup/steps.py:703
+msgid "任务完成或失败时告诉你。可以跳过，以后在「设置 › 消息推送」添加。"
+msgstr "Get notified when tasks finish or fail. You can skip this and add a channel in Settings › Push Notification later."
+
+#: app/setup/steps.py:702
+msgid "做完了怎么通知你？"
+msgstr "How should we notify you?"
+
+#: app/setup/steps.py:447
+msgid "先跳过"
+msgstr "Skip for now"
+
+#: app/content/setup_model.py:301
+msgid "全部打开"
+msgstr "Select all"
+
+#: app/setup/steps.py:210
+msgid "关闭 HDR、N 卡滤镜、帧率显示和微星小飞机等悬浮窗"
+msgstr "Turn off HDR, NVIDIA filters, FPS counters and overlays such as MSI Afterburner."
+
+#: app/setup/steps.py:412
+msgid "准备云游戏"
+msgstr "Cloud setup"
+
+#: app/setup/steps.py:23
+msgid "分辨率会自动调成 1920×1080，不用自己改"
+msgstr "Resolution is set to 1920×1080 automatically."
+
+#: module/search/terms.py:7
+msgid "初始化"
+msgstr "Initialize"
+
+#: app/setup/steps.py:572
+msgid "到点自动开始，需要小助手保持打开。"
+msgstr "Starts on time while the assistant is open."
+
+#: app/setup/steps.py:654
+msgid "{hint}另外还有 {count} 个启用的定时计划，可以在「运行」页调整。"
+msgstr "{hint} Other active schedules: {count}. Edit them on the Run page."
+
+#: app/content/setup_model.py:301
+msgid "只做日常"
+msgstr "Dailies only"
+
+#: app/setup/steps.py:29
+msgid "只支持清体力、每日实训、领取奖励和历战余响"
+msgstr "Supports Spend Power, Daily Training, reward collection and Echo of War only."
+
+#: app/content/setup_model.py:382
+msgid "只有 Windows 通知"
+msgstr "Windows only"
+
+#: app/main_window.py:790
+msgid "可以在「设置 › 高级」重新打开向导"
+msgstr "Reopen the wizard in Settings › Advanced."
+
+#: app/setup/steps.py:564
+msgid "可以自己点，也可以让小助手按时开始。"
+msgstr "Start it yourself or set a schedule."
+
+#: app/setup/steps.py:299
+msgid "可执行文件 (*.exe)"
+msgstr "Executables (*.exe)"
+
+#: app/setup/dialog.py:236
+msgid "可跳过"
+msgstr "Optional"
+
+#: module/search/terms.py:7
+msgid "向导"
+msgstr "Wizard"
+
+#: app/setup/steps.py:614
+msgid "国际服各服务器不同，请换算成电脑时间，用来判断今天做没做完"
+msgstr "Enter the server reset hour in your PC's local time so daily progress resets correctly."
+
+#: app/setup/steps.py:335
+msgid "在后台运行，看不到画面；锄大地和模拟宇宙不支持"
+msgstr "Runs without a window. Fhoe-Rail and Simulated Universe need a visible window."
+
+#: app/setup/steps.py:25
+msgid "在浏览器里运行，不占显卡，也可以无窗口运行"
+msgstr "Runs in a browser without using your GPU. A window is optional."
+
+#: module/setup/tasks.py:46
+msgid "委托、邮件、无名勋礼、兑换码等"
+msgstr "Assignments, mail, Nameless Honor, codes"
+
+#: app/setup/dialog.py:235
+msgid "安装位置或连接方式"
+msgstr "Path or connection"
+
+#: app/setup/dialog.py:90
+msgid "完成"
+msgstr "Done"
+
+#: module/setup/tasks.py:45
+msgid "完成实训，领取 500 活跃度奖励"
+msgstr "Claim the 500 Activity reward"
+
+#: app/setup/steps.py:715
+msgid "完成设置"
+msgstr "Finish setup"
+
+#: app/content/setup_model.py:51
+msgid "官方启动器"
+msgstr "Official launcher"
+
+#: app/setup/dialog.py:236
+msgid "定时与完成后操作"
+msgstr "Schedule and finish action"
+
+#: app/setup/steps.py:651
+msgid "定时运行需要小助手保持打开，可以最小化到托盘；电脑不能睡眠。"
+msgstr "Keep the assistant open and your PC awake. You can minimize it to the system tray."
+
+#: app/setup/steps.py:338
+msgid "小助手会打开浏览器，请在里面登录米哈游账号，之后会记住登录"
+msgstr "Sign in to your HoYoverse account in the browser that opens. Your login is saved."
+
+#: app/setup/steps.py:421
+msgid "小助手需要知道 StarRail.exe 的位置，才能替你启动游戏。"
+msgstr "Choose StarRail.exe so the assistant can launch the game."
+
+#: module/setup/tasks.py:51
+msgid "差分宇宙积分"
+msgstr "Divergent Universe points"
+
+#: module/setup/tasks.py:79
+msgid "已启用体力计划，清体力时会按计划选择副本。"
+msgstr "Your Power Plan chooses the stages."
+
+#: module/setup/tasks.py:81
+msgid "已启用培养目标，清体力时会按培养目标选择副本。"
+msgstr "Your training goals choose the stages."
+
+#: app/content/setup_model.py:381
+msgid "已添加 {names}"
+msgstr "Added: {names}"
+
+#: app/content/setup_model.py:400
+msgid "已选 {count} 项"
+msgstr "{count} selected"
+
+#: app/setup/steps.py:599
+msgid "开始时间"
+msgstr "Start time"
+
+#: app/content/setup_model.py:52
+msgid "开始菜单"
+msgstr "Start menu"
+
+#: module/setup/run_plan.py:210
+msgid "开机启动设置失败，请检查 Windows 计划任务权限后重试。"
+msgstr "Could not change startup settings. Check Windows Task Scheduler permissions and try again."
+
+#: module/search/terms.py:7
+msgid "引导"
+msgstr "Onboarding"
+
+#: app/content/setup_model.py:178
+msgid "当前系统不支持这种运行方式。"
+msgstr "This mode is unavailable on your system."
+
+#: app/content/setup_model.py:51
+msgid "当前设置"
+msgstr "Current setting"
+
+#: app/setup/steps.py:471
+msgid "快速选择"
+msgstr "Presets"
+
+#: app/content/setup_model.py:407
+msgid "我自己点开始"
+msgstr "Start manually"
+
+#: app/content/setup_model.py:53
+msgid "手动选择"
+msgstr "Selected manually"
+
+#: app/setup/steps.py:384
+msgid "手机：在开发者选项打开 USB 调试，用数据线连接后允许调试"
+msgstr "Phone: enable USB debugging in Developer options, connect by cable and allow debugging."
+
+#: app/content/settings/advanced.py:25
+msgid "打开向导"
+msgstr "Open wizard"
+
+#: app/setup/steps.py:570
+msgid "打开小助手，点总览的「开始完整运行」。"
+msgstr "Open Overview and select Start full run."
+
+#: app/setup/steps.py:493
+msgid "打开的项目会加入「完整运行」，已经做完的会自动跳过。之后可以在「任务」页细调。"
+msgstr "Selected tasks join Full Run. Completed tasks are skipped. You can change these on the Task page."
+
+#: app/content/setup_model.py:413
+msgid "找到游戏"
+msgstr "Find game"
+
+#: module/setup/tasks.py:45
+msgid "把开拓力用在你选择的副本上"
+msgstr "Spend Power on your chosen stage"
+
+#: module/setup/tasks.py:127
+msgid "按当前选择，每天大约 {daily}（按常见配置估算）。"
+msgstr "About {daily} per day on a typical setup."
+
+#: module/setup/tasks.py:125
+msgid "按当前选择，每天大约 {daily}，周常每周另外 {weekly}（按常见配置估算）。"
+msgstr "About {daily} a day, plus {weekly} a week on a typical setup."
+
+#: app/setup/steps.py:756
+msgid "接下来点「开始完整运行」就可以，以后改主意随时再调。"
+msgstr "Select Start full run when you’re ready. You can change these settings anytime."
+
+#: app/setup/steps.py:22
+msgid "支持全部任务，可以在前台运行，也可以设成后台运行，边挂机边用电脑"
+msgstr "All tasks are supported. Use background mode to keep working on your PC."
+
+#: module/search/terms.py:7
+msgid "新手"
+msgstr "Beginner"
+
+#: app/main_window.py:788
+msgid "无法保存设置"
+msgstr "Couldn’t save settings"
+
+#: app/content/setup_model.py:125
+msgid "无法保存设置：{error}"
+msgstr "Couldn’t save settings: {error}"
+
+#: app/main_window.py:769
+msgid "无法打开首次配置向导"
+msgstr "Couldn’t open setup"
+
+#: app/setup/steps.py:335
+msgid "无窗口运行"
+msgstr "Run headless"
+
+#: app/setup/steps.py:339
+msgid "无窗口运行时如果没有登录，会自动换成有窗口让你登录"
+msgstr "If you’re signed out, a window opens so you can sign in."
+
+#: app/content/setup_model.py:301
+msgid "日常 + 周常（推荐）"
+msgstr "Daily + weekly (recommended)"
+
+#: app/setup/steps.py:602
+msgid "最小化到托盘，不会忘记打开"
+msgstr "Start in the system tray so it’s ready on time."
+
+#: app/content/setup_model.py:392
+msgid "有窗口"
+msgstr "Windowed"
+
+#: app/content/setup_model.py:134
+msgid "桌面分身正在使用设置，请回到主桌面并结束托管后打开向导。"
+msgstr "Desktop Twin is using these settings. Return to the main desktop and end hosting to open the wizard."
+
+#: app/setup/steps.py:385
+msgid "模拟器：填地址后点「连接」，MuMu 默认是 127.0.0.1:16384"
+msgstr "Emulator: enter its address and select Connect. MuMu’s default is 127.0.0.1:16384."
+
+#: app/setup/dialog.py:119
+msgid "欢迎使用三月七小助手"
+msgstr "Welcome to March7th"
+
+#: app/setup/steps.py:183
+msgid "正在查找游戏…"
+msgstr "Finding game…"
+
+#: app/content/setup_model.py:331
+msgid "正在设置「{name}」的任务"
+msgstr "Editing tasks for {name}"
+
+#: app/content/setup_model.py:51
+msgid "正在运行的游戏"
+msgstr "Running game"
+
+#: app/setup/dialog.py:121
+msgid "每一步点「下一步」时保存"
+msgstr "Next saves each step."
+
+#: module/setup/tasks.py:47
+msgid "每周 3 次，优先消耗开拓力"
+msgstr "3 runs a week, spending Power first"
+
+#: module/setup/tasks.py:47
+msgid "每周自动完成积分奖励"
+msgstr "Earn the weekly point rewards"
+
+#: app/content/setup_model.py:413
+msgid "每天做什么"
+msgstr "Daily tasks"
+
+#: app/setup/steps.py:571
+msgid "每天定时运行"
+msgstr "Daily schedule"
+
+#: app/setup/steps.py:492
+msgid "每天想让小助手做什么？"
+msgstr "What should run each day?"
+
+#: app/setup/steps.py:599
+msgid "每天，按电脑时间"
+msgstr "Daily, in your PC’s time zone"
+
+#: module/setup/tasks.py:46
+msgid "每日签到和双倍掉落"
+msgstr "Daily check-in and double drops"
+
+#: app/setup/steps.py:575
+msgid "每次登录后自动打开小助手，开始完整运行。"
+msgstr "Open the assistant and start Full Run at sign-in."
+
+#: app/setup/steps.py:261
+msgid "没有自动找到游戏，请选择安装目录里的 StarRail.exe。也可以先跳过，以后在「设置 › 运行方式」设置。"
+msgstr "Game not found. Choose StarRail.exe in the install folder, or skip and set it later in Settings › Run mode."
+
+#: app/content/setup_model.py:382
+msgid "没有通知"
+msgstr "No notifications"
+
+#: app/setup/steps.py:334
+msgid "浏览器"
+msgstr "Browser"
+
+#: module/setup/tasks.py:48
+msgid "混沌回忆等三项，需要先配好队伍"
+msgstr "Set teams for Memory of Chaos + 2 more"
+
+#: module/setup/run_plan.py:134
+msgid "游戏刷新时间应在 0 至 23 点之间。"
+msgstr "Choose a reset hour from 0 to 23."
+
+#: app/content/setup_model.py:413
+msgid "游戏在哪里运行"
+msgstr "Run mode"
+
+#: app/setup/steps.py:118
+msgid "游戏在哪里运行？"
+msgstr "Where will you play?"
+
+#: app/setup/steps.py:421
+msgid "游戏安装在哪里？"
+msgstr "Where is the game installed?"
+
+#: app/setup/steps.py:208
+msgid "游戏已经登录过一次，能正常进入"
+msgstr "You’ve signed in and can enter the game."
+
+#: app/content/setup_model.py:224
+msgid "游戏文件不存在，请重新选择。"
+msgstr "Game file not found. Choose it again."
+
+#: app/setup/steps.py:209
+msgid "游戏语言是简体中文"
+msgstr "Game language is set to Simplified Chinese."
+
+#: module/setup/run_plan.py:160
+msgid "现有定时计划无法读取，请到「运行」检查后再设置。"
+msgstr "Couldn’t read existing schedules. Check them on the Run page, then try again."
+
+#: app/setup/steps.py:28
+msgid "用数据线或网络连接手机、模拟器，手机屏幕可以照常使用"
+msgstr "Connect a phone or emulator by USB or network. You can still use the phone screen."
+
+#: app/setup/dialog.py:235
+msgid "电脑、云游戏或安卓设备"
+msgstr "PC, cloud or Android"
+
+#: app/content/setup_model.py:406
+msgid "登录 Windows 后"
+msgstr "At Windows sign-in"
+
+#: app/setup/steps.py:602
+msgid "登录 Windows 后自动打开小助手"
+msgstr "Open the assistant at Windows sign-in"
+
+#: app/content/setup_model.py:434
+msgid "登录 Windows 后自动运行"
+msgstr "Run at Windows sign-in"
+
+#: app/setup/steps.py:574
+msgid "登录 Windows 后运行"
+msgstr "At Windows sign-in"
+
+#: app/setup/steps.py:652
+msgid "登录后大约半分钟开始，小助手会最小化到托盘。今天已经做完的任务会自动跳过。"
+msgstr "Starts about 30 seconds after sign-in, minimized to the tray. Tasks already done today are skipped."
+
+#: app/setup/dialog.py:248
+msgid "第 {index} 步，共 {total} 步"
+msgstr "Step {index} of {total}"
+
+#: app/setup/steps.py:336
+msgid "第一次运行"
+msgstr "First run"
+
+#: app/setup/steps.py:775
+msgid "细调每个任务"
+msgstr "Edit tasks"
+
+#: app/setup/dialog.py:119
+msgid "花 1 分钟，设好每天要做的事"
+msgstr "Set up your daily routine in a minute."
+
+#: app/setup/steps.py:756
+msgid "设置好了"
+msgstr "You’re all set"
+
+#: app/setup/steps.py:386
+msgid "请先在设备上安装国服客户端并登录一次"
+msgstr "Install the mainland China client on the device and sign in once."
+
+#: app/content/setup_model.py:222
+msgid "请先选择游戏文件。"
+msgstr "Choose the game file first."
+
+#: module/setup/tasks.py:96
+msgid "请选择列表中的副本。"
+msgstr "Choose a stage from the list."
+
+#: module/setup/run_plan.py:200
+msgid "请选择可用的完成后操作。"
+msgstr "Choose an available completion action."
+
+#: app/content/setup_model.py:269
+msgid "请选择可用的浏览器。"
+msgstr "Choose an available browser."
+
+#: module/setup/run_plan.py:166
+msgid "请选择有效的运行时间。"
+msgstr "Choose a valid start time."
+
+#: app/content/setup_model.py:226
+msgid "请选择游戏目录里的 StarRail.exe。"
+msgstr "Choose StarRail.exe in the game folder."
+
+#: module/setup/tasks.py:51
+msgid "货币战争积分"
+msgstr "Currency Wars points"
+
+#: app/setup/steps.py:607
+msgid "跑完之后"
+msgstr "After the run"
+
+#: app/setup/steps.py:775
+msgid "边挂机边用电脑"
+msgstr "Use your PC during runs"
+
+#: app/setup/steps.py:206
+msgid "运行前请确认"
+msgstr "Before you start"
+
+#: app/content/setup_model.py:191
+msgid "运行方式已保存，界面刷新失败：{error}"
+msgstr "Run mode saved. Couldn’t refresh the interface: {error}"
+
+#: app/setup/steps.py:770
+msgid "还想多了解一点？"
+msgstr "Learn more"
+
+#: app/content/setup_model.py:397
+msgid "还没有找到游戏"
+msgstr "Game not found yet"
+
+#: module/setup/tasks.py:118
+msgid "还没有选择任何任务，完整运行不会做任何事。"
+msgstr "No tasks selected. Full Run has nothing to do."
+
+#: module/setup/run_plan.py:162
+msgid "这个定时计划已被移除，请重新打开向导后再设置。"
+msgstr "This schedule was removed. Reopen the wizard to set it up again."
+
+#: app/setup/steps.py:419
+msgid "连接要运行游戏的手机或模拟器。"
+msgstr "Connect the phone or emulator that will run the game."
+
+#: app/setup/steps.py:412
+msgid "连接设备"
+msgstr "Connect device"
+
+#: app/setup/steps.py:298
+msgid "选择 StarRail.exe"
+msgstr "Choose StarRail.exe"
+
+#: app/setup/steps.py:192
+msgid "选择其他位置"
+msgstr "Browse…"
+
+#: app/setup/dialog.py:235
+msgid "选择要自动完成的内容"
+msgstr "Choose tasks to automate"
+
+#: app/content/setup_model.py:413
+msgid "通知我"
+msgstr "Notifications"
+
+#: app/setup/steps.py:194
+msgid "重新查找"
+msgstr "Search again"
+
+#: app/content/settings/advanced.py:26
+msgid "重新设置游戏位置、每天要做的任务、运行时间和通知"
+msgstr "Change the game location, daily tasks, run time and notifications."
+
+#: module/search/terms.py:7
+msgid "重新配置"
+msgstr "Reconfigure"
+
+#: app/content/setup_model.py:260
+msgid "集成浏览器"
+msgstr "Built-in browser"
+
+#: app/setup/steps.py:334
+msgid "集成浏览器会在第一次运行时自动下载，效果最好"
+msgstr "Recommended. The built-in browser downloads on first use."
+
+#: app/setup/steps.py:27
+msgid "需要云游戏时长；锄大地和模拟宇宙要有窗口才能运行"
+msgstr "Requires cloud playtime. Fhoe-Rail and Simulated Universe need a visible window."
+
+#: module/setup/tasks.py:49
+msgid "需要前台全屏，通常超过 1 小时"
+msgstr "Foreground fullscreen, usually over 1 hr"
+
+#: app/setup/steps.py:30
+msgid "需要安卓 10 以上、国服客户端，并打开 USB 调试"
+msgstr "Requires Android 10+, the mainland China client and USB debugging."
+
+#: app/setup/steps.py:340
+msgid "需要有云游戏时长，高峰期可能要排队"
+msgstr "Cloud playtime is required. You may have to queue at peak times."
+
+#: module/search/terms.py:7
+msgid "首次设置"
+msgstr "First-time setup"
+
+#: app/content/settings/advanced.py:25
+msgid "首次配置向导"
+msgstr "Setup wizard"
+
+#: app/setup/steps.py:24
+msgid "默认在前台运行，任务期间会操作鼠标和键盘，先别用电脑"
+msgstr "Foreground mode uses your mouse and keyboard. Leave the PC idle during runs."
+
+#: app/content/setup_model.py:52
+msgid "默认安装位置"
+msgstr "Default install path"
+
 #: module/game/adb_startup_frames.py:110
 msgid "游戏已启动，但后台虚拟屏持续输出黑帧，请导出本轮日志反馈"
 msgstr ""
@@ -8706,3 +12939,196 @@ msgstr ""
 "The game has started, but no new frames are coming from the background "
 "virtual display. Please export the log for this run and attach it to your "
 "report."
+
+#: app/tools_interface.py:114
+msgid "不参与完整运行，需要时单独打开"
+msgstr "Open these tools separately from Full Run"
+
+#: app/tools_interface.py:115
+msgid "游戏辅助"
+msgstr "Game tools"
+
+#: app/tools_interface.py:115
+msgid "排查"
+msgstr "Diagnostics"
+
+#: app/tools_interface.py:118
+msgid "选项"
+msgstr "Options"
+
+#: app/toolbox/autoplot.py:174
+msgid "快捷键 {hotkey}"
+msgstr "Hotkey {hotkey}"
+
+#: app/tools_interface.py:137
+msgid "第三方程序"
+msgstr "Third-party app"
+
+#: module/content_pages.py:64
+msgid "社区与工具"
+msgstr "Community and tools"
+
+#: app/pages/about.py:33
+msgid "崩坏：星穹铁道自动化助手，免费开源"
+msgstr "Free, open-source automation for Honkai: Star Rail"
+
+#: app/tools/check_update.py:149
+msgid "发现新版本"
+msgstr "Update available"
+
+#: app/card/messagebox_custom.py:274
+msgid "更新日志 |･ω･)"
+msgstr "Changelog |･ω･)"
+
+#: app/content/gacha_dialogs.py:94
+msgid "SRGF 格式 (*.json)"
+msgstr "SRGF files (*.json)"
+
+#: app/overview/cards.py:141
+msgid "按上次记录的数值和每 6 分钟恢复 1 点估算，可能和游戏里差几点"
+msgstr ""
+"Estimated from the last recorded value at 1 point every 6 minutes. It may "
+"differ from the game by a few points"
+
+#: app/overview/cards.py:149
+msgid "{time} 时为 {value}"
+msgstr "{value} at {time}"
+
+#: app/overview/cards.py:154
+msgid "已回满"
+msgstr "Full"
+
+#: app/pages/nav_search.py:15
+msgid "搜索"
+msgstr "Search"
+
+#: app/pages/notify.py:50
+msgid "删除渠道"
+msgstr "Remove channel"
+
+#: app/pages/notify.py:293
+msgid "删除渠道「{name}」？"
+msgstr "Remove {name}?"
+
+#: app/pages/notify.py:291
+msgid "填写的内容会一起清除，以后要用得重新填写。"
+msgstr ""
+"Its saved details will be cleared. You will need to enter them again to use "
+"it later."
+
+#: app/pages/notify.py:291
+msgid "以后要用可以重新添加。"
+msgstr "You can add it again later."
+
+#: app/pages/notify.py:292
+msgid "只是暂时不用的话，关掉开关就行。"
+msgstr "To pause it for now, just turn off its switch."
+
+#: app/pages/notify.py:304
+msgid "无法删除这个渠道"
+msgstr "Could not remove this channel"
+
+#: app/pages/notify.py:306
+msgid "已删除"
+msgstr "Removed"
+
+#: app/pages/power_order.py:87
+msgid "按从上到下的顺序用开拓力：前一步用不上或刷完了，才轮到下一步"
+msgstr ""
+"Trailblaze Power is spent from top to bottom. A step starts only when the "
+"one above is finished or not used"
+
+#: module/task_catalog.py:114
+msgid "计划刷完就停，不会刷"
+msgstr "Stops after the plan"
+
+#: module/task_catalog.py:114
+msgid "计划刷完再刷"
+msgstr "After the plan"
+
+#: module/task_catalog.py:116
+msgid "先刷 {count} 项"
+msgstr "First: {count} items"
+
+#: module/task_catalog.py:118
+msgid "计划已刷完，跳过"
+msgstr "Plan finished, skipped"
+
+#: module/task_catalog.py:118
+msgid "暂无计划，跳过"
+msgstr "No plan, skipped"
+
+#: module/task_catalog.py:120
+msgid "未启用，跳过"
+msgstr "Off, skipped"
+
+#: module/task_catalog.py:122
+msgid "先刷这里"
+msgstr "Starts here"
+
+#: module/task_catalog.py:126
+msgid "没选副本，不会刷"
+msgstr "No dungeon selected"
+
+#: module/task_catalog.py:128
+msgid "培养目标用不上时才刷"
+msgstr "If the cultivation target doesn't apply"
+
+#: module/task_catalog.py:130
+msgid "直接刷这里"
+msgstr "Runs right away"
+
+#: module/task_catalog.py:132
+msgid "先刷体力计划"
+msgstr "First: power plan"
+
+#: module/task_catalog.py:132
+msgid "按列表里的副本和次数"
+msgstr "Dungeons and counts from your list"
+
+#: module/task_catalog.py:133
+msgid "再刷培养目标"
+msgstr "Then: cultivation target"
+
+#: module/task_catalog.py:133
+msgid "按游戏里的培养目标自动选副本"
+msgstr "Picks dungeons from the in-game target"
+
+#: module/task_catalog.py:134
+msgid "最后刷默认副本"
+msgstr "Last: default dungeon"
+
+#: module/task_catalog.py:159
+msgid "现在约有 {power} 开拓力，{name}可挑战 {count} 轮"
+msgstr ""
+"About {power} Trailblaze Power now: enough for {count} waves of {name}"
+
+#: module/task_catalog.py:161
+msgid "现在约有 {power} 开拓力，{name}可挑战 {count} 次（每次 {waves} 轮）"
+msgstr ""
+"About {power} Trailblaze Power now: enough for {count} runs of {name} "
+"({waves} waves each)"
+
+#: module/task_catalog.py:47
+msgid "按体力计划、培养目标、默认副本的顺序消耗开拓力。"
+msgstr ""
+"Spends Trailblaze Power on the power plan, then the cultivation target, then"
+" the default dungeon."
+
+#: module/search/setting_text.py:3
+msgid "按列表里的副本和次数刷，排在培养目标和默认副本前面"
+msgstr ""
+"Farms the dungeons in your list, before the cultivation target and the "
+"default dungeon"
+
+#: module/overview/shortcuts.py:23
+msgid "中途接管"
+msgstr "Mid-takeover"
+
+#: app/overview/cards.py:471
+msgid "当前连接方式没有可用的快捷启动"
+msgstr "No shortcuts for this connection"
+
+#: app/content/run_models.py:377
+msgid "复制定时计划"
+msgstr "Duplicate schedule"

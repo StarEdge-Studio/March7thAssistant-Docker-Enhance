@@ -10,6 +10,8 @@ from module.automation import auto
 from module.automation.automation import screenshot_retry_timeout
 from module.automation.input_base import input_deadline, input_deadline_reached, limit_input_deadline
 from module.config import cfg
+from module.overview.plan import echo_day_due
+from module.overview.readings import save_reading
 from module.game.adb_transport import AdbError
 from module.localization import get_raw_instance_names, tr
 from module.logger import log
@@ -19,6 +21,7 @@ from tasks.base.task_steps import GameRecoveryError
 from tasks.power.instance import Instance, TeamPresetUnavailable
 from tasks.power.battle import battle_speed_visible, ensure_double_speed
 from tasks.power.policy import (
+    remaining_plan,
     BATTLE_TIMEOUT, ENTRY_TIMEOUT, DEFEAT_RETRIES, CAVERN, CRIMSON_CALYX, ECHO, GOLDEN_CALYX,
     INSTANCE_LIMITS, ORNAMENT, STAGNANT_SHADOW, BattleDefeat, InstanceTeamUnavailable, PowerError, RelicBagFull,
     SupportDemand, batch_limit, normalize as _normalize,
@@ -68,7 +71,9 @@ def _read_number(crop, parse, error):
 
 
 def read_power(crop=POWER_VALUE):
-    return _read_number(crop, parse_power, "未能确认当前开拓力")
+    value = _read_number(crop, parse_power, "未能确认当前开拓力")
+    save_reading(cfg, "overview_power", value)
+    return value
 
 
 def _read_echo_rewards():
@@ -555,6 +560,17 @@ def _wait_battle(*, repeated=False, instance_screen="calyx", verify_team=False):
 
 
 def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_settlement=None):
+    """逐批挑战。结束时记下剩余的开拓力，总览从这个数估算恢复。"""
+    balance = []
+    try:
+        yield from _run_batches(instance_type, name, planned, balance, borrow_for_daily=borrow_for_daily,
+                                on_settlement=on_settlement)
+    finally:
+        if balance:
+            save_reading(cfg, "overview_power", balance[-1])
+
+
+def _run_batches(instance_type, name, planned, balance, *, borrow_for_daily=False, on_settlement=None):
     instance_screen, cost, _ = INSTANCES[instance_type]
     limit = batch_limit(cfg, instance_type)
     demand = borrow_for_daily if isinstance(borrow_for_daily, SupportDemand) else SupportDemand(borrow_for_daily)
@@ -562,7 +578,7 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
     if instance_type == ORNAMENT:
         from tasks.touch import ornament
 
-        yield from ornament.run_instance(name, planned, limit, demand, on_settlement)
+        yield from ornament.run_instance(name, planned, limit, demand, on_settlement, balance)
         return
 
     _select_category(instance_type)
@@ -611,8 +627,13 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
     borrowed = False
     retries = 0
     cleaned = False
+    completed = 0
     while remaining is None or remaining > 0:
+        from utils.runs import DETAIL_TEXT, publish_detail
         practice = quota == 0
+        total = planned or completed + (min(quota, power // cost) if is_echo else power // cost)
+        if total > completed:
+            publish_detail(DETAIL_TEXT["instance"], name=name, index=completed + 1, total=total)
         waves = limit if remaining is None else min(remaining, limit)
         if practice:
             waves = 1
@@ -668,6 +689,7 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
             continue
 
         demand.won(borrowed)
+        completed += waves
         yield waves
         log.info(f"已结算 {waves} 次")
         previous, retries = waves, 0
@@ -675,6 +697,7 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
             remaining -= waves
         if not practice:
             power -= waves * cost
+            balance.append(power)
         if on_settlement is not None:
             on_settlement(waves, None)
         if is_echo and not practice:
@@ -694,7 +717,7 @@ def _run_instance(instance_type, name, planned, *, borrow_for_daily=False, on_se
 
 
 def run_weekly_echo(*, borrow_for_daily=False):
-    if date.today().isoweekday() < cfg.echo_of_war_start_day_of_week:
+    if not echo_day_due(cfg, date.today()):
         log.info(f"历战余响设为周{cfg.echo_of_war_start_day_of_week}开始，跳过本次")
         return True
     name = cfg.instance_names.get(ECHO)
@@ -718,7 +741,7 @@ def _run(borrow_for_daily, on_settlement=None):
     def run_instance(instance_type, name, planned):
         return _run_instance(instance_type, name, planned, borrow_for_daily=demand, on_settlement=on_settlement)
 
-    plan = cfg.power_plan
+    plan = remaining_plan(cfg)
     if plan:
         complete = run_plan(cfg, plan, run_instance)
         if not complete or not getattr(cfg, "power_plan_continue", True):

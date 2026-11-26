@@ -16,9 +16,10 @@
    若包装器对入参再 `tr()` 一次，调用点已翻译的文本会二次查表、命中不到条目，
    既浪费又会在 DEBUG 日志里刷「缺失翻译」。
    例外（有意为之）：
-   - `app/card/card_edit_dialog.py::display_label()`：入参本身就是 msgid（常量/配置里存的中文原文），
+   - `module/overview/shortcuts.py::display_name()`：内置名称是常量或配置中保存的 msgid，
      由它负责解析成当前语言；
    - `module/localization/trc()`：无 msgctxt 条目时回退 `tr()`。
+   - `module/search/terms.py::_label()`：输入是搜索词表和建议词的原文，需要按查询语言翻译。
 """
 import ast
 import re
@@ -41,8 +42,10 @@ UI_INFO_KW = {"text", "title", "content", "caption", "label", "placeholder",
 
 # ---- 约定 2 的允许例外 ----
 WRAPPER_ALLOWLIST = {
-    ("app/card/card_edit_dialog.py", "display_label"),      # 入参是 msgid，本就是由它解析
+    ("module/accounts/differences.py", "value_text"),          # 只接收持久化的原始设置值和副本名
+    ("module/overview/shortcuts.py", "display_name"),         # 内置快捷启动名称在显示时翻译
     ("module/localization/__init__.py", "trc"),              # 无 msgctxt 条目时回退 tr()
+    ("module/search/terms.py", "_label"),                    # 只接收内置同义词和建议词的 msgid
 }
 
 
@@ -170,7 +173,7 @@ def test_export_headers_and_weekdays_are_statically_extractable():
     from tools.i18n import collect_literals_from_source
 
     for path, expected in (
-        ("app/warp_interface.py", {"总次数", "保底内"}),
+        ("module/gacha/transfer.py", {"总次数", "保底内"}),
         ("app/card/expandable_switch_setting_card.py",
          {"周一", "周二", "周三", "周四", "周五", "周六", "周日"}),
     ):

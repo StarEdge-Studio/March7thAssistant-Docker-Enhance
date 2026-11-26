@@ -2,16 +2,22 @@ from PySide6.QtCore import Qt, QUrl, QSize, Signal, Slot
 from PySide6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QToolButton, QCompleter, QSizePolicy, QWidget
 from PySide6.QtGui import QPixmap, QDesktopServices, QFont
 from qfluentwidgets import (MessageBox, LineEdit, ComboBox, EditableComboBox, DateTimeEdit,
-                            BodyLabel, FluentStyleSheet, TextEdit, Slider, FluentIcon, qconfig,
+                            BodyLabel, FluentStyleSheet, TextEdit, Slider, FluentIcon, qconfig, StrongBodyLabel,
                             isDarkTheme, PrimaryPushSettingCard, InfoBar, InfoBarPosition, PushButton, CheckBox, SimpleCardWidget,
                             TextBrowser, setCustomStyleSheet)
 from app.components.ascii_spin_box import AsciiSpinBox
 from app.common.accent import accent_html
+from app.common.mascot import Mascot
+from app.components.mascot_dialog import add_mascot
+from app.components.update_banner import UpdateBanner
+from app.overview.style import primary_button_qss
+from app.pages.common import is_evernight
 from qfluentwidgets import FluentIcon as FIF
 from typing import Optional
 from app.common.scroll_dialog import (SplitFadeDialogMixin, available_host_size,
                                       build_scroll_area)
 from module.config import cfg
+from module.search.setting_text import technique_labels
 from module.localization import tr, get_raw_instance_names, get_instance_names, instance_display_to_raw
 import datetime
 import json
@@ -188,6 +194,7 @@ class MessageBoxSupport(MessageBoxImage):
 
         self.yesButton.setText(tr('下次一定'))
         self.cancelButton.setHidden(True)
+        add_mascot(self, Mascot.LATER)
 
 
 class MessageBoxAnnouncement(MessageBoxImage):
@@ -224,6 +231,29 @@ class MessageBoxHtml(MessageBox):
         QDesktopServices.openUrl(QUrl(url))
 
 
+def style_card_button(card):
+    """设置卡上的主按钮换成和其他页面一致的深粉。"""
+    light, dark = primary_button_qss(is_evernight())
+    disabled = ("QPushButton:disabled { background-color: rgba(255, 255, 255, 0.16); border: none; color: rgba(255, 255, 255, 0.43); }"
+                if isDarkTheme() else
+                "QPushButton:disabled { background-color: rgb(205, 205, 205); border: none; color: rgba(255, 255, 255, 0.9); }")
+    card.button.setStyleSheet(
+        "QPushButton { border-radius: 5px; padding: 5px 18px; font: 14px 'Segoe UI', 'Microsoft YaHei', 'PingFang SC'; }"
+        + (dark if isDarkTheme() else light).replace("PrimaryPushButton", "QPushButton") + disabled)
+
+
+def style_plain(button):
+    """主操作在卡片上时，底部的主按钮用普通样式。"""
+    setCustomStyleSheet(
+        button,
+        "PrimaryPushButton { background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(0, 0, 0, 0.073); color: black; }"
+        "PrimaryPushButton:hover { background: rgba(249, 249, 249, 0.5); }"
+        "PrimaryPushButton:pressed { background: rgba(249, 249, 249, 0.3); color: rgba(0, 0, 0, 0.63); }",
+        "PrimaryPushButton { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.053); color: white; }"
+        "PrimaryPushButton:hover { background: rgba(255, 255, 255, 0.084); }"
+        "PrimaryPushButton:pressed { background: rgba(255, 255, 255, 0.033); color: rgba(255, 255, 255, 0.786); }")
+
+
 class MessageBoxHtmlUpdate(SplitFadeDialogMixin, MessageBox):
     historyCancelled = Signal()
 
@@ -236,6 +266,15 @@ class MessageBoxHtmlUpdate(SplitFadeDialogMixin, MessageBox):
         self.textLayout.removeWidget(self.contentLabel)
         self.contentLabel.clear()
         self._scroll = None
+        host_width, host_height = available_host_size(parent)
+        self.textLayout.removeWidget(self.titleLabel)
+        self.titleLabel.hide()
+        self.banner = UpdateBanner(title, self.widget, height=92 if host_height < 720 else 116)
+        self.vBoxLayout.insertWidget(0, self.banner)
+        self.notesLabel = StrongBodyLabel(tr('更新日志 |･ω･)'), self.widget)
+        self.textLayout.addWidget(self.notesLabel)
+        self.textLayout.setContentsMargins(24, 16, 24, 20)
+        self.textLayout.setSpacing(10)
 
         self.contentLabel = BodyLabel(content, parent)
         self.contentLabel.setObjectName("contentLabel")
@@ -262,6 +301,9 @@ class MessageBoxHtmlUpdate(SplitFadeDialogMixin, MessageBox):
             tr('Mirror酱 服务 ⚡'),
             tr("Mirror酱 用户可以通过 CDK 高速更新（支持任意版本间增量更新）")
         )
+        for card in (self.githubUpdateCard, self.mirrorchyanUpdateCard):
+            style_card_button(card)
+        style_plain(self.yesButton)
 
         # 仅更新日志放进限高滚动区：日志再长也只在内部滚动，
         # 两张更新卡片固定在滚动区之外，始终可见可点。
@@ -293,11 +335,11 @@ class MessageBoxHtmlUpdate(SplitFadeDialogMixin, MessageBox):
         self.textLayout.addWidget(self.mirrorchyanUpdateCard, 0, Qt.AlignmentFlag.AlignTop)
         self.textLayout.activate()
 
-        host_width, host_height = available_host_size(parent)
-        # 非滚动部分的高度：布局边距 + 标题 + 两张更新卡片 + 按钮区 + 间距 + 余量
-        chrome = (self.textLayout.contentsMargins().top()
+        # 非滚动部分的高度：横幅 + 布局边距 + 小标题 + 两张更新卡片 + 按钮区 + 间距 + 余量
+        chrome = (self.banner.height()
+                  + self.textLayout.contentsMargins().top()
                   + self.textLayout.contentsMargins().bottom()
-                  + self.titleLabel.height()
+                  + self.notesLabel.sizeHint().height()
                   + self.githubUpdateCard.height()
                   + self.mirrorchyanUpdateCard.height()
                   + self.buttonGroup.height()
@@ -308,6 +350,7 @@ class MessageBoxHtmlUpdate(SplitFadeDialogMixin, MessageBox):
 
     def prepareHistory(self, current: str, target: str, latest_note: str):
         self._history_target = target
+        self.banner.setVersions(current, target)
         self._history_sections = (VersionNote(target, clean_release_body(latest_note)),)
         self.historyStatusLabel.setText(tr("正在加载历史更新记录……"))
         self.historyStatusLabel.show()
@@ -648,7 +691,6 @@ class MessageBoxDate(MessageBox):
 class MessageBoxInstance(MessageBox):
     def __init__(self, title: str, content: dict, parent=None):
         super().__init__(title, "", parent)
-        self.content = content
 
         self.textLayout.removeWidget(self.contentLabel)
         self.contentLabel.clear()
@@ -683,7 +725,7 @@ class MessageBoxInstance(MessageBox):
                 comboBox.addItem(item_name)
                 item_list.append(item_name)
                 raw_type, raw_name = instance_display_to_raw(type, name)
-                if self.content[instance_display_to_raw(type)] == raw_name:
+                if content[instance_display_to_raw(type)] == raw_name:
                     comboBox.setCurrentText(item_name)
                     has_default = True
             if not has_default:
@@ -748,7 +790,6 @@ class MessageBoxInstance(MessageBox):
 class MessageBoxInstanceChallengeCount(MessageBox):
     def __init__(self, title: str, content: dict, parent=None):
         super().__init__(title, "", parent)
-        self.content = content
 
         self.textLayout.removeWidget(self.contentLabel)
         self.contentLabel.clear()
@@ -781,51 +822,16 @@ class MessageBoxInstanceChallengeCount(MessageBox):
 
             # 创建滑块组件
             sliderLayout = SliderWithSpinBox(1, count, 1, self)
-            sliderLayout.setValue(self.content[type])
+            sliderLayout.setValue(content[type])
             horizontalLayout.addLayout(sliderLayout)
             self.slider_dict[type] = sliderLayout
 
             self.textLayout.addLayout(horizontalLayout)
 
 
-class MessageBoxNotify(MessageBox):
-    def __init__(self, title: str, configlist: dict, parent=None):
-        super().__init__(title.capitalize(), "", parent)
-        self.configlist = configlist
-
-        self.textLayout.removeWidget(self.contentLabel)
-        self.contentLabel.clear()
-
-        self.yesButton.setText(tr('确认'))
-        self.cancelButton.setText(tr('取消'))
-
-        self.buttonGroup.setMinimumWidth(480)
-
-        font = QFont()
-        font.setPointSize(10)
-        lineEditFont = QFont()
-        lineEditFont.setPointSize(9)
-        self.textLayout.setSpacing(4)
-
-        self.lineEdit_dict = {}
-        for name, config in self.configlist.items():
-            titleLabel = QLabel(name.capitalize(), parent)
-            titleLabel.setFont(font)
-            self.textLayout.addWidget(titleLabel, 0, Qt.AlignmentFlag.AlignTop)
-
-            lineEdit = LineEdit(self)
-            lineEdit.setText(str(cfg.get_value(config)))
-            lineEdit.setFont(lineEditFont)
-            lineEdit.setFixedHeight(22)
-
-            self.textLayout.addWidget(lineEdit, 0, Qt.AlignmentFlag.AlignTop)
-            self.lineEdit_dict[config] = lineEdit
-
-
 class MessageBoxNotifyTemplate(MessageBox):
     def __init__(self, title: str, content: dict, parent=None):
         super().__init__(title, "", parent)
-        self.content = content
 
         self.textLayout.removeWidget(self.contentLabel)
         self.contentLabel.clear()
@@ -840,7 +846,7 @@ class MessageBoxNotifyTemplate(MessageBox):
         self.textLayout.setSpacing(4)
 
         self.lineEdit_dict = {}
-        for id, template in self.content.items():
+        for id, template in content.items():
             lineEdit = LineEdit(self)
             lineEdit.setText(template.replace("\n", r"\n"))
             lineEdit.setFont(font)
@@ -857,9 +863,8 @@ class MessageBoxNotifyTemplate(MessageBox):
 
 
 class MessageBoxTeam(MessageBox):
-    def __init__(self, title: str, content: dict, template: dict, parent=None):
+    def __init__(self, title: str, content: list, template: dict, parent=None):
         super().__init__(title, "", parent)
-        self.content = content
 
         self.textLayout.removeWidget(self.contentLabel)
         self.contentLabel.clear()
@@ -874,12 +879,7 @@ class MessageBoxTeam(MessageBox):
 
         self.template = template
 
-        self.tech_map = {
-            -1: tr("秘技 / 开怪"),
-            0: tr("无操作"),
-            1: tr("秘技 1 次"),
-            2: tr("秘技 2 次"),
-        }
+        self.tech_map = technique_labels()
 
         self.comboBox_list = []
         for i in range(1, 5):
@@ -895,14 +895,14 @@ class MessageBoxTeam(MessageBox):
             charComboBox = EditableComboBox()
             charComboBox.setMinimumWidth(130)
             charComboBox.addItems(self.template.values())
-            charComboBox.setCurrentText(self.template[self.content[i - 1][0]])
+            charComboBox.setCurrentText(self.template[content[i - 1][0]])
             setup_completer(charComboBox, list(self.template.values()))
             horizontalLayout.addWidget(charComboBox)
 
             techComboBox = ComboBox()
             techComboBox.setMinimumWidth(130)
             techComboBox.addItems(self.tech_map.values())
-            techComboBox.setCurrentText(self.tech_map[self.content[i - 1][1]])
+            techComboBox.setCurrentText(self.tech_map[content[i - 1][1]])
             horizontalLayout.addWidget(techComboBox)
 
             self.textLayout.addLayout(horizontalLayout)
@@ -966,9 +966,8 @@ class MessageBoxTeam(MessageBox):
 
 
 class MessageBoxFriends(MessageBox):
-    def __init__(self, title: str, content: dict, template: dict, parent=None):
+    def __init__(self, title: str, content: list, template: dict, parent=None):
         super().__init__(title, "", parent)
-        self.content = content
 
         self.textLayout.removeWidget(self.contentLabel)
         self.contentLabel.clear()
@@ -989,12 +988,12 @@ class MessageBoxFriends(MessageBox):
             charComboBox = EditableComboBox()
             charComboBox.setMaximumWidth(150)
             charComboBox.addItems(self.template.values())
-            charComboBox.setCurrentText(self.template[self.content[i - 1][0]])
+            charComboBox.setCurrentText(self.template[content[i - 1][0]])
             setup_completer(charComboBox, list(self.template.values()))
 
             nameLineEdit = LineEdit()
             nameLineEdit.setMaximumWidth(150)
-            nameLineEdit.setText(self.content[i - 1][1])
+            nameLineEdit.setText(content[i - 1][1])
 
             horizontalLayout = QHBoxLayout()
             horizontalLayout.addWidget(charComboBox)
@@ -1047,9 +1046,8 @@ class MessageBoxFriends(MessageBox):
 class MessageBoxPowerPlan(MessageBox):
     """体力计划配置对话框"""
 
-    def __init__(self, title: str, content: list, parent=None, keep_plan: bool = False, *, continue_after_plan: bool = True):
+    def __init__(self, title: str, content: list | None, parent=None, keep_plan: bool = False, *, continue_after_plan: bool = True):
         super().__init__(title, "", parent)
-        self.content = content if content else []
 
         self.textLayout.removeWidget(self.contentLabel)
         self.contentLabel.clear()
@@ -1092,7 +1090,7 @@ class MessageBoxPowerPlan(MessageBox):
         self.textLayout.addLayout(self.planLayout)
 
         # 根据已有内容添加计划行
-        for plan in self.content:
+        for plan in content or ():
             if (isinstance(plan, (list, tuple)) and len(plan) == 3
                     and isinstance(plan[0], str) and isinstance(plan[1], str)
                     and tr(plan[1]) in self._valid_instance_names(tr(plan[0]))
@@ -1357,6 +1355,7 @@ class MessageBoxCloseWindow(MessageBox):
 
         # 存储用户的选择
         self.action = None  # 'minimize' 或 'close'
+        add_mascot(self, Mascot.WAVE)
 
     def accept(self):
         """用户选择最小化到托盘"""

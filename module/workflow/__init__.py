@@ -9,6 +9,7 @@ import uuid
 import zipfile
 from datetime import datetime
 
+from utils import paths
 from module.automation import auto
 from module.config import cfg
 from module.game.adb_transport import AdbError
@@ -17,7 +18,7 @@ from module.localization import tr
 from module.notification import notif
 
 WORKFLOW_FILE_NAME = "workflow.yaml"
-WORKFLOW_USER_ROOT = os.path.abspath("./config/workflows")
+WORKFLOW_USER_ROOT = paths.workflows_dir()
 WORKFLOW_EXAMPLE_ROOT = os.path.abspath("./assets/config/workflows")
 WORKFLOW_OFFICIAL_CONFIG_FILE = "official_workflows.yaml"
 WORKFLOW_OFFICIAL_CONFIG_PATH = os.path.join(WORKFLOW_EXAMPLE_ROOT, WORKFLOW_OFFICIAL_CONFIG_FILE)
@@ -168,7 +169,7 @@ def _load_workflows_from_root(root_dir: str, read_only: bool, allowed_dirs: set[
         workflow = normalize_workflow(data)
         workflow["_workflow_source"] = "example" if read_only else "user"
         workflow["_workflow_dir_name"] = directory_name
-        workflow["_workflow_base_dir"] = workflow_dir
+        workflow["_workflow_base_dir"] = os.path.abspath(workflow_dir)
         workflow["_workflow_read_only"] = read_only
         workflows.append(workflow)
 
@@ -324,7 +325,7 @@ def build_workflow_task(workflow_name: str, step_path=None, timeout: int = 0, na
     """构造 workflow 启动任务字典（标记形态：program='workflow'）。
 
     所有 GUI 启动入口（流程编排、定时任务等）统一产出该形态，
-    由 `LogInterface.startTask` 的 workflow 改写处唯一解析为实际命令行
+    由 `RunController.startTask` 的 workflow 改写处唯一解析为实际命令行
     （含 frozen/开发态分支），避免同一启动语义出现多份解析逻辑。
 
     :param workflow_name: 要运行的流程名称
@@ -405,7 +406,7 @@ def get_asset_directory(kind: str, workflow=None) -> str:
     ensure_workflow_directories()
     base_dir = get_workflow_directory(workflow)
     if not base_dir:
-        base_dir = WORKFLOW_USER_ROOT
+        base_dir = os.path.abspath(WORKFLOW_USER_ROOT)
     asset_dir = _workflow_asset_directory(base_dir, kind)
     os.makedirs(asset_dir, exist_ok=True)
     return asset_dir
@@ -713,13 +714,15 @@ def normalize_workflow(workflow: dict) -> dict:
 
 
 def load_workflows() -> list[dict]:
-    ensure_workflow_directories()
+    observer = paths.readonly_role()
+    if not observer:
+        ensure_workflow_directories()
 
     allowed_sample_dirs, _ = _read_official_workflow_config()
     sample_workflows = _load_workflows_from_root(WORKFLOW_EXAMPLE_ROOT, read_only=True, allowed_dirs=allowed_sample_dirs)
     user_workflows = _load_workflows_from_root(WORKFLOW_USER_ROOT, read_only=False)
 
-    if not sample_workflows and not user_workflows:
+    if not observer and not sample_workflows and not user_workflows:
         save_workflows([create_default_workflow()])
         user_workflows = _load_workflows_from_root(WORKFLOW_USER_ROOT, read_only=False)
 
@@ -734,7 +737,7 @@ def load_workflows() -> list[dict]:
                 renamed_user_workflow = True
         existing_names.add(workflow["name"])
 
-    if renamed_user_workflow:
+    if renamed_user_workflow and not observer:
         save_workflows(workflows)
         user_workflows = _load_workflows_from_root(WORKFLOW_USER_ROOT, read_only=False)
         workflows = sample_workflows + user_workflows
@@ -777,7 +780,7 @@ def save_workflows(workflows: list[dict]):
 
         normalized["_workflow_source"] = "user"
         normalized["_workflow_dir_name"] = directory_name
-        normalized["_workflow_base_dir"] = os.path.join(WORKFLOW_USER_ROOT, directory_name)
+        normalized["_workflow_base_dir"] = os.path.abspath(os.path.join(WORKFLOW_USER_ROOT, directory_name))
         normalized["_workflow_read_only"] = False
         _write_workflow_file(normalized)
         active_directory_names.add(directory_name)
@@ -849,7 +852,7 @@ def import_workflow_from_zip(zip_path: str) -> dict:
         if os.path.isdir(os.path.join(WORKFLOW_USER_ROOT, d))
     }
     dir_name = _allocate_workflow_directory_name(reserved_names)
-    target_dir = os.path.join(WORKFLOW_USER_ROOT, dir_name)
+    target_dir = os.path.abspath(os.path.join(WORKFLOW_USER_ROOT, dir_name))
     os.makedirs(target_dir, exist_ok=True)
 
     try:

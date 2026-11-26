@@ -8,7 +8,7 @@ os.chdir(os.path.dirname(sys.executable) if getattr(sys, 'frozen', False)else os
 from utils.console import ensure_utf8_output
 
 # 输出流固定成 UTF-8：非 UTF-8 环境（cp1252 / cp936 / cp932 的控制台或管道）下打印中文会直接抛
-# UnicodeEncodeError；而且 GUI 的内嵌日志（app/log_interface.py）现在也按 UTF-8 解码子进程输出。
+# UnicodeEncodeError；而且 GUI 的内嵌日志（app/content/run_controller.py）现在也按 UTF-8 解码子进程输出。
 ensure_utf8_output()
 
 from utils.dpi import configure_dpi_awareness
@@ -18,7 +18,7 @@ from utils.tasks import AVAILABLE_TASKS, CLI_ONLY_TASKS, HOST_TASKS, UNSUPPORTED
 configure_dpi_awareness()
 
 # 任务完成后操作的可选值（与 assets/config/config.example.yaml 的 after_finish 一致）
-AFTER_FINISH_CHOICES = ("None", "Exit", "Loop", "Shutdown", "Sleep", "Hibernate", "Restart", "Logoff", "TurnOffDisplay", "RunScript")
+from utils.runs import AFTER_FINISH_CHOICES
 
 
 def parse_args():
@@ -125,18 +125,38 @@ def parse_args():
         '--control',
         nargs=2,
         metavar=('RUN_ID', 'ACTION'),
-        help='向运行中的任务发送 pause / resume / stop（RUN_ID 可用 current）'
+        help='向运行中的任务发送 pause / resume / stop，轮流运行另支持 skip（RUN_ID 可用 current）'
     )
     # 内部参数：未提权入口把任务交给管理员进程时传入的运行编号
+    agent.add_argument('--account', metavar='UID/名称/all', help='指定本地账号或全部参与轮流的账号')
+    agent.add_argument('--account-timeout', type=int, default=8 * 60 * 60, help=argparse.SUPPRESS)
     agent.add_argument('--run-id', help=argparse.SUPPRESS)
     # 内部参数：由免 UAC 计划任务启动时最小化自身窗口（计划任务无法指定窗口状态）
     agent.add_argument('--minimize-console', action='store_true', help=argparse.SUPPRESS)
 
+    optional.add_argument("--data-dir", help="指定数据文件夹（直接使用，不迁移）")
+    optional.add_argument("--data-session", help=argparse.SUPPRESS)
+    from module.overview.plan import STEPS
+    optional.add_argument('--retry-step', choices=sorted(STEPS.keys() - {'prepare'}), help=argparse.SUPPRESS)
+    optional.add_argument('--page-task', choices=('activity', 'reward', 'echo', 'assets', 'daily'), help=argparse.SUPPRESS)
+    optional.add_argument('--startup-task', action='store_true', help=argparse.SUPPRESS)
+    optional.add_argument('--scheduled', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.account is not None and (not args.account.strip() or any(ord(c) < 32 for c in args.account)):
+        parser.error("--account 需要有效的 UID 或名称")
+    if args.account_timeout <= 0:
+        parser.error("--account-timeout 必须大于零")
+    if args.page_task and (args.task != "routine" or args.workflow_name or args.retry_step):
+        parser.error("--page-task 只能单独与 routine 一起使用")
+    if args.retry_step and (args.task != "routine" or args.workflow_name):
+        parser.error("--retry-step 只能与 routine 一起使用")
+    from utils import paths
+    from utils.data_migration import initialize
+    initialize(override=args.data_dir, session=args.data_session)
 
     # AI 助手里已安装的 Skill 副本跟随小助手更新（仅打包版；不输出内容，不影响下面查询类命令的结果）
     from utils.agent_skill import sync_installed_skills
-    if not os.environ.get("MARCH7TH_DESKTOP_TWIN"):
+    if not paths.readonly_role() and not os.environ.get("MARCH7TH_DESKTOP_TWIN"):
         sync_installed_skills()
 
     # 查询类命令只读配置：可能由未提权的 m7a.exe 调用，安装目录不一定可写
@@ -225,6 +245,8 @@ def parse_args():
 
 
 args = parse_args()
+from module.accounts.runtime import configure_worker
+configure_worker("workflow" if args.workflow_name else args.task or "main", args.account)
 
 desktop_twin_context = None
 if sys.platform == "win32" and os.environ.get("MARCH7TH_DESKTOP_TWIN"):
@@ -317,8 +339,13 @@ run_session = RunSession.begin(
     workflow_step_path=args.workflow_step_path,
     argv=sys.argv[1:],
     invoker=_run_invoker(),
+    retry_step=args.retry_step,
+    trigger=('startup' if args.startup_task else 'scheduled' if args.scheduled else 'manual' if is_gui_started()
+             else 'ai' if os.getenv('M7A_RUN_TRIGGER') == 'ai' else None),
     version=read_version(),
 )
+if args.page_task:
+    run_session.update_record(page_task=args.page_task)
 run_session.print_json = args.json
 if desktop_twin_context:
     run_session.record["windows_session_id"] = desktop_twin_context.session.session_id
@@ -329,7 +356,7 @@ _is_cloud_or_webui = os.environ.get("MARCH7TH_CLOUD_GAME_ENABLE", "").lower() in
 if sys.platform == 'win32' and not is_gui_started() and not is_docker_started() and not _is_cloud_or_webui and requires_admin and not is_user_admin():
     # 入口转交的管理员进程却没有管理员权限（例如免 UAC 运行的计划任务被改成了不以最高权限运行）：
     # 不执行任务，把原因写进运行记录，入口会照常转告调用方
-    _message = "没有获得管理员权限，任务未运行。如果开启了免 UAC 运行，请在图形界面「设置 → 杂项」中关闭后重新开启"
+    _message = "没有获得管理员权限，任务未运行。如果开启了免 UAC 运行，请在图形界面「设置 → 高级」中关闭后重新开启"
     print(_message, flush=True)
     run_session.note(error=_message)
     run_session.finish(EXIT_ELEVATION_FAILED)
@@ -354,6 +381,38 @@ except InvalidGameConnection as error:
     _report_invalid_connection(error)
     run_session.finish(EXIT_FAILED)
     sys.exit(EXIT_FAILED)
+
+from module.accounts.runtime import AccountError, begin_account_run
+
+try:
+    if args.account == "all" or os.getenv("M7A_ROTATION_PARENT"):
+        from module.accounts.rotation import join_parent, rotate
+        if args.account == "all":
+            rotation_code = rotate(run_session, cfg, args)
+            run_session.finish(rotation_code)
+            sys.exit(rotation_code)
+        join_parent(run_session)
+    begin_account_run(cfg, args.account, "workflow" if args.workflow_name else args.task or "main", run_session)
+    if not args.workflow_name and not (args.page_task or args.retry_step) and (args.task or "main") in ("main", "routine"):
+        from utils.runs import publish_full_plan
+        try:
+            publish_full_plan(cfg, touch=get_ui_profile(cfg).name == "touch_720",
+                              backend=get_control_backend(cfg), task=args.task or "main")
+        except (ValueError, TypeError, KeyError, OSError) as error:
+            print(f"暂时无法预览运行步骤（{type(error).__name__}），将按实际执行更新", flush=True)
+except AccountError as error:
+    print(str(error), flush=True)
+    run_session.note(error=str(error), reason=error.reason)
+    from module.accounts.messages import notify_account_error
+    notify_account_error(run_session, args.account, error)
+    run_session.finish(error.exit_code)
+    sys.exit(error.exit_code)
+except (KeyboardInterrupt, Exception) as error:
+    code = EXIT_STOPPED if isinstance(error, KeyboardInterrupt) else EXIT_FAILED
+    print(f"账号数据暂时无法读取（{type(error).__name__}），本次任务已停止", flush=True)
+    run_session.note(error="无法准备本次账号运行，请检查账号数据", reason="account_switch_failed")
+    run_session.finish(code)
+    sys.exit(code)
 
 from module.logger import log
 import logging
@@ -435,6 +494,8 @@ pause_ctl.on_stop_timeout = _force_stop
 
 def ensure_exclusive_run():
     """取得运行锁：已有任务在操控游戏时不再启动第二个自动化进程（--force 可显式越过）。"""
+    if run_session.account_prepared:
+        return
     result = run_session.acquire_lock(force=args.force)
     if result.status == LOCK_BUSY:
         log.error(f"已有任务正在运行：{describe_run(result.holder)}，本次未执行。请等待其结束后再试，确需同时运行请加 --force")
@@ -480,6 +541,7 @@ def _game_connection(task_id):
 
 
 def run_main_actions(no_run_immediately=False):
+    from utils.runs import effective_after_finish, publish_progress
     is_first_run = no_run_immediately
     while True:
         if is_first_run:
@@ -492,21 +554,27 @@ def run_main_actions(no_run_immediately=False):
         main_start_time = time.time()
         with _game_connection("main"):
             try:
+                publish_progress(phase="prepare", current_step=None, steps=[], login_required=None)
                 version.start()
+                publish_progress(phase="launch")
                 game.start()
+                from utils.runs import publish_full_plan
+                publish_full_plan(cfg, touch=get_ui_profile(cfg).name == "touch_720", backend=get_control_backend(cfg))
+                publish_progress(phase="execute")
                 if get_ui_profile(cfg).name == "touch_720":
                     from tasks.touch import rewards
 
                     success = rewards.routine(full_run=True)
                 else:
                     success = Daily.start()
+                publish_progress(phase="finish")
                 telemetry.track_task_complete("main", success is not False, time.time() - main_start_time)
                 if success is False:
-                    if cfg.after_finish == "Loop" and not is_gui_started():
+                    if effective_after_finish(cfg.after_finish) == "Loop" and not is_gui_started():
                         game.after_finish_is_loop()
                         continue
                     notif.flush_batch()
-                    if cfg.after_finish != "Loop":
+                    if effective_after_finish(cfg.after_finish) != "Loop":
                         # 任务链已走完，普通步骤失败仍执行完成后操作，但保留失败退出码。
                         game.stop(False, success=False)
                     return False
@@ -518,7 +586,7 @@ def run_main_actions(no_run_immediately=False):
                     raise
             except GameRecoveryError as error:
                 telemetry.track_task_complete("main", False, time.time() - main_start_time)
-                if cfg.after_finish != "Loop" or is_gui_started():
+                if effective_after_finish(cfg.after_finish) != "Loop" or is_gui_started():
                     notif.flush_batch()
                     raise
                 release_input()
@@ -536,6 +604,9 @@ def run_main_actions(no_run_immediately=False):
 
 
 def run_sub_task(action, task_override=None):
+    from utils.runs import effective_after_finish, observe_step, publish_progress
+
+    publish_progress(phase="launch")
     # 不兼容无窗口模式的任务仅覆盖本次启动方式，不修改用户配置。
     visible_cloud_tasks = {"fight", "universe"}
     success = True
@@ -603,8 +674,11 @@ def run_sub_task(action, task_override=None):
         "apocalyptic": lambda: challenge.start("apocalyptic"),
         "redemption": Redemption.start
     }
+    publish_progress(phase="execute")
     task = task_override or sub_tasks.get(action)
     if task:
+        if action != "routine":
+            task = observe_step(action, task)
         if action in ("currencywarsloop", "divergentloop"):
             task()
         else:
@@ -617,10 +691,11 @@ def run_sub_task(action, task_override=None):
             except Exception:
                 telemetry.track_task_complete(action, False, time.time() - task_start_time)
                 raise
+    publish_progress(phase="finish")
     if action not in ("screen_test", "character_export"):
         if success:
             game.stop(False)
-        elif cfg.after_finish == "Exit":
+        elif effective_after_finish(cfg.after_finish) == "Exit":
             # 失败时仅响应显式退出游戏，不执行成功后的系统操作或循环等待。
             game.get_game_controller().stop_game()
     return success
@@ -651,7 +726,7 @@ def run_sub_task_update(action):
 
 
 def run_notify_action():
-    notif.notify(content=cfg.notify_template['TestMessage'], image="./assets/app/images/March7th.jpg", level=NotificationLevel.ALL)
+    notif.notify(content=cfg.notify_template['TestMessage'], image="./assets/screenshot/March7th.png", level=NotificationLevel.ALL)
     pause_always()
     sys.exit(0)
 
@@ -698,10 +773,14 @@ def main(action=None, no_run_immediately=False, workflow_name=None, workflow_ste
         with _game_connection(task_id):
             return _run_action(action, no_run_immediately, workflow_name, workflow_step_path)
     finally:
+        # 任务失败时也更新核对过的登录，正常结束时 game.stop 已经做过。
+        game.renew_login(cfg)
         task_power_request.release(log)
 
 
 def _run_action(action=None, no_run_immediately=False, workflow_name=None, workflow_step_path=None):
+    from utils.runs import publish_progress
+
     touch = get_ui_profile(cfg).name == "touch_720"
     touch_tasks = {"routine", "daily", "power"}
     backend = get_control_backend(cfg)
@@ -711,6 +790,7 @@ def _run_action(action=None, no_run_immediately=False, workflow_name=None, workf
     telemetry.track_startup(backend)
 
     if workflow_name:
+        publish_progress(phase="execute")
         return run_workflow_action(workflow_name, workflow_step_path)
 
     if (action or "main") in EXCLUSIVE_ACTIONS:
@@ -719,6 +799,7 @@ def _run_action(action=None, no_run_immediately=False, workflow_name=None, workf
     if action == "adb_check":
         if backend != "adb":
             raise AdbError("backend_required", tr("ADB 自检需要设置 control_backend: adb"))
+        publish_progress(phase="execute")
         task_power_request.acquire(log)
         return adb_check.run(game.get_game_controller("adb"))
 
@@ -728,6 +809,21 @@ def _run_action(action=None, no_run_immediately=False, workflow_name=None, workf
 
     # 子任务
     elif action in ["routine", "daily", "power", "currencywars", "currencywarsloop", "currencywarstemp", "divergent", "divergentloop", "divergenttemp", "fight", "universe", "forgottenhall", "purefiction", "apocalyptic", "redemption", "screen_test", "character_export"]:
+        page_task = run_session.record.get("page_task")
+        if action == "routine" and isinstance(page_task, str):
+            from tasks.page_actions import run_page
+            from module.task_catalog import BY_ID
+            if touch and not BY_ID[page_task].touch:
+                log.warning("触屏模式不支持此项任务")
+                return False
+            return run_sub_task(action, task_override=lambda: run_page(page_task, cfg, touch=touch))
+        retry_step = run_session.record.get("retry_step")
+        if action == "routine" and isinstance(retry_step, str):
+            if touch:
+                from tasks.touch import rewards
+
+                return run_sub_task(action, task_override=lambda: rewards.routine(full_run=True, only=retry_step))
+            return run_sub_task(action, task_override=lambda: Daily.start(only=retry_step))
         if touch and action in touch_tasks:
             from tasks.touch import power, rewards
 
@@ -739,8 +835,9 @@ def _run_action(action=None, no_run_immediately=False, workflow_name=None, workf
             return run_sub_task(action, task_override=touch_actions[action])
         return run_sub_task(action)
 
+    publish_progress(phase="launch" if action == "game" else "execute")
     # 子任务 原生图形界面
-    elif action in ["universe_gui", "fight_gui"]:
+    if action in ["universe_gui", "fight_gui"]:
         run_sub_task_gui(action)
 
     # 子任务 更新项目
@@ -854,6 +951,13 @@ if __name__ == "__main__":
             sys.exit(EXIT_FAILED)
         except Exception as e:
             release_input()
+            from module.accounts.runtime import AccountError
+            if isinstance(e, AccountError):
+                run_session.note(reason=e.reason, error=str(e))
+                log.error(str(e))
+                from module.accounts.messages import notify_account_error
+                notify_account_error(run_session, args.account, e)
+                sys.exit(e.exit_code)
             telemetry.track_error(type(e).__name__, str(e))
             log.error(cfg.notify_template['ErrorOccurred'].format(error=e))
             terminal = isinstance(e, GameRecoveryError)

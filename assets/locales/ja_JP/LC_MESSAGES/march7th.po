@@ -58,24 +58,12 @@ msgstr "ログ"
 msgid "任务日志"
 msgstr "タスクログ"
 
-#: app/log_interface.py:434
-msgid "等待任务..."
-msgstr "タスク待機中..."
-
 #: app/log_interface.py:1809
 msgid "清空日志"
 msgstr "ログをクリア"
 
 msgid "配置定时任务"
 msgstr "定期タスクを設定"
-
-#: app/log_interface.py:996
-msgid "尚未配置定时任务"
-msgstr "定期タスクは未設定です"
-
-#: app/log_interface.py:2357
-msgid "任务完成"
-msgstr "タスク完了"
 
 #: app/log_interface.py:2360
 msgid "任务已停止"
@@ -976,10 +964,6 @@ msgstr "QQ グループ"
 msgid "检查更新"
 msgstr "更新を確認"
 
-#: app/setting_interface.py:2558
-msgid "当前版本："
-msgstr "現在のバージョン："
-
 #: app/setting_interface.py:2563
 msgid "更新源"
 msgstr "更新ソース"
@@ -1133,59 +1117,51 @@ msgstr "ゲーム起動中 (❁´◡`❁)"
 msgid "程序已最小化到托盘"
 msgstr "アプリをトレイに最小化しました。"
 
-#: app/log_interface.py:449
-msgid "停止任务"
-msgstr "タスク停止"
-
-#: app/home_interface.py:28
 msgid "更换背景图片"
 msgstr "背景画像を変更"
 
-#: app/home_interface.py:35
 msgid "恢复默认图片"
 msgstr "デフォルト画像に戻す"
 
-#: app/home_interface.py:42
 msgid "三月七小助手"
 msgstr "三月七アシスタント"
 
-#: app/home_interface.py:70
+#: app/content/settings/appearance.py:19
 msgid "选择图片"
 msgstr "画像を選択"
 
-#: app/home_interface.py:165
 msgid "任务 >"
 msgstr "タスク >"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "运行一次"
 msgstr "1 回実行"
 
-#: app/card/card_edit_dialog.py:32
+#: module/overview/labels.py:10
 msgid "循环运行"
 msgstr "ループ実行"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "快速启动 ⭐"
 msgstr "クイック起動 ⭐"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "原版运行"
 msgstr "原版を起動"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "更新锄大地"
 msgstr "フィールド探索を更新"
 
-#: app/card/card_edit_dialog.py:32
+#: app/common/home_actions.py:25
 msgid "重置配置文件"
 msgstr "設定ファイルをリセット"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "打开程序目录"
 msgstr "プログラムフォルダーを開く"
 
-#: app/card/card_edit_dialog.py:32
+#: module/search/setting_text.py:3
 msgid "打开项目主页"
 msgstr "プロジェクトページを開く"
 
@@ -1229,10 +1205,6 @@ msgstr "自動会話"
 msgid "进入剧情页面后自动开始运行，支持大于等于 1920*1080 的 16:9 分辨率，不支持云·星穹铁道"
 msgstr ""
 "ストーリー画面に入ると自動で開始します。1920×1080 以上の 16:9 解像度に対応し、クラウド・崩壊：スターレイルでは使用できません。"
-
-#: app/tools_interface.py:40
-msgid "捕获"
-msgstr "キャプチャ"
 
 #: app/tools_interface.py:42
 msgid "游戏截图"
@@ -1441,34 +1413,6 @@ msgid "已配置 {count} 项计划"
 msgid_plural "已配置 {count} 项计划|plural"
 msgstr[0] "{count} 件のプランを設定済み"
 
-#: app/warp_interface.py:24
-msgid "更新数据"
-msgstr "データ更新"
-
-#: app/warp_interface.py:25
-msgid "更新完整数据"
-msgstr "完全データを更新"
-
-#: app/warp_interface.py:26
-msgid "导入数据"
-msgstr "データをインポート"
-
-#: app/warp_interface.py:27
-msgid "导出数据"
-msgstr "データをエクスポート"
-
-#: app/warp_interface.py:28
-msgid "导出Excel"
-msgstr "Excel にエクスポート"
-
-#: app/warp_interface.py:29
-msgid "复制链接"
-msgstr "リンクをコピー"
-
-#: app/warp_interface.py:30
-msgid "清空"
-msgstr "クリア"
-
 #: app/warp_interface.py:117
 msgid "导入抽卡记录"
 msgstr "ガチャ記録をインポート"
@@ -1477,33 +1421,13 @@ msgstr "ガチャ記録をインポート"
 msgid "UIGF / SRGF 格式 (*.json)"
 msgstr "UIGF / SRGF 形式 (*.json)"
 
-#: app/warp_interface.py:144
-msgid "导入成功(＾∀＾●)"
-msgstr "インポートに成功しました (＾∀＾●)"
-
-#: app/warp_interface.py:154
-msgid "导入失败(╥╯﹏╰╥)"
-msgstr "インポートに失敗しました (╥╯﹏╰╥)"
-
 #: app/warp_interface.py:173
 msgid "导出抽卡记录"
 msgstr "ガチャ記録をエクスポート"
 
-#: app/warp_interface.py:175
-msgid "UIGF 格式 (*.json);;SRGF 格式 (*.srgf.json)"
-msgstr "UIGF 形式 (*.json);;SRGF 形式 (*.srgf.json)"
-
 #: app/warp_interface.py:182
 msgid "UIGF 格式 (*.json)"
 msgstr "UIGF 形式 (*.json)"
-
-#: app/warp_interface.py:201
-msgid "导出成功(＾∀＾●)"
-msgstr "エクスポートに成功しました (＾∀＾●)"
-
-#: app/warp_interface.py:212
-msgid "导出失败(╥╯﹏╰╥)"
-msgstr "エクスポートに失敗しました (╥╯﹏╰╥)"
 
 #: app/warp_interface.py:228
 msgid "导出为 Excel 文件"
@@ -1565,28 +1489,6 @@ msgstr "ガチャ記録を消去"
 msgid "确定要清空抽卡记录吗？此操作不可撤销。"
 msgstr "ガチャ記録を消去しますか？この操作は取り消せません。"
 
-#: app/warp_interface.py:361
-msgid "清空完成(＾∀＾●)"
-msgstr "クリア完了 (＾∀＾●)"
-
-#: app/warp_interface.py:372
-msgid "清空失败(╥╯﹏╰╥)"
-msgstr "クリア失敗 (╥╯﹏╰╥)"
-
-#: app/warp_interface.py:403
-msgid ""
-"抽卡记录为空，请先打开游戏内抽卡记录，再点击更新数据即可。\n"
-"\n"
-"你也可以从其他支持 UIGF/SRGF 数据格式的应用导入数据，例如 StarRail Warp Export 或 Starward 等。\n"
-"\n"
-"复制链接功能可用于小程序或其他软件。"
-msgstr ""
-"跳躍履歴がありません。まずゲーム内で跳躍履歴を開き、その後「データ更新」をクリックしてください。\n"
-"\n"
-"StarRail Warp Export や Starward など、UIGF/SRGF 形式に対応した他のアプリからデータをインポートすることもできます。\n"
-"\n"
-"リンクのコピー機能は、ミニアプリや他のソフトウェアで利用できます。"
-
 #: app/sub_interfaces/hotkey_interface.py:20
 msgid "秘技（只对清体力和逐光捡金场景生效）"
 msgstr "秘技（開拓力消化と逐光の金拾いでのみ有効）"
@@ -1611,31 +1513,6 @@ msgstr "タスク停止（グローバルホットキー、バックグラウン
 msgid "按键设置"
 msgstr "キー設定"
 
-#: app/sub_interfaces/accounts_interface.py:31
-msgid "重要：请完全进入游戏（看到角色）后再进行导出，否则会读取前一个账号的UID，导致文件和账号不对应"
-msgstr ""
-"重要：エクスポートする前に、ゲームに完全にログインしてキャラクターが表示されるまで待ってください。そうしないと、前のアカウントのUIDが読み込まれ、ファイルとアカウントが一致しなくなります。"
-
-#: app/sub_interfaces/accounts_interface.py:34
-msgid "该功能不支持云·星穹铁道"
-msgstr "この機能はクラウド・崩壊：スターレイルでは利用できません。"
-
-#: app/sub_interfaces/accounts_interface.py:41
-msgid "导出当前游戏账户"
-msgstr "現在のゲームアカウントをエクスポート"
-
-#: app/sub_interfaces/accounts_interface.py:42
-msgid "导入选中的账户"
-msgstr "選択したアカウントをインポート"
-
-#: app/sub_interfaces/accounts_interface.py:43
-msgid "删除账户"
-msgstr "アカウント削除"
-
-#: app/sub_interfaces/accounts_interface.py:44
-msgid "账户更名"
-msgstr "アカウント名変更"
-
 #: app/sub_interfaces/accounts_interface.py:45
 msgid "自动登录"
 msgstr "自動ログイン"
@@ -1644,97 +1521,13 @@ msgstr "自動ログイン"
 msgid "刷新"
 msgstr "更新"
 
-#: app/sub_interfaces/accounts_interface.py:47
-msgid "清除注册表"
-msgstr "レジストリをクリア"
-
-#: app/sub_interfaces/accounts_interface.py:72
-msgid "账户列表刷新成功"
-msgstr "アカウント一覧を更新しました。"
-
 #: app/sub_interfaces/accounts_interface.py:77
 msgid "导出"
 msgstr "エクスポート"
 
-#: app/sub_interfaces/accounts_interface.py:77
-msgid "账户导出成功"
-msgstr "アカウントのエクスポートに成功しました。"
-
-#: app/sub_interfaces/accounts_interface.py:82
-msgid "请选择要删除的账户"
-msgstr "削除するアカウントを選択してください。"
-
-#: app/sub_interfaces/accounts_interface.py:84
-msgid "确定要删除选中的账户吗？"
-msgstr "選択したアカウントを削除しますか？"
-
-#: app/sub_interfaces/accounts_interface.py:94
-msgid "请选择要更名的账户"
-msgstr "名前を変更するアカウントを選択してください。"
-
-#: app/sub_interfaces/accounts_interface.py:97
-msgid "只能选择一个账户"
-msgstr "アカウントは1つだけ選択してください。"
-
-#: app/sub_interfaces/accounts_interface.py:101
-msgid "请输入新的账户名"
-msgstr "新しいアカウント名を入力してください。"
-
 #: app/sub_interfaces/accounts_interface.py:105
 msgid "账户名不能为空"
 msgstr "アカウント名は必須です。"
-
-#: app/sub_interfaces/accounts_interface.py:113
-msgid "请选择要使用的账户"
-msgstr "使用するアカウントを選択してください。"
-
-#: app/sub_interfaces/accounts_interface.py:124
-msgid ""
-"当登录过期时尝试自动重新填写账号密码\n"
-" *此功能存在一定风险，请谨慎使用*"
-msgstr ""
-"ログインの有効期限が切れた場合、アカウントとパスワードの自動再入力を試みます\n"
-" *この機能には一定のリスクがあります。慎重に使用してください*"
-
-#: app/sub_interfaces/accounts_interface.py:131
-msgid "请输入用户名"
-msgstr "ユーザー名を入力してください。"
-
-#: app/sub_interfaces/accounts_interface.py:135
-msgid "用户名不能为空"
-msgstr "ユーザー名は必須です。"
-
-#: app/sub_interfaces/accounts_interface.py:138
-msgid "请输入密码"
-msgstr "パスワードを入力してください。"
-
-#: app/sub_interfaces/accounts_interface.py:142
-msgid "密码不能为空"
-msgstr "パスワードは必須です。"
-
-#: app/sub_interfaces/accounts_interface.py:150
-msgid "导入"
-msgstr "インポート"
-
-#: app/sub_interfaces/accounts_interface.py:158
-msgid "账户导入成功"
-msgstr "アカウントのインポートに成功しました。"
-
-#: app/sub_interfaces/accounts_interface.py:161
-msgid "确定要清除注册表中的账户信息吗？"
-msgstr "レジストリ内のアカウント情報を削除しますか？"
-
-#: app/sub_interfaces/accounts_interface.py:164
-msgid "注册表中的账户信息已清除"
-msgstr "レジストリ内のアカウント情報を削除しました。"
-
-#: app/sub_interfaces/accounts_interface.py:184
-msgid "账户设置"
-msgstr "アカウント設定"
-
-#: app/schedule_dialog.py:113
-msgid "添加/编辑定时任务"
-msgstr "定期タスクの追加 / 編集"
 
 #: app/schedule_dialog.py:134
 msgid "例如：完整运行"
@@ -1807,14 +1600,6 @@ msgstr "実行ファイル (*.exe *.bat *.ps1);;すべてのファイル (*.*)"
 msgid "{exe} 的完整路径"
 msgstr "{exe} のフルパス"
 
-#: app/schedule_dialog.py:725
-msgid "定时任务配置"
-msgstr "定期タスク設定"
-
-#: app/schedule_dialog.py:745
-msgid "参数/任务"
-msgstr "引数 / タスク"
-
 #: app/schedule_dialog.py:745
 msgid "通知"
 msgstr "通知"
@@ -1823,7 +1608,7 @@ msgstr "通知"
 msgid "添加"
 msgstr "追加"
 
-#: app/home_interface.py:168
+#: app/overview/cards.py:393
 msgid "编辑"
 msgstr "編集"
 
@@ -1871,30 +1656,6 @@ msgstr ""
 "時刻起動：設定した時刻になると、このタスクを直接開始します。\n"
 "チェーン起動：単独では時刻起動されません。前のタスクの後ろに配置すると、そのタスクが正常終了した直後に一覧順で開始します。\n"
 "今すぐ実行：現在のタスクから開始し、後ろに続くチェーンタスクも続けて実行します。"
-
-#: app/schedule_dialog.py:1052
-msgid "请先选择要编辑的任务"
-msgstr "先に編集するタスクを選択してください"
-
-#: app/schedule_dialog.py:1068
-msgid "请先选择要删除的任务"
-msgstr "先に削除するタスクを選択してください"
-
-#: app/schedule_dialog.py:1073
-msgid "确认删除选中的定时任务？"
-msgstr "選択した定期タスクを削除しますか？"
-
-#: app/schedule_dialog.py:1086
-msgid "请先选择要运行的任务"
-msgstr "先に実行するタスクを選択してください"
-
-#: app/schedule_dialog.py:1093
-msgid "确认立即运行任务 \"{name}\" 吗？"
-msgstr "今すぐタスク「{name}」を実行しますか？"
-
-#: app/schedule_dialog.py:1126
-msgid "无法运行任务：父组件不支持 runScheduledTask"
-msgstr "タスクを実行できません：親コンポーネントが runScheduledTask をサポートしていません"
 
 #: app/card/autoplot_setting_card.py:64
 msgid "自动跳过 (当出现跳过按钮时自动点击)"
@@ -2127,26 +1888,6 @@ msgstr "スクリプトまたはプログラムのパス"
 msgid "抽"
 msgstr "回"
 
-#: app/tools/warp_export.py:193
-msgid "已累计"
-msgstr "累計"
-
-#: app/tools/warp_export.py:193
-msgid "抽未出5星"
-msgstr "回で星5未排出"
-
-#: app/tools/warp_export.py:197
-msgid "星"
-msgstr "星"
-
-#: app/tools/warp_export.py:203
-msgid "5星历史记录"
-msgstr "星5履歴"
-
-#: app/tools/warp_export.py:204
-msgid "五星平均出货次数为"
-msgstr "星5の平均排出回数は"
-
 #: app/tools/warp_export.py:318
 msgid "请重新打开游戏抽卡记录"
 msgstr "ゲーム内のガチャ記録を開き直してください"
@@ -2187,14 +1928,6 @@ msgstr "URL が見つかりません"
 msgid "跃迁数据获取失败(´▔∀▔`)"
 msgstr "ガチャデータの取得に失敗しました (´▔∀▔`)"
 
-#: app/tools/warp_export.py:504
-msgid "正在获取跃迁数据..."
-msgstr "ガチャデータを取得中..."
-
-#: app/tools/warp_export.py:513
-msgid "跃迁数据获取完成(＾∀＾●)"
-msgstr "ガチャデータの取得が完了しました (＾∀＾●)"
-
 #: module/update/version_check.py:194
 msgid "Mirror酱 CDK 已过期"
 msgstr "Mirror酱 CDK の有効期限が切れています"
@@ -2214,14 +1947,6 @@ msgstr "Mirror酱 CDK の種類がダウンロード対象リソースと一致�
 #: module/update/version_check.py:194
 msgid "Mirror酱 CDK 已被封禁"
 msgstr "Mirror酱 CDK は停止されています"
-
-#: app/tools/check_update.py:149
-msgid ""
-"发现新版本：{cfg.version} ——> {version}\n"
-"更新日志 |･ω･)"
-msgstr ""
-"新しいバージョンを検出しました：{cfg.version} -> {version}\n"
-"更新履歴 |･ω･)"
 
 #: app/tools/check_update.py:237
 msgid "尚未配置 Mirror酱 更新源 (╥╯﹏╰╥)"
@@ -3284,10 +3009,6 @@ msgstr "爻光"
 msgid "火花"
 msgstr "火花"
 
-#: app/tools/warp_export.py:193
-msgid "一共"
-msgstr "合計"
-
 #: assets/config/character_names.json
 msgid "阮·梅「雪绽梅笺」"
 msgstr "ルアン・メェイ「紙上に咲く雪梅」"
@@ -3362,14 +3083,6 @@ msgstr "画像を手動選択"
 #: app/card/messagebox_custom.py:1170
 msgid "上移"
 msgstr "上へ"
-
-#: app/schedule_dialog.py:1033
-msgid "请先选择要上移的任务"
-msgstr "上に移動するタスクを選択してください"
-
-#: app/schedule_dialog.py:1039
-msgid "当前任务已经位于最上方"
-msgstr "このタスクはすでに最上部にあります"
 
 #: app/setting_interface.py:2479
 msgid "优先使用后台截图"
@@ -4092,35 +3805,35 @@ msgstr "階差宇宙の周回"
 msgid "差分宇宙中途接管"
 msgstr "階差宇宙を途中から引き継ぐ"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "差分宇宙运行一次 ⭐"
 msgstr "差分宇宙を 1 回実行 ⭐"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "差分宇宙循环运行 ⭐"
 msgstr "差分宇宙ループ実行 ⭐"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "模拟宇宙快速启动（停止维护）"
 msgstr "模擬宇宙クイック起動（メンテナンス終了）"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "模拟宇宙原版运行（停止维护）"
 msgstr "模擬宇宙の通常実行（メンテナンス終了）"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "更新模拟宇宙（停止维护）"
 msgstr "模擬宇宙を更新（メンテナンス終了）"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "重置模拟宇宙配置文件（停止维护）"
 msgstr "模擬宇宙の設定ファイルをリセット（メンテナンス終了）"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "打开模拟宇宙目录（停止维护）"
 msgstr "模擬宇宙のフォルダーを開く（メンテナンス終了）"
 
-#: app/card/card_edit_dialog.py:32
+#: module/task_catalog.py:40
 msgid "打开模拟宇宙项目主页（停止维护）"
 msgstr "模擬宇宙のプロジェクトページを開く（メンテナンス終了）"
 
@@ -4209,83 +3922,78 @@ msgstr "ステージゼロ / 千の星"
 msgid "鎏金追忆"
 msgstr "黄金の追憶"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "重置模拟宇宙配置文件"
 msgstr "模擬宇宙の設定ファイルをリセット"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "打开模拟宇宙目录"
 msgstr "模擬宇宙のフォルダーを開く"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "打开模拟宇宙项目主页"
 msgstr "模擬宇宙のプロジェクトページを開く"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "重置锄大地配置文件"
 msgstr "フィールド周回の設定ファイルをリセット"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "打开锄大地程序目录"
 msgstr "フィールド周回プログラムのフォルダーを開く"
 
-#: app/card/card_edit_dialog.py:19
+#: module/overview/shortcuts.py:12
 msgid "打开锄大地项目主页"
 msgstr "フィールド周回のプロジェクトページを開く"
 
-#: app/card/card_edit_dialog.py:425
 msgid "编辑主页卡片"
 msgstr "ホームのカードを編集"
 
-#: app/card/card_edit_dialog.py:280
+#: app/overview/shortcut_dialog.py:77
 msgid "图标"
 msgstr "アイコン"
 
-#: app/card/card_edit_dialog.py:292
 msgid "标题："
 msgstr "タイトル："
 
-#: app/card/card_edit_dialog.py:295
 msgid "卡片标题"
 msgstr "カードのタイトル"
 
-#: app/card/card_edit_dialog.py:323
+#: app/overview/shortcut_dialog.py:76
 msgid "操作类型："
 msgstr "操作の種類："
 
-#: app/card/card_edit_dialog.py:325
+#: app/overview/shortcut_dialog.py:64
 msgid "单个任务"
 msgstr "単一タスク"
 
-#: app/card/card_edit_dialog.py:325
+#: app/overview/shortcut_dialog.py:64
 msgid "任务菜单"
 msgstr "タスクメニュー"
 
-#: app/card/card_edit_dialog.py:229
+#: app/overview/shortcut_dialog.py:77
 msgid "任务："
 msgstr "タスク："
 
-#: app/card/card_edit_dialog.py:353
+#: app/overview/shortcut_dialog.py:75
 msgid "添加菜单项"
 msgstr "メニュー項目を追加"
 
-#: app/card/card_edit_dialog.py:207
 msgid "菜单项名称"
 msgstr "メニュー項目名"
 
-#: app/card/card_edit_dialog.py:227
+#: app/card/messagebox_custom.py:1215
 msgid "名称："
 msgstr "名称："
 
-#: app/card/card_edit_dialog.py:460
 msgid "添加卡片"
 msgstr "カードを追加"
 
-#: app/card/card_edit_dialog.py:462
+#: app/card/stationprioritysettingcard.py:181
 msgid "恢复默认"
 msgstr "既定値に戻す"
 
-#: app/card/card_edit_dialog.py:465
+#: app/warp_interface.py:196
 msgid "确定"
 msgstr "確認"
 
@@ -4318,7 +4026,6 @@ msgstr "ダウンロード用プロキシ"
 msgid "留空则使用系统代理；支持 http:// 和 socks5://"
 msgstr "空欄の場合はシステムのプロキシを使用します。http:// と socks5:// に対応"
 
-#: app/card/card_edit_dialog.py:379
 msgid "选择图标"
 msgstr "アイコンを選択"
 
@@ -4828,7 +4535,7 @@ msgstr "押下時間"
 msgid "请选择模板图片"
 msgstr "テンプレート画像を選択してください"
 
-#: app/card/card_edit_dialog.py:530
+#: app/overview/shortcut_dialog.py:267
 msgid "保存失败"
 msgstr "保存に失敗しました"
 
@@ -5231,11 +4938,10 @@ msgstr "更新パッケージを展開中..."
 msgid "检测到新版本：{version}"
 msgstr "新しいバージョンを検出しました: {version}"
 
-#: app/card/card_edit_dialog.py:543
+#: module/overview/shortcuts.py:229
 msgid "任务菜单中的菜单项名称不能为空"
 msgstr "タスクメニューの項目名を入力してください"
 
-#: app/card/card_edit_dialog.py:531
 msgid "卡片标题不能为空"
 msgstr "カードのタイトルを入力してください"
 
@@ -5702,23 +5408,9 @@ msgstr "ワークフローを選択："
 msgid "启动参数："
 msgstr "起動引数："
 
-#: app/schedule_dialog.py:780
-msgid "冲突："
-msgstr "競合："
-
-#: app/schedule_dialog.py:802
-msgid "链式失败后："
-msgstr "チェーン失敗後："
-
-#: app/schedule_dialog.py:1131
-msgid "启动任务失败：{error}"
-msgstr "タスク開始に失敗しました：{error}"
-
-#: app/card/samplecardview1.py:61
 msgid "执行完成(＾∀＾●)"
 msgstr "実行完了(＾∀＾●)"
 
-#: app/card/samplecardview1.py:73
 msgid "执行出错"
 msgstr "実行エラー"
 
@@ -5874,14 +5566,6 @@ msgstr "一時停止中"
 #: app/log_interface.py:212
 msgid "按下 {stop} 停止 · {pause} 暂停"
 msgstr "{stop} で停止 · {pause} で一時停止"
-
-#: app/log_interface.py:458
-msgid "暂停任务"
-msgstr "タスク一時停止"
-
-#: app/log_interface.py:463
-msgid "仅内置任务支持暂停，暂停后脚本将停止一切操作"
-msgstr "内蔵タスクのみ一時停止に対応。一時停止中はスクリプトがすべての操作を停止します"
 
 #: app/log_interface.py:1750
 msgid "继续任务"
@@ -6304,10 +5988,6 @@ msgstr "この配信元のバージョンが対象バージョンと一致しま
 msgid "未选择"
 msgstr "未選択"
 
-#: app/log_interface.py:989
-msgid "{date}（{weekday}）{time}"
-msgstr "{date}（{weekday}）{time}"
-
 #: app/schedule_dialog.py:269
 msgid "执行星期："
 msgstr "実行する曜日："
@@ -6334,20 +6014,8 @@ msgstr ""
 "連鎖起動：時刻では単独起動しません。前のタスクの後に配置してください。前のタスクが正常終了すると、曜日を個別に判定せず、一覧の順にすぐ起動します。\n"
 "今すぐ実行：曜日の制限を受けず、このタスクから開始し、後続の連鎖タスクも続けて実行します。"
 
-#: app/schedule_dialog.py:745
-msgid "执行计划"
-msgstr "実行スケジュール"
-
 msgid "游戏内日志"
 msgstr "ゲーム内ログ"
-
-#: app/log_interface.py:975
-msgid "定时任务({count})"
-msgstr "定時タスク（{count}）"
-
-#: app/log_interface.py:977
-msgid "已启用 {count} 个按时任务，点击配置"
-msgstr "定時タスク {count} 件が有効です。クリックして設定"
 
 #: app/log_interface.py:994
 msgid "下次：{time}"
@@ -7974,21 +7642,9 @@ msgstr "貪悦の神首"
 msgid "星神★阿哈·群星乐透"
 msgstr "星神★アッハ・群星ロッタリー"
 
-#: app/sub_interfaces/accounts_interface.py:80
-msgid "账户导出失败，请确认已登录游戏后重试。"
-msgstr "アカウントをエクスポートできませんでした。ゲームにログインしていることを確認してから、もう一度お試しください。"
-
-#: app/sub_interfaces/accounts_interface.py:166
-msgid "账户导入失败，请重试。"
-msgstr "アカウントをインポートできませんでした。もう一度お試しください。"
-
 #: app/sub_interfaces/accounts_interface.py:171
 msgid "这会清除该游戏的登录信息和画质、分辨率等设置。确定继续吗？"
 msgstr "このゲームのログイン情報と、画質や解像度などの設定が削除されます。続行しますか？"
-
-#: app/sub_interfaces/accounts_interface.py:177
-msgid "清除失败，请重试。"
-msgstr "削除できませんでした。もう一度お試しください。"
 
 #: app/sub_interfaces/accounts_interface.py:179
 msgid "游戏登录信息和设置已清除"
@@ -8056,26 +7712,6 @@ msgstr "バックアップの検証に失敗しました。元の履歴は変更
 msgid "确认导入抽卡记录"
 msgstr "跳躍履歴のインポート確認"
 
-#: app/warp_interface.py:144
-msgid ""
-"账号 UID：{uid}\n"
-"导入方式：保留已有记录，补充新记录，自动跳过重复内容。\n"
-"\n"
-"现有记录：{existing} 条\n"
-"文件记录：{incoming} 条\n"
-"新增记录：{added} 条\n"
-"重复记录：{duplicates} 条\n"
-"合并后：{total} 条"
-msgstr ""
-"アカウント UID：{uid}\n"
-"方式：既存の履歴を保持して新しい履歴を追加し、重複を除きます。\n"
-"\n"
-"既存の履歴：{existing} 件\n"
-"ファイル内：{incoming} 件\n"
-"新規追加：{added} 件\n"
-"重複：{duplicates} 件\n"
-"統合後：{total} 件"
-
 #: app/warp_interface.py:150
 msgid "确认合并"
 msgstr "統合する"
@@ -8104,30 +7740,6 @@ msgstr "次へ"
 msgid "警告：替换现有抽卡记录"
 msgstr "警告：既存の跳躍履歴を置換"
 
-#: app/warp_interface.py:168
-msgid ""
-"当前账号：{existing_uid}\n"
-"导入账号：{uid}\n"
-"导入方式：替换现有记录。\n"
-"\n"
-"现有记录数量：{existing}\n"
-"替换后记录数量：{total}\n"
-"\n"
-"此操作会用导入文件中的记录替换目前保存的全部记录。原有记录不会保留在当前列表中。\n"
-"\n"
-"确定要替换吗？"
-msgstr ""
-"現在のアカウント：{existing_uid}\n"
-"インポートするアカウント：{uid}\n"
-"方式：既存の履歴を置換します。\n"
-"\n"
-"既存の履歴数：{existing}\n"
-"置換後の履歴数：{total}\n"
-"\n"
-"現在保存されているすべての履歴を、インポートするファイルの履歴で置き換えます。元の履歴は現在の一覧には残りません。\n"
-"\n"
-"置換しますか？"
-
 #: app/warp_interface.py:173
 msgid "确认替换"
 msgstr "置換を確認"
@@ -8135,10 +7747,6 @@ msgstr "置換を確認"
 #: app/tools/warp_import.py:105
 msgid "现有记录无法读取，不能合并。请重新导入并选择替换现有记录。"
 msgstr "既存の履歴を読み取れないため統合できません。再度インポートし、既存の履歴の置換を選択してください。"
-
-#: app/warp_interface.py:173
-msgid "无法读取"
-msgstr "読み取り不可"
 
 #: app/warp_interface.py:174
 msgid "无法统计"
@@ -8172,11 +7780,10 @@ msgstr "図鑑優先"
 msgid "忆灵「长夜」"
 msgstr "記憶の精霊「長夜」"
 
-#: app/home_interface.py:54
+#: app/overview/greeting.py:150
 msgid "别晃啦！本姑娘头好晕( ꩜ ᯅ ꩜;)"
 msgstr "もう揺らさないでよ！目が回っちゃう～ ( ꩜ ᯅ ꩜;)"
 
-#: app/home_interface.py:123
 msgid "长夜月小助手"
 msgstr "長夜月アシスタント"
 
@@ -8348,6 +7955,4546 @@ msgstr "現在、デスクトップ分身のパスワードを変更できませ
 msgid "分身凭据已在其他位置更改，请核对后再操作。"
 msgstr "分身の資格情報が別の場所で変更されました。アカウントを確認してから操作してください。"
 
+#: app/data_settings.py:30
+msgid "数据已移到 userdata 文件夹"
+msgstr "データを userdata フォルダーに移動しました"
+
+#: app/data_settings.py:31
+msgid "设置、账号、流程编排和记录现在都保存在这个文件夹里，迁移前的副本在 userdata\\backup。"
+msgstr "設定、アカウント、ワークフロー、記録をこのフォルダーに保存しました。移行前のバックアップは userdata\\backup にあります。"
+
+#: app/data_settings.py:32 app/data_settings.py:62
+msgid "打开文件夹"
+msgstr "フォルダーを開く"
+
+#: app/data_settings.py:61
+msgid "数据与备份"
+msgstr "データとバックアップ"
+
+#: app/data_settings.py:62
+msgid "数据文件夹"
+msgstr "データフォルダー"
+
+#: app/data_settings.py:63
+msgid "备份到文件"
+msgstr "ファイルにバックアップ"
+
+#: app/data_settings.py:63 app/data_settings.py:85
+msgid "备份数据"
+msgstr "データをバックアップ"
+
+#: app/data_settings.py:64
+msgid "把设置、账号、流程编排和各种记录打包成一个 zip 文件，不含日志和云游戏浏览器数据"
+msgstr "設定、アカウント、ワークフロー、各種記録を ZIP にまとめます。ログとクラウドゲームのブラウザーデータは含まれません。"
+
+#: app/data_settings.py:105 app/data_settings.py:65
+msgid "选择备份文件"
+msgstr "バックアップファイルを選択"
+
+#: app/data_settings.py:65
+msgid "从备份恢复"
+msgstr "バックアップから復元"
+
+#: app/data_settings.py:66
+msgid "恢复前会自动备份当前数据，恢复后需要重启小助手"
+msgstr "復元前に現在のデータを自動でバックアップします。復元後はアシスタントを再起動してください。"
+
+#: app/data_settings.py:67
+msgid "选择文件夹"
+msgstr "フォルダーを選択"
+
+#: app/data_settings.py:103 app/data_settings.py:67
+msgid "从旧版文件夹导入"
+msgstr "旧バージョンのフォルダーからインポート"
+
+#: app/data_settings.py:68
+msgid "选择以前的小助手文件夹，把其中的设置、账号、流程编排和记录复制过来，导入前会自动备份当前数据"
+msgstr "以前のアシスタントのフォルダーから、設定、アカウント、ワークフロー、記録をコピーします。現在のデータは先にバックアップされます。"
+
+#: app/data_settings.py:69 app/data_settings.py:85
+msgid "导出排查包"
+msgstr "診断用ファイルをエクスポート"
+
+#: app/data_settings.py:70
+msgid "隐藏 Token、密码、Cookie 和推送密钥后，导出设置和最近一次运行的日志，可以直接发到群里或 Issue"
+msgstr "トークン、パスワード、Cookie、通知用キーを伏せて、設定と直近の実行ログを書き出します。グループや Issue で共有できます。"
+
+#: app/data_settings.py:37
+msgid "截图"
+msgstr "スクリーンショット"
+
+#: app/data_settings.py:37
+msgid "云游戏浏览器数据"
+msgstr "クラウドゲームのブラウザーデータ"
+
+#: app/data_settings.py:38
+msgid "部分数据还在原来的位置"
+msgstr "一部のデータは元の場所にあります"
+
+#: app/data_settings.py:100 app/data_settings.py:115
+msgid "请先停止正在运行的任务"
+msgstr "先に実行中のタスクを停止してください"
+
+#: app/data_settings.py:123
+msgid "请重新启动小助手以使用这份数据。"
+msgstr "このデータを使うにはアシスタントを再起動してください。"
+
+#: app/data_settings.py:124
+msgid "关闭小助手"
+msgstr "アシスタントを閉じる"
+
+#: app/data_settings.py:50
+msgid "数据迁移没有完成"
+msgstr "データの移行が完了しませんでした"
+
+#: app/data_settings.py:23
+msgid "无法打开数据文件夹"
+msgstr "データフォルダーを開けません"
+
+#: app/data_settings.py:94
+msgid "文件已保存"
+msgstr "ファイルを保存しました"
+
+#: app/data_settings.py:117 app/data_settings.py:45
+msgid "数据操作没有完成"
+msgstr "データの処理が完了しませんでした"
+
+#: app/data_settings.py:122
+msgid "数据已导入"
+msgstr "データをインポートしました"
+
+#: app/data_settings.py:122
+msgid "数据已恢复"
+msgstr "データを復元しました"
+
+#: app/data_settings.py:39
+msgid "{items}暂时沿用原位置，下次启动会再试。"
+msgstr "{items}は当面、元の場所を使用します。次回の起動時に移行を再試行します。"
+
+#: app/data_settings.py:92
+msgid "文件保存失败"
+msgstr "ファイルを保存できませんでした"
+
+#: app/data_settings.py:51
+msgid "这次继续使用原来的位置，下次启动会再试。原因：{reason}"
+msgstr "今回は元の場所を使い、次回の起動時に再試行します。理由：{reason}"
+
+#: utils/data_backup.py:106
+msgid "请选择 ZIP 文件"
+msgstr "ZIP ファイルを選択してください"
+
+#: utils/data_backup.py:104
+msgid "请选择数据文件以外的位置保存压缩包"
+msgstr "バックアップ対象のデータとは別の場所に保存してください"
+
+#: app/data_settings.py:113 app/data_settings.py:42 utils/data_backup.py:199
+msgid "上次还原尚未完成，请重启小助手后重试"
+msgstr "前回の復元が完了していません。アシスタントを再起動してから再試行してください"
+
+#: utils/data_backup.py:50
+msgid "备份中有无法恢复的项目：{name}"
+msgstr "復元できない項目があります：{name}"
+
+#: utils/data_backup.py:213
+msgid "没有找到可以恢复的数据文件"
+msgstr "復元できるデータファイルが見つかりません"
+
+#: utils/data_backup.py:215
+msgid "备份中的设置文件无效"
+msgstr "バックアップ内の設定ファイルが無効です"
+
+#: utils/data_backup.py:317
+msgid "运行日志路径是链接"
+msgstr "実行ログのパスはリンクです"
+
+#: utils/data_backup.py:67
+msgid "数据目录中包含链接：{path}"
+msgstr "データフォルダーにリンクがあります：{path}"
+
+#: utils/data_backup.py:146
+msgid "无法导入文件：{name}"
+msgstr "ファイルをインポートできません：{name}"
+
+#: utils/data_backup.py:151
+msgid "导入期间文件发生了变化：{name}"
+msgstr "インポート中にファイルが変更されました：{name}"
+
+#: utils/data_backup.py:126
+msgid "备份中包含无效或重复的文件：{name}"
+msgstr "バックアップに無効または重複したファイルがあります：{name}"
+
+#: utils/data_backup.py:169 utils/data_backup.py:241
+msgid "恢复校验失败：{name}"
+msgstr "復元したファイルの検証に失敗しました：{name}"
+
+#: app/setting_interface.py:2976
+msgid "数据"
+msgstr "データ"
+
+#: utils/data_migration.py:21
+msgid "另一个小助手进程正在使用原来的数据位置"
+msgstr "別のアシスタントが元のデータの場所を使用しています。"
+
+#: utils/data_migration.py:22
+msgid "此安装的其他界面或任务仍在运行"
+msgstr "このインストールの別のウィンドウまたはタスクが実行中です。"
+
+#: utils/data_migration.py:23
+msgid "其他进程仍在处理数据文件"
+msgstr "別のプロセスがデータファイルを処理しています。"
+
+#: utils/data_migration.py:24
+msgid "设置文件不是有效的 YAML 配置"
+msgstr "設定ファイルが有効な YAML 設定ではありません。"
+
+#: utils/data_migration.py:25
+msgid "userdata 与原数据目录重叠，无法安全移动文件"
+msgstr "userdata と元のデータフォルダーが重なるため、安全に移行できません。"
+
+#: utils/data_migration.py:26
+msgid "迁移记录格式无效"
+msgstr "移行記録の形式が正しくありません。"
+
+#: utils/data_migration.py:27
+msgid "迁移记录中含有未知项目"
+msgstr "移行記録に不明な項目があります。"
+
+#: utils/data_migration.py:28
+msgid "迁移备份路径错误"
+msgstr "移行バックアップのパスが正しくありません。"
+
+#: utils/data_migration.py:29
+msgid "迁移记录中的目录无效"
+msgstr "移行記録のフォルダーが無効です。"
+
+#: utils/data_migration.py:30
+msgid "迁移后的设置文件与原文件不同"
+msgstr "移行した設定ファイルが元のファイルと一致しません。"
+
+#: utils/data_backup.py:120
+msgid "请选择备份文件，排查包仅用于分享。"
+msgstr "バックアップファイルを選択してください。診断用ファイルは共有専用です。"
+
+#: module/update/extractor.py:136 module/update/update_engine.py:541
+msgid "更新临时路径与用户数据目录重叠：{path}"
+msgstr "更新用の一時パスがユーザーデータフォルダーと重なっています：{path}"
+
+#: utils/data_backup.py:62
+msgid "文件名与现有目录冲突：{path}"
+msgstr "ファイル名が既存フォルダーと重複しています：{path}"
+
+#: utils/data_migration.py:33
+msgid "上次还原尚未完成，请在设置的「数据」标签重新选择备份文件或导入文件夹。"
+msgstr "前回の復元が完了していません。設定の「データ」タブでバックアップファイルまたはインポートするフォルダーをもう一度選んでください。"
+
+#: module/overview/snapshot.py
+msgid "{name}没有完成"
+msgstr "{name}が完了しませんでした"
+
+#: module/overview/plan.py:18
+msgid "三星光锥叠加"
+msgstr "星3光円錐の重畳"
+
+#: module/overview/snapshot.py
+msgid "下午好，开拓者"
+msgstr "こんにちは、開拓者"
+
+#: module/overview/snapshot.py
+msgid "中午好，开拓者"
+msgstr "お昼ですね、開拓者"
+
+#: module/overview/cards.py:10
+msgid "仅检查奖励"
+msgstr "報酬のみ確認"
+
+#: module/overview/snapshot.py
+msgid "今天的任务都做完了"
+msgstr "今日の任務はすべて完了しました"
+
+#: module/overview/cards.py:10
+msgid "今日已完成"
+msgstr "本日完了"
+
+#: module/overview/snapshot.py
+msgid "任务已暂停"
+msgstr "任務を一時停止中"
+
+#: module/overview/cards.py
+msgid "体力计划 · {count} 项"
+msgstr "開拓力計画・{count} 件"
+
+#: module/overview/plan.py:18
+msgid "余烬兑换"
+msgstr "残り火交換"
+
+#: module/overview/snapshot.py
+msgid "停止"
+msgstr "停止"
+
+#: module/overview/snapshot.py:11
+msgid "准备"
+msgstr "準備"
+
+#: module/overview/cards.py:15
+msgid "叠加三星光锥"
+msgstr "星3光円錐を重畳"
+
+#: module/overview/cards.py
+msgid "可以设置自动启动任务的时间。"
+msgstr "任務を自動で開始する時刻を設定できます。"
+
+#: module/overview/plan.py:18
+msgid "合成自塑尘脂"
+msgstr "自塑樹脂を合成"
+
+#: module/overview/cards.py
+msgid "周{day}起执行"
+msgstr "週の{day}日目から実行"
+
+#: module/overview/plan.py:18
+msgid "培养目标"
+msgstr "育成目標"
+
+#: module/overview/samples.py
+msgid "完整运行后检查每周积分奖励与日常领取情况"
+msgstr "一括実行後に週間ポイント報酬と日課の受取状況を確認"
+
+#: app/setting_interface.py
+msgid "定时计划"
+msgstr "スケジュール"
+
+#: module/overview/cards.py:10
+msgid "将执行"
+msgstr "実行予定"
+
+#: module/overview/cards.py
+msgid "尚未设置远程推送"
+msgstr "外部通知が未設定です"
+
+#: module/overview/snapshot.py
+msgid "就绪"
+msgstr "準備完了"
+
+#: module/overview/plan.py:18
+msgid "差分宇宙固定次数"
+msgstr "階差宇宙の指定回数周回"
+
+#: module/overview/plan.py:18
+msgid "差分宇宙积分奖励"
+msgstr "階差宇宙のポイント報酬"
+
+#: module/overview/snapshot.py
+msgid "已停止"
+msgstr "停止済み"
+
+#: module/overview/snapshot.py
+msgid "已完成"
+msgstr "完了"
+
+#: module/overview/snapshot.py
+msgid "开始完整运行"
+msgstr "一括実行を開始"
+
+#: module/overview/cards.py:10
+msgid "当前环境不支持"
+msgstr "この環境では利用できません"
+
+#: module/overview/snapshot.py
+msgid "待设置"
+msgstr "設定待ち"
+
+#: module/overview/snapshot.py:11
+msgid "执行任务"
+msgstr "任務を実行"
+
+#: module/overview/cards.py
+msgid "找不到本地游戏"
+msgstr "ローカルのゲームが見つかりません"
+
+#: module/overview/cards.py:15
+msgid "按配置路线运行"
+msgstr "設定したルートを巡回"
+
+#: module/overview/cards.py
+msgid "挑战第 {level} 层"
+msgstr "第 {level} 層に挑戦"
+
+#: module/overview/snapshot.py:11
+msgid "收尾"
+msgstr "終了処理"
+
+#: module/overview/plan.py:18
+msgid "日常准备"
+msgstr "日課の準備"
+
+#: module/overview/plan.py:18
+msgid "日常领奖"
+msgstr "日課の報酬受取"
+
+#: module/overview/snapshot.py
+msgid "早上好，开拓者"
+msgstr "おはようございます、開拓者"
+
+#: app/setting_interface.py
+msgid "星轨背景"
+msgstr "星の軌跡の背景"
+
+#: app/setting_interface.py
+msgid "显示 Q 版小人"
+msgstr "ミニキャラを表示"
+
+#: module/overview/snapshot.py
+msgid "晚上好，开拓者"
+msgstr "こんばんは、開拓者"
+
+#: module/overview/snapshot.py
+msgid "暂停"
+msgstr "一時停止"
+
+#: module/overview/cards.py:10
+msgid "未到执行日"
+msgstr "実行日前"
+
+#: module/overview/cards.py:10
+msgid "未开启"
+msgstr "無効"
+
+#: module/overview/cards.py:10
+msgid "本周已完成"
+msgstr "今週完了"
+
+#: module/overview/cards.py:10
+msgid "本月已完成"
+msgstr "今月完了"
+
+#: module/overview/snapshot.py
+msgid "本次完整运行有 {count} 项待执行。"
+msgstr "一括実行で {count} 件の任務を実行予定です。"
+
+#: module/overview/snapshot.py
+msgid "本次完整运行的结果已保存。"
+msgstr "一括実行の結果を保存しました。"
+
+#: module/overview/snapshot.py
+msgid "查看原因"
+msgstr "原因を確認"
+
+#: module/overview/snapshot.py
+msgid "查看本次结果"
+msgstr "今回の結果を表示"
+
+#: module/overview/snapshot.py
+msgid "查看运行"
+msgstr "実行状況を表示"
+
+#: module/overview/snapshot.py
+msgid "查看运行日志了解原因。"
+msgstr "実行ログで原因を確認できます。"
+
+#: module/overview/plan.py:18
+msgid "查询支援实训"
+msgstr "サポート訓練を確認"
+
+#: module/overview/cards.py:15
+msgid "检查实训活跃度"
+msgstr "訓練のアクティブ度を確認"
+
+#: module/overview/cards.py:15
+msgid "检查已开启的活动"
+msgstr "有効なイベントを確認"
+
+#: module/overview/cards.py:15
+msgid "检查支援角色需求"
+msgstr "サポートキャラの要否を確認"
+
+#: module/overview/cards.py:15
+msgid "检查新兑换码"
+msgstr "新しい交換コードを確認"
+
+#: module/overview/cards.py
+msgid "每周 {count} 次"
+msgstr "週 {count} 回"
+
+#: module/overview/cards.py
+msgid "每周积分奖励"
+msgstr "週間ポイント報酬"
+
+#: module/overview/plan.py:18
+msgid "每周遗器清理"
+msgstr "週間遺物整理"
+
+#: module/overview/cards.py
+msgid "每天 {count} 次"
+msgstr "1日 {count} 回"
+
+#: module/overview/cards.py:15
+msgid "每月合成"
+msgstr "毎月合成"
+
+#: module/overview/cards.py:15
+msgid "每月购买所选物品"
+msgstr "選択した品を毎月購入"
+
+#: module/overview/cards.py
+msgid "没有可运行的定时计划"
+msgstr "実行可能なスケジュールがありません"
+
+#: module/overview/plan.py:18
+msgid "活动"
+msgstr "イベント"
+
+#: module/overview/cards.py
+msgid "游戏连接设置需要调整"
+msgstr "ゲーム接続設定を確認してください"
+
+#: app/setting_interface.py
+msgid "管理"
+msgstr "管理"
+
+#: module/overview/snapshot.py
+msgid "继续设置"
+msgstr "設定を続ける"
+
+#: module/overview/snapshot.py
+msgid "继续运行"
+msgstr "実行を再開"
+
+#: module/overview/snapshot.py
+msgid "继续运行时会重新检查已完成的项目。"
+msgstr "再開時に完了済みの項目を再確認します。"
+
+#: module/overview/cards.py
+msgid "要在其他设备收到任务通知，请开启推送并设置渠道。"
+msgstr "ほかの端末で任務の通知を受け取るには、通知を有効にして送信先を設定してください。"
+
+#: module/overview/cards.py:15
+msgid "读取培养目标"
+msgstr "育成目標を読み込む"
+
+#: module/overview/snapshot.py
+msgid "运行中"
+msgstr "実行中"
+
+#: module/overview/snapshot.py
+msgid "运行单项"
+msgstr "個別に実行"
+
+#: module/overview/snapshot.py
+msgid "还差一步就能开始"
+msgstr "あと一歩で開始できます"
+
+#: module/overview/cards.py:10
+msgid "进行中"
+msgstr "進行中"
+
+#: module/overview/samples.py
+msgid "连续几次未能识别副本结算画面，已保存日志供检查。"
+msgstr "挑戦のリザルト画面を複数回認識できなかったため、確認用のログを保存しました。"
+
+#: module/overview/cards.py
+msgid "选择游戏的可执行文件后即可开始。"
+msgstr "ゲームの実行ファイルを選択すると開始できます。"
+
+#: module/overview/cards.py
+msgid "速通模式"
+msgstr "高速クリアモード"
+
+#: module/overview/snapshot.py
+msgid "重新运行"
+msgstr "再実行"
+
+#: module/overview/snapshot.py
+msgid "重试这一项"
+msgstr "この項目を再試行"
+
+#: app/setting_interface.py
+msgid "问候区背景图"
+msgstr "挨拶エリアの背景"
+
+#: module/overview/cards.py
+msgid "难度 {level} · 周积分"
+msgstr "難易度 {level}・週間ポイント"
+
+#: module/overview/snapshot.py
+msgid "需要处理"
+msgstr "要確認"
+
+#: module/overview/cards.py:15
+msgid "领取已开启的奖励"
+msgstr "有効な報酬を受け取る"
+
+#: module/overview/cards.py
+msgid "上次启动时游戏要求重新登录，请打开本地客户端登录。"
+msgstr "前回の起動時に再ログインが必要でした。ローカル版を開いてログインしてください。"
+
+#: module/overview/cards.py
+msgid "上次运行需要登录"
+msgstr "前回の実行時にログインが必要でした"
+
+#: module/overview/cards.py
+msgid "云游戏等待登录超时，请打开云游戏完成登录。"
+msgstr "クラウドゲームのログイン待ちがタイムアウトしました。クラウド版を開いてログインしてください。"
+
+#: module/overview/cards.py:24
+msgid "合成材料"
+msgstr "素材合成"
+
+#: module/overview/labels.py:4
+msgid "命令行"
+msgstr "コマンドライン"
+
+#: module/overview/cards.py:24
+msgid "回忆一"
+msgstr "記憶・1"
+
+#: module/overview/labels.py:4
+msgid "图形界面"
+msgstr "デスクトップ画面"
+
+#: module/overview/labels.py:4
+msgid "定时"
+msgstr "スケジュール"
+
+#: module/overview/labels.py:4
+msgid "容器"
+msgstr "コンテナ"
+
+#: module/overview/labels.py:8
+msgid "已中断"
+msgstr "中断"
+
+#: module/overview/labels.py:8
+msgid "已跳过"
+msgstr "スキップ済み"
+
+#: module/overview/labels.py:8
+msgid "异常结束"
+msgstr "異常終了"
+
+#: module/overview/shortcuts.py
+msgid "快捷启动已在其他窗口修改，请重新打开编辑。"
+msgstr "ほかのウィンドウでショートカットが変更されました。編集画面を開き直してください。"
+
+#: module/overview/shortcuts.py
+msgid "快捷启动的名称、图标或操作无效。"
+msgstr "ショートカットの名前、アイコン、または操作が無効です。"
+
+#: module/overview/labels.py:4
+msgid "手动"
+msgstr "手動"
+
+#: module/overview/cards.py:24
+msgid "支援礼盒"
+msgstr "サポートギフト"
+
+#: module/overview/cards.py:24
+msgid "试用姬子"
+msgstr "体験版の姫子"
+
+#: module/overview/labels.py:8
+msgid "部分失败"
+msgstr "一部失敗"
+
+#: module/overview/labels.py:4
+msgid "非交互运行"
+msgstr "非対話実行"
+
+#: module/overview/snapshot.py
+msgid "{phase} · 已运行 {minutes} 分钟"
+msgstr "{phase}・経過 {minutes} 分"
+
+#: module/overview/snapshot.py
+msgid "暂时无法读取运行计划。"
+msgstr "実行予定を読み込めません。"
+
+#: module/overview/cards.py
+msgid "计划次数为零"
+msgstr "予定回数は0回"
+
+#: app/overview/cards.py:213
+msgid "完整运行将执行"
+msgstr "完全実行の項目"
+
+#: app/overview/cards.py:214
+msgid "按当前设置，已完成和未开启的会自动跳过"
+msgstr "現在の設定に従い、完了済み・無効の項目を自動でスキップします"
+
+#: app/overview/cards.py:321
+msgid "上次运行"
+msgstr "前回の実行"
+
+#: app/overview/cards.py:392
+msgid "快捷启动"
+msgstr "ショートカット"
+
+#: app/overview/cards.py:450
+msgid "去设置"
+msgstr "設定を開く"
+
+#: app/overview/cards.py:489
+msgid "建议检查"
+msgstr "確認したい設定"
+
+#: app/overview/cards.py:502
+msgid "暂时无法检查设置"
+msgstr "現在、設定を確認できません"
+
+#: app/overview/cards.py:244
+msgid "暂时读不到完整运行清单"
+msgstr "現在、完全実行のリストを読み込めません"
+
+#: app/overview/cards.py:244
+msgid "完整运行没有要执行的项目"
+msgstr "完全実行の対象項目はありません"
+
+#: app/overview/cards.py:248
+msgid "收起未开启的项目"
+msgstr "無効な項目を閉じる"
+
+#: app/overview/cards.py:322
+msgid "查看日志"
+msgstr "ログを表示"
+
+#: app/overview/cards.py:409
+msgid "暂时读不到快捷启动"
+msgstr "現在、ショートカットを読み込めません"
+
+#: app/overview/cards.py:335
+msgid "暂时读不到运行记录"
+msgstr "現在、実行履歴を読み込めません"
+
+#: app/overview/cards.py:335
+msgid "还没有运行记录，完成一次运行后会显示每一项的结果"
+msgstr "一度実行すると、ここに各項目の結果が表示されます"
+
+#: app/overview/cards.py:357
+msgid "以及另外 {count} 项"
+msgstr "ほか {count} 件"
+
+#: app/overview/cards.py:411
+msgid "还没有快捷启动，点「编辑」添加常用操作"
+msgstr "「編集」からよく使う操作を追加できます"
+
+#: app/overview/cards.py:411
+msgid "还没有快捷启动"
+msgstr "ショートカットはまだありません"
+
+#: app/overview/cards.py:250
+msgid "显示未开启的 {count} 项"
+msgstr "無効な {count} 件を表示"
+
+#: app/overview/cards.py:348
+msgid "用时 {duration}"
+msgstr "所要時間 {duration}"
+
+#: app/overview/cards.py:350
+msgid "{trigger}触发"
+msgstr "開始方法：{trigger}"
+
+#: app/main_window.py:555 app/main_window.py:912 app/overview/greeting.py:270
+msgid "总览"
+msgstr "概要"
+
+#: app/overview/greeting.py:270
+msgid "暂时读不到运行状态"
+msgstr "現在、実行状態を読み込めません"
+
+#: app/overview/greeting.py:270
+msgid "稍后会自动重试。"
+msgstr "しばらくすると自動で再試行します。"
+
+#: app/overview/shortcut_dialog.py:23
+msgid "相机"
+msgstr "カメラ"
+
+#: app/overview/shortcut_dialog.py:23
+msgid "运行"
+msgstr "実行"
+
+#: app/overview/shortcut_dialog.py:23 app/overview_interface.py:113
+msgid "开拓力"
+msgstr "開拓力"
+
+#: app/overview/shortcut_dialog.py:24
+msgid "任务清单"
+msgstr "タスクリスト"
+
+#: app/overview/shortcut_dialog.py:25
+msgid "宇宙"
+msgstr "宇宙"
+
+#: app/overview/shortcut_dialog.py:25
+msgid "奖杯"
+msgstr "トロフィー"
+
+#: app/overview/shortcut_dialog.py:26
+msgid "指南针"
+msgstr "コンパス"
+
+#: app/overview/shortcut_dialog.py:27
+msgid "发送"
+msgstr "送信"
+
+#: app/overview/shortcut_dialog.py:28
+msgid "下载"
+msgstr "ダウンロード"
+
+#: app/overview/shortcut_dialog.py:28
+msgid "礼物"
+msgstr "ギフト"
+
+#: app/overview/shortcut_dialog.py:29
+msgid "列表"
+msgstr "リスト"
+
+#: app/overview/shortcut_dialog.py:29
+msgid "星星"
+msgstr "星"
+
+#: app/overview/shortcut_dialog.py:38
+msgid "编辑快捷启动"
+msgstr "ショートカットを編集"
+
+#: app/overview/style.py:104
+msgid "不到 1 分钟"
+msgstr "1 分未満"
+
+#: app/overview/style.py:111
+msgid "{hours} 小时 {minutes} 分钟"
+msgstr "{hours} 時間 {minutes} 分"
+
+#: app/overview/style.py:92
+msgid "今天 {time}"
+msgstr "今日 {time}"
+
+#: app/overview/style.py:94
+msgid "明天 {time}"
+msgstr "明日 {time}"
+
+#: app/overview/style.py:96
+msgid "昨天 {time}"
+msgstr "昨日 {time}"
+
+#: app/overview/style.py:107
+msgid "{minutes} 分钟"
+msgstr "{minutes} 分"
+
+#: app/overview/style.py:110
+msgid "{hours} 小时"
+msgstr "{hours} 時間"
+
+#: app/overview_interface.py:115
+msgid "本周周常"
+msgstr "今週の週間タスク"
+
+#: app/overview_interface.py:116
+msgid "下次定时运行"
+msgstr "次の定期実行"
+
+#: app/overview_interface.py:216
+msgid "管理定时"
+msgstr "スケジュール管理"
+
+#: app/overview_interface.py:170
+msgid "暂时读不到每日实训"
+msgstr "現在、デイリー訓練を読み込めません"
+
+#: app/overview_interface.py:189
+msgid "暂时读不到周常进度"
+msgstr "現在、週間タスクの進捗を読み込めません"
+
+#: app/overview_interface.py:206
+msgid "暂时读不到定时计划"
+msgstr "現在、スケジュールを読み込めません"
+
+#: app/overview_interface.py:209
+msgid "未安排"
+msgstr "予定なし"
+
+#: app/overview_interface.py:210
+msgid "还没有定时运行"
+msgstr "定期実行の予定はありません"
+
+#: app/overview_interface.py:210
+msgid "添加定时"
+msgstr "予定を追加"
+
+#: app/overview_interface.py:303
+msgid "更换问候区背景"
+msgstr "あいさつ欄の背景を変更"
+
+#: app/overview_interface.py:153
+msgid "暂时读不到开拓力"
+msgstr "現在、開拓力を読み込めません"
+
+#: app/overview_interface.py:153
+msgid "运行一次清体力后显示"
+msgstr "開拓力消化を一度実行すると表示されます"
+
+#: app/overview_interface.py:182
+msgid "今天还没有完成"
+msgstr "今日はまだ未完了です"
+
+#: app/overview_interface.py:193
+msgid "/ {count} 项"
+msgstr "／{count} 件"
+
+#: app/overview_interface.py:199
+msgid "本周的都完成了"
+msgstr "今週の分はすべて完了"
+
+#: app/overview_interface.py:199
+msgid "没有开启每周任务"
+msgstr "有効な週間タスクはありません"
+
+#: app/overview_interface.py:305
+msgid "恢复默认背景"
+msgstr "既定の背景に戻す"
+
+#: app/overview_interface.py:308
+msgid "隐藏 Q 版小人"
+msgstr "ミニキャラを隠す"
+
+#: app/overview_interface.py:178
+msgid "{time} 完成"
+msgstr "{time} に完了"
+
+#: app/overview_interface.py:197
+msgid "剩余：{names}"
+msgstr "残り：{names}"
+
+#: app/overview_interface.py:162
+msgid "约{time} 回满"
+msgstr "{time} ごろ全回復"
+
+#: app/overview_interface.py:180
+msgid "今天还差 {points} 活跃度"
+msgstr "今日の活躍度はあと {points} ポイント"
+
+#: module/overview/shortcuts.py:231
+msgid "配置写入已暂停，请恢复后再保存。"
+msgstr "設定の書き込みは一時停止中です。再開後に保存してください。"
+
+#: app/overview/shortcut_dialog.py:77
+msgid "操作类型"
+msgstr "操作の種類"
+
+#: app/overview/shortcut_dialog.py:78
+msgid "任务"
+msgstr "タスク"
+
+#: module/channel_catalog.py:95
+msgid "Bark"
+msgstr "Bark"
+
+#: module/channel_catalog.py:121
+msgid "Discord"
+msgstr "Discord"
+
+#: module/search/setting_text.py:3
+msgid "GitHub API 认证 Token，选填"
+msgstr "GitHub API の認証トークン（任意）"
+
+#: module/channel_catalog.py:158
+msgid "Go-cqhttp"
+msgstr "Go-cqhttp"
+
+#: module/channel_catalog.py:130
+msgid "Gotify"
+msgstr "Gotify"
+
+#: module/channel_catalog.py:135
+msgid "KOOK"
+msgstr "KOOK"
+
+#: module/channel_catalog.py:145
+msgid "Matrix"
+msgstr "Matrix"
+
+#: module/channel_catalog.py:127
+msgid "MeoW"
+msgstr "MeoW"
+
+#: module/search/setting_text.py:3
+msgid "MirrorChyan CDK"
+msgstr "MirrorChyan CDK"
+
+#: module/channel_catalog.py:84
+msgid "OneBot"
+msgstr "OneBot"
+
+#: module/channel_catalog.py:154
+msgid "Pushdeer"
+msgstr "Pushdeer"
+
+#: module/channel_catalog.py:115
+msgid "Pushplus"
+msgstr "Pushplus"
+
+#: module/channel_catalog.py:140
+msgid "Qmsg"
+msgstr "Qmsg"
+
+#: module/channel_catalog.py:49
+msgid "SMTP"
+msgstr "SMTP"
+
+#: module/channel_catalog.py:70
+msgid "Telegram"
+msgstr "Telegram"
+
+#: module/channel_catalog.py:165
+msgid "Webhook"
+msgstr "Webhook"
+
+#: module/channel_catalog.py:37
+msgid "Windows"
+msgstr "Windows"
+
+#: module/search/setting_text.py:3
+msgid "adb 可执行文件"
+msgstr "ADB 実行ファイル"
+
+#: module/search/setting_text.py:3
+msgid "上次完成3次「历战余响」的时间戳"
+msgstr "歴戦余韻を3回クリアした最終日時"
+
+#: module/search/setting_text.py:3
+msgid "上次运行模拟宇宙的时间戳，用于记录和控制运行频率"
+msgstr "模擬宇宙の実行間隔を判定するための最終実行日時"
+
+#: app/content/settings_state.py:62
+msgid "主题切换由主窗口管理"
+msgstr "テーマの変更はメインウィンドウで管理します"
+
+#: module/search/setting_text.py:3
+msgid "云崩铁是否全屏运行"
+msgstr "クラウド版を全画面で実行する"
+
+#: module/content_pages.py:34
+msgid "任务结束后"
+msgstr "タスク終了後"
+
+#: module/notification/channels.py
+msgid "保存失败，请稍后重试"
+msgstr "保存できませんでした。しばらくしてから再試行してください"
+
+#: module/content_pages.py:43
+msgid "全局热键"
+msgstr "グローバルホットキー"
+
+#: module/search/__init__.py
+msgid "共 {count} 项"
+msgstr "全 {count} 件"
+
+#: module/task_catalog.py:57
+msgid "分别配置混沌回忆、虚构叙事和末日幻影。"
+msgstr "混沌の記憶、虚構叙事、末日の幻影を個別に設定します。"
+
+#: app/content/settings_state.py:62
+msgid "切换更新源会检查更新"
+msgstr "更新元を変更すると更新を確認します"
+
+#: module/content_pages.py:67
+msgid "刷什么"
+msgstr "周回先"
+
+#: module/content_pages.py:66
+msgid "加入完整运行"
+msgstr "完全実行に含める"
+
+#: module/search/setting_text.py:3
+msgid "单次触摸点按的毫秒数"
+msgstr "タップ1回の長さ（ミリ秒）"
+
+#: module/content_pages.py:95
+msgid "博弈策略"
+msgstr "攻略戦略"
+
+#: module/task_catalog.py:53
+msgid "参加货币战争并获取每周积分。"
+msgstr "貨幣戦争に参加して週間ポイントを獲得します。"
+
+#: app/content/notify_model.py
+msgid "发送失败"
+msgstr "送信失敗"
+
+#: module/notification/results.py:12
+msgid "发送失败，请检查渠道配置"
+msgstr "送信に失敗しました。チャンネル設定を確認してください"
+
+#: module/notification/results.py
+msgid "发送成功"
+msgstr "送信成功"
+
+#: module/content_pages.py:59
+msgid "启动与权限"
+msgstr "起動と権限"
+
+#: module/search/setting_text.py:3
+msgid "启动器类型及窗口标题，可选 米哈游启动器、HoYoPlay"
+msgstr "ランチャーの種類とウィンドウ名。miHoYo ランチャーまたは HoYoPlay を選択します"
+
+#: module/settings_registry.py:163
+msgid "启用「每月自动购买命运的足迹」"
+msgstr "毎月「運命の足跡」を自動購入"
+
+#: module/settings_registry.py:157
+msgid "启用「每月自动购买星轨专票」"
+msgstr "毎月「星軌専用チケット」を自動購入"
+
+#: module/settings_registry.py:160
+msgid "启用「每月自动购买星轨通票」"
+msgstr "毎月「星軌チケット」を自動購入"
+
+#: module/notification/channels.py
+msgid "启用图片时请填写此项"
+msgstr "画像を有効にする場合は入力してください"
+
+#: module/search/setting_text.py:3
+msgid "周几开始执行「历战余响」，假设值为4，那么周1、2、3不执行「历战余响」，周4、5、6、7则执行"
+msgstr "歴戦余韻を開始する曜日。4なら木曜から日曜まで実行します"
+
+#: module/settings_registry.py:125
+msgid "周几开始执行历战余响"
+msgstr "歴戦余韻の開始曜日"
+
+#: module/search/setting_text.py:3
+msgid "在总览问候区显示 Q 版小人"
+msgstr "総覧の挨拶欄にミニキャラを表示"
+
+#: app/content/backend.py
+msgid "在这台电脑上运行 PC 版游戏。"
+msgstr "このパソコンで PC 版を起動します。"
+
+#: module/content_pages.py:85
+msgid "地图与队伍"
+msgstr "マップと編成"
+
+#: module/task_catalog.py:60
+msgid "处理每月兑换、光锥叠加和遗器清理。"
+msgstr "毎月の交換、光円錐の重畳、遺物整理を行います。"
+
+#: module/content_pages.py:54
+msgid "备份与恢复"
+msgstr "バックアップと復元"
+
+#: module/content_pages.py:46
+msgid "外观"
+msgstr "外観"
+
+#: module/content_pages.py:45
+msgid "外观与窗口"
+msgstr "外観とウィンドウ"
+
+#: module/content_pages.py:35
+msgid "完成后操作"
+msgstr "完了後の操作"
+
+#: module/task_catalog.py:47
+msgid "完成当天的每日实训。"
+msgstr "今日のデイリートレーニングを完了します。"
+
+#: app/content/settings_state.py:62
+msgid "定时计划由运行页管理"
+msgstr "スケジュールは実行ページで管理します"
+
+#: module/content_pages.py:73
+msgid "实训项目"
+msgstr "訓練項目"
+
+#: app/content/settings_state.py
+msgid "密钥由编辑表单管理"
+msgstr "認証情報は編集フォームで管理します"
+
+#: module/tool_catalog.py:20
+msgid "导出角色的属性、光锥、星魂、技能和遗器。"
+msgstr "キャラクターのステータス、光円錐、星魂、スキル、遺物を出力します。"
+
+#: module/notification/channels.py
+msgid "已填写 {count} 个字段"
+msgstr "入力済み {count} 項目"
+
+#: module/content_pages.py:39
+msgid "已添加的渠道"
+msgstr "追加済みのチャンネル"
+
+#: module/search/__init__.py
+msgid "已设置"
+msgstr "設定済み"
+
+#: module/content_pages.py:68
+msgid "开拓力不够时"
+msgstr "開拓力が足りないとき"
+
+#: app/content/settings_state.py
+msgid "当前值由运行环境指定"
+msgstr "実行環境によって指定されています"
+
+#: module/search/setting_text.py:3
+msgid "当日成功通关差分宇宙的次数，任何方式运行并成功通关都会记录此值"
+msgstr "実行方法を問わず集計した、本日の階差宇宙クリア回数"
+
+#: module/content_pages.py:42
+msgid "快捷键"
+msgstr "ショートカットキー"
+
+#: module/content_pages.py:69
+msgid "战斗与高级"
+msgstr "戦闘と詳細設定"
+
+#: module/search/setting_text.py:3
+msgid "战斗内角色详情键"
+msgstr "戦闘中にキャラクター詳細を開くキー"
+
+#: module/search/setting_text.py:3
+msgid "战斗外交互键"
+msgstr "戦闘外でのインタラクトキー"
+
+#: module/search/setting_text.py:3
+msgid "执行差分宇宙时的难度等级，取值范围 1-6，数值越大难度越高，其中难度 6 对应常规演算星阶模式"
+msgstr "階差宇宙の難易度（1～6）。数字が大きいほど高難度で、6は通常演算の星階モードです"
+
+#: module/content_pages.py:91
+msgid "执行时间"
+msgstr "実行時期"
+
+#: module/search/setting_text.py:3
+msgid "投资环境和投资策略的选择优先级"
+msgstr "投資環境と投資戦略の選択優先度"
+
+#: module/task_catalog.py:50
+msgid "按地图路线清理大世界敌人。"
+msgstr "選択したルートに沿ってフィールドの敵を倒します。"
+
+#: module/task_catalog.py:52
+msgid "按所选星期挑战历战余响。"
+msgstr "指定した曜日から歴戦余韻に挑戦します。"
+
+#: module/content_pages.py:108
+msgid "按月和其他"
+msgstr "毎月・その他"
+
+#: module/content_pages.py:40
+msgid "推送内容"
+msgstr "通知内容"
+
+#: module/notification/results.py:12
+msgid "推送参数无效，请检查渠道配置"
+msgstr "通知のパラメーターが無効です。チャンネル設定を確認してください"
+
+#: module/notification/results.py:12
+msgid "推送服务拒绝了身份验证。请打开此渠道的编辑窗口，核对机器人密钥和收件人，再发送一条测试消息。"
+msgstr "通知サービスが認証を拒否しました。このチャンネルの編集画面でボットの認証情報と宛先を確認し、テストメッセージを送信してください。"
+
+#: app/content/settings_state.py
+msgid "操作或进度没有可恢复的设置"
+msgstr "操作や進捗表示にはリセットできる設定がありません"
+
+#: module/search/setting_text.py:3
+msgid "支援列表滚动查找次数"
+msgstr "サポート一覧を検索するスクロール回数"
+
+#: module/notification/results.py:12
+msgid "无法连接推送服务"
+msgstr "通知サービスに接続できません"
+
+#: module/search/setting_text.py:3
+msgid "是否体力优先完成3次「历战余响」"
+msgstr "歴戦余韻3回を優先して開拓力を使う"
+
+#: module/search/setting_text.py:3
+msgid "是否使用支援角色"
+msgstr "サポートキャラクターを使う"
+
+#: module/search/setting_text.py:3
+msgid "是否使用镜像下载浏览器和驱动"
+msgstr "ミラーからブラウザーとドライバーをダウンロードする"
+
+#: module/search/setting_text.py:3
+msgid "是否允许浏览器保存数据（登录状态/游戏本地数据）"
+msgstr "ログイン状態とゲームのローカルデータをブラウザーに保存する"
+
+#: module/search/setting_text.py:3
+msgid "是否启用「差分宇宙」积分奖励"
+msgstr "階差宇宙のポイント報酬を有効にする"
+
+#: module/search/setting_text.py:3
+msgid "是否启用「货币战争」积分奖励"
+msgstr "貨幣戦争のポイント報酬を有効にする"
+
+#: module/search/setting_text.py:3
+msgid "是否启用日常任务"
+msgstr "日常タスクを有効にする"
+
+#: module/search/setting_text.py:3
+msgid "是否启用每月自动购买余烬兑换中的「命运的足迹」"
+msgstr "毎月エンバー交換で運命の足跡を購入する"
+
+#: module/search/setting_text.py:3
+msgid "是否启用每月自动购买余烬兑换中的「星轨专票」"
+msgstr "毎月エンバー交換で星軌専用チケットを購入する"
+
+#: module/search/setting_text.py:3
+msgid "是否启用每月自动购买余烬兑换中的「星轨通票」"
+msgstr "毎月エンバー交換で星軌チケットを購入する"
+
+#: module/search/setting_text.py:3
+msgid "是否启用活动功能"
+msgstr "イベント確認を有効にする"
+
+#: module/search/setting_text.py:3
+msgid "是否启用清体力总开关"
+msgstr "完全実行で開拓力を消費する"
+
+#: module/search/setting_text.py:3
+msgid "是否启用资产管理功能"
+msgstr "資産管理を有効にする"
+
+#: module/search/setting_text.py:3
+msgid "是否启用锄大地功能"
+msgstr "フィールド周回を有効にする"
+
+#: module/search/setting_text.py:3
+msgid "是否启用领取奖励功能"
+msgstr "報酬受け取りを有効にする"
+
+#: module/search/setting_text.py:3
+msgid "是否在打副本时自动切换队伍"
+msgstr "ステージで自動的に編成を切り替える"
+
+#: module/search/setting_text.py:3
+msgid "是否在进入副本前进行传送至任意锚点"
+msgstr "ステージに入る前に界域アンカーに移動する"
+
+#: module/search/setting_text.py:3
+msgid "是否在锄大地时自动切换队伍"
+msgstr "フィールド周回で自動的に編成を切り替える"
+
+#: module/search/setting_text.py:3
+msgid "是否检查更新"
+msgstr "更新を確認する"
+
+#: module/search/setting_text.py:3
+msgid "是否通过启动器更新游戏"
+msgstr "ランチャーからゲームを更新する"
+
+#: module/search/setting_text.py:3
+msgid "是否领取兑换码奖励"
+msgstr "交換コード報酬を受け取る"
+
+#: module/search/setting_text.py:3
+msgid "是否领取委托奖励"
+msgstr "依頼報酬を受け取る"
+
+#: module/search/setting_text.py:3
+msgid "是否领取成就奖励"
+msgstr "アチーブメント報酬を受け取る"
+
+#: module/search/setting_text.py:3
+msgid "是否领取支援奖励"
+msgstr "サポート報酬を受け取る"
+
+#: module/search/setting_text.py:3
+msgid "是否领取无名勋礼奖励"
+msgstr "ナナシの勲功報酬を受け取る"
+
+#: module/search/setting_text.py:3
+msgid "是否领取每日实训奖励"
+msgstr "デイリートレーニング報酬を受け取る"
+
+#: module/search/setting_text.py:3
+msgid "是否领取短信奖励"
+msgstr "メッセージ報酬を受け取る"
+
+#: module/search/setting_text.py:3
+msgid "是否领取邮件奖励"
+msgstr "メール報酬を受け取る"
+
+#: module/search/__init__.py
+msgid "暂时无法读取"
+msgstr "現在読み取れません"
+
+#: module/content_pages.py:49
+msgid "更新"
+msgstr "アップデート"
+
+#: module/search/setting_text.py:3
+msgid "更新下载代理，留空则使用系统代理"
+msgstr "更新のダウンロードプロキシ。空欄ならシステムの設定を使います"
+
+#: module/notification/results.py:12
+msgid "服务未接受消息，请检查渠道配置"
+msgstr "サービスがメッセージを受け付けませんでした。チャンネル設定を確認してください"
+
+#: module/notification/results.py
+msgid "服务返回 HTTP {status}"
+msgstr "サービスが HTTP {status} を返しました"
+
+#: module/notification/channels.py
+msgid "未知字段"
+msgstr "不明な項目"
+
+#: module/search/__init__.py
+msgid "未设置"
+msgstr "未設定"
+
+#: module/search/setting_text.py:3
+msgid "末日幻影关卡范围，设置允许尝试的关卡等级范围"
+msgstr "末日の幻影で挑戦するステージの範囲"
+
+#: module/search/setting_text.py:150
+msgid "本地客户端"
+msgstr "ローカルクライアント"
+
+#: module/task_catalog.py:49
+msgid "检查并领取已选的日常奖励。"
+msgstr "選択した日常報酬を確認して受け取ります。"
+
+#: module/task_catalog.py:48
+msgid "检查签到、双倍掉落和活动热点。"
+msgstr "ログイン報酬、ドロップ2倍、注目イベントを確認します。"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙使用的命途"
+msgstr "模擬宇宙の運命"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙使用的难度"
+msgstr "模擬宇宙の難易度"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙类型，可选 \"差分宇宙\"（divergent）或 \"模拟宇宙\"（universe）"
+msgstr "階差宇宙（divergent）または模擬宇宙（universe）を選択"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙运行方式，可选 \"源码\"（source）或 \"集成\"（exe）"
+msgstr "模擬宇宙をソース（source）または同梱版（exe）で実行"
+
+#: module/search/setting_text.py:3
+msgid "模拟宇宙运行频率，可选 \"每周\"（weekly）或 \"每天\"（daily）"
+msgstr "模擬宇宙を毎週（weekly）または毎日（daily）実行"
+
+#: module/content_pages.py:101
+msgid "模拟宇宙（外部工具，停止维护）"
+msgstr "模擬宇宙（外部ツール、メンテナンス終了）"
+
+#: module/search/setting_text.py:3
+msgid "每周所选日期清理四星及以下遗器；可在展开项启用智能弃置"
+msgstr "指定した曜日に星4以下の遺物を整理します。展開するとスマート廃棄を有効にできます"
+
+#: module/content_pages.py:110
+msgid "每月兑换"
+msgstr "毎月の交換"
+
+#: module/content_pages.py:77
+msgid "活动项目"
+msgstr "イベント項目"
+
+#: module/search/setting_text.py:3
+msgid "浏览器启动的额外参数，如 \"--auto-open-devtools-for-tabs\""
+msgstr "ブラウザーの追加起動引数（例 \"--auto-open-devtools-for-tabs\"）"
+
+#: module/search/setting_text.py:3
+msgid "混沌回忆关卡范围，设置允许尝试的关卡等级范围"
+msgstr "混沌の記憶で挑戦するステージの範囲"
+
+#: app/content/settings_state.py:62
+msgid "清空路径会影响完成后操作"
+msgstr "パスを消去すると完了後の操作に影響します"
+
+#: app/content/settings_state.py:62
+msgid "清空路径可能使任务无法启动"
+msgstr "パスを消去するとタスクを開始できなくなる場合があります"
+
+#: app/content/settings_state.py
+msgid "渠道字段需要一起校验"
+msgstr "チャンネルの項目はまとめて検証する必要があります"
+
+#: module/content_pages.py:29
+msgid "游戏与启动"
+msgstr "ゲームと起動"
+
+#: module/content_pages.py:31
+msgid "游戏优化"
+msgstr "ゲーム最適化"
+
+#: module/content_pages.py:32
+msgid "游戏内按键"
+msgstr "ゲーム内キー"
+
+#: module/search/setting_text.py:3
+msgid "游戏安装路径"
+msgstr "ゲームのインストール先"
+
+#: app/content/notify_model.py
+msgid "点击「开始监听」后，请在 {seconds} 秒内在群聊中 @ 机器人发送验证码 {code}，或将机器人拉进目标群"
+msgstr ""
+"「リスニング開始」を選んでから {seconds} 秒以内に、グループでボットをメンションして確認コード {code} "
+"を送るか、対象グループに招待してください"
+
+#: module/content_pages.py:86
+msgid "特殊物品领取"
+msgstr "特殊アイテムの受け取り"
+
+#: module/search/setting_text.py:3
+msgid "用于“回忆一”的队伍配置"
+msgstr "記憶・1で使う編成"
+
+#: module/settings_registry.py:370
+msgid "界面语言 / 界面語言 / 日本語 / 인터페이스 언어 / UI Language"
+msgstr "界面语言 / 界面語言 / 日本語 / 인터페이스 언어 / UI Language"
+
+#: module/content_pages.py:100
+msgid "积分奖励"
+msgstr "ポイント報酬"
+
+#: module/content_pages.py:47
+msgid "窗口"
+msgstr "ウィンドウ"
+
+#: module/notification/channels.py
+msgid "端口应在 1 到 65535 之间"
+msgstr "1～65535 のポートを入力してください"
+
+#: module/search/setting_text.py:3
+msgid "米哈游启动器安装路径"
+msgstr "miHoYo ランチャーのインストール先"
+
+#: app/content/notify_model.py
+msgid "绑定失败，请检查机器人凭据和网络"
+msgstr "紐付けに失敗しました。ボットの認証情報とネットワークを確認してください"
+
+#: app/content/notify_model.py
+msgid "绑定超时，请重新发起绑定"
+msgstr "紐付けがタイムアウトしました。もう一度開始してください"
+
+#: module/search/setting_text.py:3
+msgid "自动识别 Windows 本地客户端的按键，缺失时使用以下设置"
+msgstr "Windows ローカル版のキー設定を自動検出し、不明なキーには以下の設定を使います"
+
+#: module/task_catalog.py:55
+msgid "获取差分宇宙积分，或按配置运行模拟宇宙。"
+msgstr "階差宇宙のポイントを獲得するか、設定に従って模擬宇宙を実行します。"
+
+#: module/search/setting_text.py:3
+msgid "虚构叙事关卡范围，设置允许尝试的关卡等级范围"
+msgstr "虚構叙事で挑戦するステージの範囲"
+
+#: module/search/setting_text.py:3
+msgid "设备序列号或 IP:端口"
+msgstr "デバイスのシリアル番号または IP:ポート"
+
+#: app/content/settings_state.py:62
+msgid "设备连接由运行方式页面管理"
+msgstr "デバイス接続は実行方法ページで管理します"
+
+#: module/search/setting_text.py:3
+msgid "设置停止任务的全局快捷键（支持后台）"
+msgstr "バックグラウンドでも有効なタスク停止ホットキー"
+
+#: module/search/setting_text.py:3
+msgid "设置切换自动对话的全局快捷键（支持后台）"
+msgstr "バックグラウンドでも有効な自動会話の切り替えホットキー"
+
+#: module/search/setting_text.py:3
+msgid "设置打开地图的按键"
+msgstr "マップを開くキー"
+
+#: module/search/setting_text.py:3
+msgid "设置打开短信的按键"
+msgstr "メッセージを開くキー"
+
+#: module/search/setting_text.py:3
+msgid "设置打开跃迁的按键"
+msgstr "跳躍を開くキー"
+
+#: module/search/setting_text.py:3
+msgid "设置暂停/继续任务的全局快捷键（支持后台，仅内置任务有效）"
+msgstr "内蔵タスクを一時停止・再開するホットキー（バックグラウンド対応）"
+
+#: module/search/setting_text.py:3
+msgid "设置游戏内使用秘技的按键"
+msgstr "秘技を使うキー"
+
+#: module/search/setting_text.py:3
+msgid "设置自动战斗的按键"
+msgstr "オート戦闘のキー"
+
+#: app/content/settings_state.py:62
+msgid "语言切换需要重建界面"
+msgstr "言語の変更時は画面を再構築します"
+
+#: module/notification/channels.py
+msgid "请填写此项"
+msgstr "この項目を入力してください"
+
+#: module/notification/channels.py
+msgid "请求头应为 JSON 对象"
+msgstr "リクエストヘッダーには JSON オブジェクトを指定してください"
+
+#: module/notification/channels.py
+msgid "请至少填写其中一项"
+msgstr "いずれか1項目以上を入力してください"
+
+#: module/notification/channels.py
+msgid "请输入完整的 HTTP 或 HTTPS 地址"
+msgstr "HTTP または HTTPS の完全なアドレスを入力してください"
+
+#: module/notification/channels.py
+msgid "请输入整数"
+msgstr "整数を入力してください"
+
+#: module/notification/channels.py
+msgid "请输入有效的 JSON"
+msgstr "有効な JSON を入力してください"
+
+#: module/notification/channels.py
+msgid "请选择列表中的选项"
+msgstr "リストから選択してください"
+
+#: module/notification/channels.py
+msgid "请选择开或关"
+msgstr "オンまたはオフを選択してください"
+
+#: module/content_pages.py:111
+msgid "资产处理"
+msgstr "資産の処理"
+
+#: module/content_pages.py:108
+msgid "资产管理"
+msgstr "資産管理"
+
+#: module/content_pages.py:23
+msgid "运行方式"
+msgstr "実行方法"
+
+#: app/content/settings_state.py:62
+msgid "运行方式需要检查任务状态"
+msgstr "実行方法を変更する前にタスクの状態を確認します"
+
+#: module/notification/results.py:12
+msgid "连接超时，请检查网络或代理"
+msgstr "接続がタイムアウトしました。ネットワークまたはプロキシを確認してください"
+
+#: app/content/backend.py
+msgid "通过 ADB 连接手机或模拟器。"
+msgstr "ADB でスマートフォンまたはエミュレーターに接続します。"
+
+#: app/content/backend.py
+msgid "通过浏览器运行云游戏。"
+msgstr "ブラウザーでクラウド版を実行します。"
+
+#: module/search/setting_text.py:3
+msgid "遇到未完成对局时，\"restart\" 结算后重新开局，\"resume\" 按配置的策略继续进度"
+msgstr "未完了の対局では restart で精算して再開し、resume で設定した戦略に従って続行します"
+
+#: module/content_pages.py:112
+msgid "遗器清理"
+msgstr "遺物整理"
+
+#: module/search/setting_text.py:3
+msgid "锄大地运行方式，可选 \"源码\"（source）或 \"集成\"（exe）"
+msgstr "フィールド周回をソース（source）または同梱版（exe）で実行"
+
+#: module/search/setting_text.py:3
+msgid "问候区自选背景；留空时使用当前主题的星轨"
+msgstr "挨拶欄の背景画像。空欄なら現在のテーマの星軌を使います"
+
+#: module/content_pages.py:60
+msgid "隐私"
+msgstr "プライバシー"
+
+#: app/content/settings_state.py:62
+msgid "需要同步系统计划任务"
+msgstr "システムのスケジュールタスクの同期が必要です"
+
+#: module/content_pages.py:79
+msgid "领取奖励"
+msgstr "報酬受け取り"
+
+#: module/content_pages.py:81
+msgid "领取项目"
+msgstr "受け取る項目"
+
+#: module/content_pages.py:57
+msgid "高级"
+msgstr "詳細設定"
+
+#: module/task_catalog.py
+msgid "，另可挑战 {count} 轮"
+msgstr "、さらに {count} ウェーブ挑戦できます"
+
+#: module/search/setting_text.py:216
+msgid "使用截图、兑换码和角色面板导出等工具。"
+msgstr "スクリーンショット、交換コード、キャラクター情報の出力などを利用できます。"
+
+#: module/search/setting_text.py:3
+msgid "切换后即时生效"
+msgstr "切り替えるとすぐに反映されます"
+
+#: module/search/setting_text.py:216
+msgid "创建、编辑和运行自定义流程。"
+msgstr "カスタムフローの作成、編集、実行ができます。"
+
+#: module/search/setting_text.py:216
+msgid "创建第一个流程"
+msgstr "最初のフローを作る"
+
+#: module/search/setting_text.py:3
+msgid "刷周积分 / 刷晋升点 / 冲职级"
+msgstr "週間ポイント / 昇進ポイント / ランク上げ"
+
+#: module/search/setting_text.py:3
+msgid "加入用户交流群"
+msgstr "ユーザーのコミュニティに参加する"
+
+#: module/search/__init__.py
+msgid "可选项包括 {items}"
+msgstr "選択肢は {items} です"
+
+#: module/search/setting_text.py:3
+msgid "向所有已启用的渠道发送测试消息。"
+msgstr "有効なすべてのチャンネルにテストメッセージを送信します。"
+
+#: module/search/setting_text.py:3
+msgid "数据保存在哪里"
+msgstr "データの保存場所"
+
+#: module/search/setting_text.py:216
+msgid "查看、导入和导出跃迁记录。"
+msgstr "跳躍履歴の閲覧、インポート、エクスポートができます。"
+
+#: module/search/setting_text.py:216
+msgid "查看各版本的改动。"
+msgstr "各バージョンの変更内容を確認できます。"
+
+#: module/search/setting_text.py:216
+msgid "查看开拓力、完整运行清单与最近结果。"
+msgstr "開拓力、完全実行の予定、最近の結果を確認できます。"
+
+#: module/search/setting_text.py:216
+msgid "查看本地后台模式与云游戏的使用条件。"
+msgstr "ローカルのバックグラウンドモードとクラウド版の利用条件を確認できます。"
+
+#: module/search/setting_text.py:216
+msgid "查看运行日志、控制任务或管理定时计划。"
+msgstr "実行ログの確認、タスクの操作、スケジュールの管理ができます。"
+
+#: module/search/setting_text.py:216
+msgid "查阅使用教程和常见问题。"
+msgstr "使い方とよくある質問を確認できます。"
+
+#: module/search/setting_text.py:216
+msgid "检查版本，访问项目主页和社区。"
+msgstr "バージョンを確認し、プロジェクトのホームページやコミュニティにアクセスできます。"
+
+#: module/search/setting_text.py:3
+msgid "管理已添加的推送渠道。"
+msgstr "追加した通知チャンネルを管理します。"
+
+#: module/search/setting_text.py:216
+msgid "管理更新源、下载代理和版本检测。"
+msgstr "更新元、ダウンロード用プロキシ、バージョン確認を管理します。"
+
+#: module/search/setting_text.py:216
+msgid "管理本地游戏账号。"
+msgstr "ローカルゲームのアカウントを管理します。"
+
+#: module/search/setting_text.py:3
+msgid "设备运行状态"
+msgstr "デバイスの動作状態"
+
+#: module/search/setting_text.py:216
+msgid "设置停止、暂停和自动对话的全局热键。"
+msgstr "停止、一時停止、自動会話のグローバルホットキーを設定します。"
+
+#: module/search/setting_text.py:216
+msgid "设置日志、启动权限和隐私选项。"
+msgstr "ログ、起動権限、プライバシー設定を変更できます。"
+
+#: module/search/setting_text.py:3
+msgid "设置通知的标题和正文。"
+msgstr "通知のタイトルと本文を設定します。"
+
+#: module/search/setting_text.py:216
+msgid "调整助手的程序与环境设置。"
+msgstr "アシスタントと実行環境を設定します。"
+
+#: module/search/setting_text.py:216
+msgid "运行前准备"
+msgstr "実行前の準備"
+
+#: module/search/setting_text.py:3
+msgid "远程一号位锄地 / 黄泉一号位锄地 / 仅获取特殊物品"
+msgstr "遠距離キャラ先頭 / 黄泉先頭 / 特殊アイテムのみ"
+
+#: module/search/setting_text.py:216
+msgid "选择任务并调整完整运行的内容。"
+msgstr "タスクを選び、完全実行に含める内容を設定します。"
+
+msgid " 任务相关的内容请到「任务」页查看。"
+msgstr " タスク別の設定は「タスク」で確認できます。"
+
+msgid "ADB"
+msgstr "ADB"
+
+msgid "HDR"
+msgstr "HDR"
+
+msgid "Windows / macOS / Linux"
+msgstr "Windows / macOS / Linux"
+
+msgid "proxy"
+msgstr "プロキシ"
+
+msgid "{count} 个渠道"
+msgstr "{count} 件のチャンネル"
+
+msgid "{count} 次"
+msgstr "{count} 回"
+
+msgid "{enabled} / {total} 已开启"
+msgstr "{total} 件中 {enabled} 件が有効"
+
+msgid "{name} 测试失败"
+msgstr "{name} のテストに失敗"
+
+msgid "{name} 测试消息已发出"
+msgstr "{name} にテストメッセージを送信しました"
+
+msgid "、"
+msgstr "、"
+
+msgid "上次发送失败：{reason}"
+msgstr "前回の送信に失敗：{reason}"
+
+msgid "上次发送成功"
+msgstr "前回の送信に成功"
+
+msgid "上次完成历战余响"
+msgstr "歴戦余韻の前回クリア"
+
+msgid "上次完成每日实训"
+msgstr "デイリー訓練の前回完了"
+
+msgid "上次完成锄大地"
+msgstr "フィールド探索の前回完了"
+
+msgid "上次拿满本周积分"
+msgstr "週間ポイントが上限に達した最終日時"
+
+msgid "上次运行模拟宇宙"
+msgstr "模擬宇宙の前回実行"
+
+msgid "不占鼠标"
+msgstr "マウスを占有しない"
+
+msgid "也匹配了：{words}"
+msgstr "関連語：{words}"
+
+msgid "仅 Windows"
+msgstr "Windows のみ"
+
+msgid "从未完成"
+msgstr "未完了"
+
+msgid "代理"
+msgstr "プロキシ"
+
+msgid "任务完成或失败时通知你。先添加一个常用的渠道，再点「测试」确认能收到。"
+msgstr "タスクの完了や失敗を通知します。チャンネルを追加し、「テスト」で受信を確認してください。"
+
+msgid "全部"
+msgstr "すべて"
+
+msgid "全部任务结束后要做什么，例如关机、退出小助手或运行脚本。"
+msgstr "全タスク終了後の動作を選びます。シャットダウン、アシスタントの終了、スクリプトの実行などができます。"
+
+msgid "分辨率"
+msgstr "解像度"
+
+msgid "切换分类"
+msgstr "カテゴリ切り替え"
+
+msgid "刷本"
+msgstr "周回"
+
+msgid "前往任务页 ›"
+msgstr "タスクへ ›"
+
+msgid "副本"
+msgstr "ステージ"
+
+msgid "发送测试"
+msgstr "テスト送信"
+
+msgid "可后台"
+msgstr "バックグラウンド対応"
+
+msgid "启动游戏的方式和等待时间，以及运行期间对画面和按键的调整。"
+msgstr "ゲームの起動方法と待機時間、実行中の画面やキーの設定を変更します。"
+
+msgid "和默认值不同，悬停卡片可以恢复默认"
+msgstr "初期値から変更されています。カードにポインターを合わせると元に戻せます。"
+
+msgid "在帮助中查看这项设置的说明"
+msgstr "この設定の説明をヘルプで開く"
+
+msgid "在浏览器中运行云游戏，可以无窗口运行，也能用 Docker 部署。"
+msgstr "ブラウザーでクラウドゲームを実行します。ヘッドレス実行と Docker による運用にも対応しています。"
+
+msgid "在这台电脑上运行 PC 版游戏，支持全部任务。"
+msgstr "この PC でゲームを起動します。すべてのタスクに対応しています。"
+
+msgid "差分宇宙今日已完成"
+msgstr "本日の差分宇宙クリア回数"
+
+msgid "已修改"
+msgstr "変更済み"
+
+msgid "已停用"
+msgstr "無効"
+
+msgid "已添加"
+msgstr "追加済み"
+
+msgid "已添加，点击编辑"
+msgstr "追加済み。クリックして編集"
+
+msgid "开机自启"
+msgstr "ログイン時に起動"
+
+msgid "当前系统不支持这种运行方式"
+msgstr "この OS はこの実行方法に対応していません"
+
+msgid "当前运行方式不支持这项任务，或者已有任务正在运行"
+msgstr "この実行方法では利用できないか、別のタスクが実行中です"
+
+msgid "当前配置无法识别：{error}。请重新选择运行方式。"
+msgstr "設定を認識できません：{error}。実行方法を選び直してください。"
+
+msgid "想找什么？"
+msgstr "何をお探しですか？"
+
+msgid "截屏"
+msgstr "画面キャプチャ"
+
+msgid "打开并定位"
+msgstr "結果を開く"
+
+msgid "打开开关的任务会加入「完整运行」，每项也可以单独立即运行"
+msgstr "有効にしたタスクは「完全実行」に含まれます。個別にすぐ実行することもできます。"
+
+msgid "抽卡"
+msgstr "ガチャ"
+
+msgid "挂机"
+msgstr "放置"
+
+msgid "按键"
+msgstr "キー"
+
+msgid "换个说法试试，比如用功能的名字，或者下面这些常用词："
+msgstr "機能名や、次のよく使われるキーワードで検索してください。"
+
+msgid "换个说法试试：{words}"
+msgstr "別の言葉で検索：{words}"
+
+msgid "搜索「{query}」"
+msgstr "「{query}」の検索結果"
+
+msgid "搜索功能、设置、帮助"
+msgstr "機能・設定・ヘルプを検索"
+
+msgid "搜索设置"
+msgstr "設定を検索"
+
+msgid "搜索设置、任务、帮助和工具"
+msgstr "設定・タスク・ヘルプ・ツールを検索"
+
+msgid "搜索（Ctrl+K）"
+msgstr "検索（Ctrl+K）"
+
+msgid "收起"
+msgstr "折りたたむ"
+
+msgid "无法停用这个渠道"
+msgstr "このチャンネルを無効にできません"
+
+msgid "无法启用这个渠道"
+msgstr "このチャンネルを有効にできません"
+
+msgid "无窗口"
+msgstr "ヘッドレス"
+
+msgid "更多 {count} 个"
+msgstr "さらに {count} 件"
+
+msgid "更新策略"
+msgstr "戦略を更新"
+
+msgid "最小化"
+msgstr "最小化"
+
+msgid "查看教程"
+msgstr "ガイドを開く"
+
+msgid "检查更新的时机、下载来源和代理。"
+msgstr "更新チェックのタイミング、ダウンロード元、プロキシを設定します。"
+
+msgid "正在发送测试消息……"
+msgstr "テストメッセージを送信中…"
+
+msgid "正在测试"
+msgstr "テスト中"
+
+msgid "每个任务做什么，在「任务」页设置。"
+msgstr "各タスクの内容は「タスク」で設定します。"
+
+msgid "没有恢复默认"
+msgstr "初期値に戻せませんでした"
+
+msgid "没有找到「{query}」"
+msgstr "「{query}」は見つかりませんでした"
+
+msgid "没有找到相关设置。"
+msgstr "該当する設定が見つかりませんでした。"
+
+msgid "测试消息已发出，请确认是否收到"
+msgstr "テストメッセージを送信しました。届いているか確認してください。"
+
+msgid "添加 {name}"
+msgstr "{name} を追加"
+
+msgid "添加渠道"
+msgstr "チャンネルを追加"
+
+msgid "清除记录后，下次运行会重新执行这一项"
+msgstr "記録を消去すると、次回はこの項目を再び実行します"
+
+msgid "热键"
+msgstr "ホットキー"
+
+msgid "版本信息、项目主页和社区。"
+msgstr "バージョン情報、プロジェクトのホームページ、コミュニティ。"
+
+msgid "现在无法运行"
+msgstr "現在実行できません"
+
+msgid "画面"
+msgstr "画面"
+
+msgid "界面语言、主题、总览的问候区，以及关闭和记忆窗口的方式。"
+msgstr "表示言語、テーマ、概要の挨拶エリア、ウィンドウを閉じるときの動作と位置の記憶を設定します。"
+
+msgid "等 {count} 项"
+msgstr "など計 {count} 件"
+
+msgid "筛选任务"
+msgstr "タスクを絞り込む"
+
+msgid "编辑 {name}"
+msgstr "{name} を編集"
+
+msgid "自动绑定单聊用户"
+msgstr "個別チャットの相手を自動連携"
+
+msgid "自动绑定群聊"
+msgstr "グループチャットを自動連携"
+
+msgid "自启动"
+msgstr "自動起動"
+
+msgid "设置、账号、运行记录和日志都放在数据文件夹里，可以在这里备份、恢复或导出排查包。"
+msgstr "設定、アカウント、実行履歴、ログはデータフォルダーに保存されます。ここからバックアップ、復元、診断用ファイルの出力ができます。"
+
+msgid "请到对应应用里确认是否收到"
+msgstr "受信先のアプリでメッセージを確認してください"
+
+msgid "请在这张卡片上手动修改"
+msgstr "このカードで手動変更してください"
+
+msgid "输入功能、设置或问题里的词。用平时的说法也行，比如「挂机」「体力」「刷本」。"
+msgstr "機能名や設定、困っていることを入力してください。「放置」「開拓力」「周回」などの言葉でも検索できます。"
+
+msgid "还没有添加渠道。从下面选一个你常用的，填好后点「测试」确认能收到。"
+msgstr "まだチャンネルがありません。下から選んで必要事項を入力し、「テスト」で受信を確認してください。"
+
+msgid "这个渠道不需要填写任何内容。"
+msgstr "このチャンネルには入力項目がありません。"
+
+msgid "选择游戏在哪里运行，以及小助手怎样操作它。切换后从下一次任务开始生效。"
+msgstr "ゲームの実行場所と操作方法を選びます。変更は次のタスクから反映されます。"
+
+msgid "通常不需要修改，排查问题时再来调整。"
+msgstr "通常は変更不要です。問題を調べるときに調整してください。"
+
+msgid "通过 ADB 连接手机或模拟器，支持清体力、每日实训、领奖和历战余响。"
+msgstr "ADB でスマートフォンやエミュレーターに接続し、開拓力消化、デイリー訓練、報酬受取、歴戦余韻を実行します。"
+
+msgid "部分任务"
+msgstr "一部タスク"
+
+msgid "重置"
+msgstr "リセット"
+
+msgid "随时停止、暂停任务或切换自动对话的全局快捷键，小助手在后台时也能用。"
+msgstr "アシスタントがバックグラウンドでも、グローバルホットキーでタスクの停止・一時停止や自動会話の切り替えができます。"
+
+msgid "请在「设置 → 运行方式 → 游戏路径」中选择正确的游戏文件"
+msgstr "「設定 → 実行方法 → ゲームパス」で正しいゲームファイルを選択してください。"
+
+msgid "请按提示处理后重试。仍然失败时，把运行页的日志发给开发者。"
+msgstr "案内に従って再試行してください。解決しない場合は、実行ページのログを開発者に送ってください。"
+
+msgid "工具"
+msgstr "ツール"
+
+msgid "页面"
+msgstr "ページ"
+
+#: module/docs/catalog.py:22
+msgid "每日实训对照表"
+msgstr "デイリー訓練対応表"
+
+#: module/docs/catalog.py:26
+msgid "安卓版教程"
+msgstr "Android 版ガイド"
+
+#: module/docs/catalog.py:29
+msgid "Docker 部署"
+msgstr "Docker での導入"
+
+#: module/docs/catalog.py:30
+msgid "Termux 安卓部署"
+msgstr "Android に Termux で導入"
+
+#: app/help_interface.py:41
+msgid "搜索帮助文档"
+msgstr "ヘルプを検索"
+
+#: app/help_interface.py:43
+msgid "本页目录"
+msgstr "このページの目次"
+
+#: app/help_interface.py:264
+msgid "新"
+msgstr "新着"
+
+#: app/help/page.py:56
+msgid "返回"
+msgstr "戻る"
+
+#: app/help/page.py:54
+msgid "随 {version} 更新"
+msgstr "{version} で更新"
+
+#: app/help/page.py:103
+msgid "这篇文档的排版出了问题，下面按原文显示。"
+msgstr "この文書を整形できなかったため、以下に原文を表示します。"
+
+#: app/help/page.py:161
+msgid "已复制本节的官网链接"
+msgstr "この節の公式サイトへのリンクをコピーしました"
+
+#: app/help/blocks.py:87
+msgid "图片"
+msgstr "画像"
+
+#: app/help/blocks.py:87
+msgid "图片：{name}"
+msgstr "画像：{name}"
+
+#: app/help/blocks.py:102
+msgid "复制本节的官网链接"
+msgstr "この節の公式サイトへのリンクをコピー"
+
+#: app/help/blocks.py:369
+msgid "已复制"
+msgstr "コピーしました"
+
+#: app/help/blocks.py:493
+msgid "详细信息"
+msgstr "詳細"
+
+#: app/help/richtext.py:322
+msgid "前往"
+msgstr "開く"
+
+#: app/help/richtext.py:454
+msgid "前往：{path}"
+msgstr "{path} を開く"
+
+#: app/help/richtext.py:63
+msgid "部分"
+msgstr "一部"
+
+#: app/help/richtext.py:518
+msgid "复制链接地址"
+msgstr "リンクのアドレスをコピー"
+
+#: app/help/search.py:111
+msgid "没有找到相关内容"
+msgstr "検索結果が見つかりませんでした"
+
+#: app/help/search.py:113
+msgid "换个说法试试："
+msgstr "別のキーワードで検索："
+
+#: app/help/search.py:113
+msgid "换个说法，或者少输入几个字试试。"
+msgstr "キーワードを変えるか、数を減らしてみてください。"
+
+#: app/help/search.py:190
+msgid "找到 {count} 个相关小节"
+msgstr "関連する項目：{count} 件"
+
+#: app/help/sections.py:173
+msgid "当前版本"
+msgstr "現在のバージョン"
+
+#: app/help/sections.py:175
+msgid "测试版"
+msgstr "テスト版"
+
+#: app/help/sections.py:183
+msgid "这个版本的说明暂时无法显示。"
+msgstr "このバージョンの更新内容を一時的に表示できません。"
+
+#: app/help/side.py:254
+msgid "没找到答案？"
+msgstr "解決しませんか？"
+
+#: app/help/side.py:263
+msgid "换个说法搜索，或带上日志去 QQ 群提问"
+msgstr "検索語を変えるか、ログを添えて QQ グループで質問してください。"
+
+#: app/help/side.py:255
+msgid "打开常见问题"
+msgstr "よくある質問を開く"
+
+#: app/help/side.py:265
+msgid "QQ 群"
+msgstr "QQ グループ"
+
+#: module/channel_catalog.py:37
+msgid "启用 Windows 通知"
+msgstr "Windows 通知を有効化"
+
+#: module/channel_catalog.py:39
+msgid "启用 企业微信机器人 通知"
+msgstr "WeCom ボット 通知を有効化"
+
+#: module/channel_catalog.py:43
+msgid "启用 QQ 官方机器人 通知"
+msgstr "QQ 公式ボット 通知を有効化"
+
+#: module/channel_catalog.py:49
+msgid "启用 SMTP 通知"
+msgstr "SMTP 通知を有効化"
+
+#: module/channel_catalog.py:61
+msgid "启用 飞书 通知"
+msgstr "Feishu 通知を有効化"
+
+#: module/channel_catalog.py:70
+msgid "启用 Telegram 通知"
+msgstr "Telegram 通知を有効化"
+
+#: module/channel_catalog.py:77
+msgid "启用 钉钉 通知"
+msgstr "DingTalk 通知を有効化"
+
+#: module/channel_catalog.py:81
+msgid "启用 Server酱³ 通知"
+msgstr "Server酱³ 通知を有効化"
+
+#: module/channel_catalog.py:84
+msgid "启用 OneBot 通知"
+msgstr "OneBot 通知を有効化"
+
+#: module/channel_catalog.py:90
+msgid "启用 Server酱·Turbo版 通知"
+msgstr "Server酱・Turbo 版 通知を有効化"
+
+#: module/channel_catalog.py:95
+msgid "启用 Bark 通知"
+msgstr "Bark 通知を有効化"
+
+#: module/channel_catalog.py:108
+msgid "启用 企业微信应用 通知"
+msgstr "WeCom アプリ 通知を有効化"
+
+#: module/channel_catalog.py:115
+msgid "启用 Pushplus 通知"
+msgstr "Pushplus 通知を有効化"
+
+#: module/channel_catalog.py:121
+msgid "启用 Discord 通知"
+msgstr "Discord 通知を有効化"
+
+#: module/channel_catalog.py:127
+msgid "启用 MeoW 通知"
+msgstr "MeoW 通知を有効化"
+
+#: module/channel_catalog.py:130
+msgid "启用 Gotify 通知"
+msgstr "Gotify 通知を有効化"
+
+#: module/channel_catalog.py:135
+msgid "启用 KOOK 通知"
+msgstr "KOOK 通知を有効化"
+
+#: module/channel_catalog.py:140
+msgid "启用 Qmsg 通知"
+msgstr "Qmsg 通知を有効化"
+
+#: module/channel_catalog.py:145
+msgid "启用 Matrix 通知"
+msgstr "Matrix 通知を有効化"
+
+#: module/channel_catalog.py:154
+msgid "启用 Pushdeer 通知"
+msgstr "Pushdeer 通知を有効化"
+
+#: module/channel_catalog.py:158
+msgid "启用 Go-cqhttp 通知"
+msgstr "Go-cqhttp 通知を有効化"
+
+#: module/channel_catalog.py:165
+msgid "启用 Webhook 通知"
+msgstr "Webhook 通知を有効化"
+
+#: module/channel_catalog.py:171
+msgid "启用 自定义通知 通知"
+msgstr "カスタム通知を有効化"
+
+#: module/gacha/pools.py
+msgid "角色池"
+msgstr "キャラクター跳躍"
+
+#: module/gacha/pools.py
+msgid "光锥池"
+msgstr "光円錐跳躍"
+
+#: module/gacha/pools.py
+msgid "常驻池"
+msgstr "恒常跳躍"
+
+#: module/gacha/pools.py
+msgid "新手池"
+msgstr "初心者跳躍"
+
+#: app/content/gacha_model.py
+msgid "类型"
+msgstr "種類"
+
+#: app/content/gacha_model.py
+msgid "第几抽（保底内）"
+msgstr "天井内の連数"
+
+#: module/gacha/store.py:44
+msgid "{date} 更新"
+msgstr "{date} 更新"
+
+#: module/gacha/store.py:41
+msgid "今天 {time} 更新"
+msgstr "今日 {time} 更新"
+
+#: module/gacha/store.py:41
+msgid "昨天 {time} 更新"
+msgstr "昨日 {time} 更新"
+
+#: module/gacha/update.py:22
+msgid "从游戏更新抽卡记录仅支持 Windows。"
+msgstr "ゲームからの跳躍履歴の更新は Windows でのみ利用できます。"
+
+#: utils/gacha_transaction.py:33
+msgid "导入中断后文件又发生了变化，请核对原件与备份：{path}"
+msgstr "インポート中断後にファイルが変更されました。元のファイルとバックアップを確認してください：{path}"
+
+#: module/gacha/transfer.py:31
+msgid "导入文件中有重复的星铁 UID，请核对文件。"
+msgstr "同じスターレイルの UID が複数あります。ファイルを確認してください。"
+
+#: app/content/gacha_dialogs.py:45
+msgid "导入方式：保留已有记录，补充新记录，自动跳过重复内容。"
+msgstr "既存の履歴を残して新しい履歴を追加し、重複は自動でスキップします。"
+
+#: module/gacha/store.py:102
+msgid "当前以只读方式运行，无法修改抽卡记录。"
+msgstr "読み取り専用モードでは跳躍履歴を変更できません。"
+
+#: utils/gacha_transaction.py:39
+msgid "抽卡导入备份名称无效：{path}"
+msgstr "跳躍履歴のインポート用バックアップ名が無効です：{path}"
+
+#: module/gacha/store.py:115
+msgid "抽卡导入尚未完成，请在正常启动小助手后重试。"
+msgstr "跳躍履歴のインポートが完了していません。小助手を通常起動してから再試行してください。"
+
+#: utils/gacha_transaction.py:28
+msgid "抽卡导入恢复记录无效：{path}"
+msgstr "跳躍履歴のインポート復元ファイルが無効です：{path}"
+
+#: utils/gacha_transaction.py:43
+msgid "抽卡记录备份校验失败：{path}"
+msgstr "跳躍履歴のバックアップを検証できませんでした：{path}"
+
+#: module/gacha/transfer.py:25
+msgid "文件中没有可导入的星铁账号。"
+msgstr "ファイルにインポート可能なスターレイルのアカウントがありません。"
+
+#: module/gacha/store.py:66
+msgid "文件名中的 UID 与记录中的 UID 不一致。"
+msgstr "ファイル名の UID が履歴内の UID と一致しません。"
+
+#: app/content/gacha_dialogs.py:99
+msgid "文件已导出，无法打开所在文件夹。"
+msgstr "エクスポートは完了しましたが、保存先フォルダーを開けませんでした。"
+
+#: module/gacha/store.py:131
+msgid "旧抽卡记录尚未合并，请先在抽卡页查看文件：{path}"
+msgstr "以前の跳躍履歴が未統合です。跳躍履歴ページでファイルを確認してください：{path}"
+
+#: module/gacha/update.py:50
+msgid "未知的更新方式。"
+msgstr "更新方法を認識できません。"
+
+#: module/gacha/fetch.py:220
+msgid "本页记录的账号、语言或卡池不一致，已停止更新。"
+msgstr "このページのアカウント、言語、または跳躍の種類が一致しないため、更新を中止しました。"
+
+#: app/content/gacha_dialogs.py:44
+msgid "此操作会用导入文件中的记录替换目前保存的全部记录。原有记录不会保留在当前列表中。"
+msgstr "対象アカウントの保存済み履歴はすべてインポートするファイルの内容に置き換わります。以前の履歴は現在の一覧に残りません。"
+
+#: module/gacha/transfer.py:155
+msgid "没有可导出的抽卡记录。"
+msgstr "エクスポートできる跳躍履歴がありません。"
+
+#: module/gacha/update.py:58
+msgid "游戏未返回含 UID 的抽卡记录。"
+msgstr "ゲームから UID を含む跳躍履歴を取得できませんでした。"
+
+#: module/gacha/fetch.py:214
+msgid "记录分页没有前进，请重新打开游戏抽卡记录后重试。"
+msgstr "次のページを取得できませんでした。ゲーム内の跳躍履歴を開き直して再試行してください。"
+
+#: module/gacha/transfer.py:28
+msgid "请选择 UIGF v4 格式的文件。"
+msgstr "UIGF v4 形式のファイルを選択してください。"
+
+#: module/gacha/transfer.py:143
+msgid "请选择抽卡记录数据目录以外的位置导出。"
+msgstr "跳躍履歴のデータフォルダー以外の場所にエクスポートしてください。"
+
+#: module/gacha/transfer.py:145
+msgid "请选择要导出的格式和 UID。"
+msgstr "エクスポートする形式と UID を選択してください。"
+
+#: module/gacha/store.py:97
+msgid "请选择要操作的 UID。"
+msgstr "対象の UID を選択してください。"
+
+#: app/content/gacha_dialogs.py:109
+msgid "账号 UID：{uid}"
+msgstr "アカウント UID：{uid}"
+
+#: app/content/gacha_dialogs.py:36
+msgid "账号 UID：{uid}\n现有记录：{existing} 条\n文件记录：{incoming} 条\n新增记录：{added} 条\n重复记录：{duplicates} 条\n导入后：{total} 条"
+msgstr "アカウント UID：{uid}\n既存の履歴：{existing} 件\nファイル内の履歴：{incoming} 件\n新規：{added} 件\n重複：{duplicates} 件\nインポート後：{total} 件"
+
+#: app/content/gacha_update.py:71
+msgid "还没有成功更新过抽卡记录。"
+msgstr "跳躍履歴の更新はまだ一度も完了していません。"
+
+#: module/gacha/store.py:83
+msgid "抽卡记录文件无法解析，请检查文件或从备份恢复。"
+msgstr "跳躍履歴ファイルを読み取れません。ファイルを確認するか、バックアップから復元してください。"
+
+#: module/gacha/update.py:70
+msgid "游戏返回的抽卡记录不完整，请重新打开跃迁记录后重试。"
+msgstr "ゲームから取得した跳躍履歴が不完全です。跳躍履歴を開き直して再試行してください。"
+
+#: utils/data_backup.py:151
+msgid "所选目录的抽卡导入尚未完成，请先在原安装中打开抽卡页。"
+msgstr "選択したフォルダーで跳躍履歴のインポートが完了していません。元のインストール先で跳躍履歴ページを開いてください。"
+
+#: app/gacha/cards.py:135
+msgid "当前保底"
+msgstr "現在の天井カウント"
+
+#: app/gacha/cards.py:136
+msgid "{category} · {limit} 抽保底"
+msgstr "{category} · {limit}回で確定"
+
+#: app/gacha/cards.py:137
+msgid "四星 {count} / {limit}"
+msgstr "星4 {count} / {limit}"
+
+#: app/gacha/cards.py:140
+msgid "抽 · 已结束"
+msgstr "回 · 終了"
+
+#: app/gacha/cards.py:142
+msgid "新手跃迁最多 {limit} 抽，已经抽完"
+msgstr "初心者跳躍は全{limit}回終了しました"
+
+#: app/gacha/cards.py:146
+msgid "抽 · 已获得五星"
+msgstr "回 · 星5獲得済み"
+
+#: app/gacha/cards.py:148
+msgid "还能再抽 {pulls} 抽"
+msgstr "残り{pulls}回"
+
+#: app/gacha/cards.py:150
+msgid "抽未出五星"
+msgstr "回連続で星5なし"
+
+#: app/gacha/cards.py:152
+msgid "距离保底 {pulls} 抽（约 {jade} 星琼）"
+msgstr "天井まであと{pulls}回（星玉約{jade}個）"
+
+#: app/gacha/cards.py:183
+msgid "五星出货分布"
+msgstr "星5獲得までの回数分布"
+
+#: app/gacha/cards.py:184
+msgid "按出金时的抽数分段"
+msgstr "星5が出た回数別"
+
+#: app/gacha/cards.py:189
+msgid "另有 {count} 个五星超过 {limit} 抽，可能是记录不完整"
+msgstr "{limit}回を超えて獲得した星5がほかに{count}件あります。履歴の一部が欠けている可能性があります。"
+
+#: app/gacha/cards.py:218
+msgid "五星记录"
+msgstr "星5獲得履歴"
+
+#: app/gacha/cards.py:218
+msgid "最近在前"
+msgstr "新しい順"
+
+#: app/gacha/cards.py:219
+msgid "打开明细表 ›"
+msgstr "明細を開く ›"
+
+#: app/gacha/cards.py:230
+msgid "这个卡池还没有记录"
+msgstr "この跳躍の履歴はまだありません"
+
+#: app/gacha/cards.py:232
+msgid "还没有五星，表格中可按星级、名称筛选"
+msgstr "星5はまだありません。明細ではレア度や名前で絞り込めます"
+
+#: app/gacha/cards.py:234
+msgid "共 {count} 个五星，这里显示最近 {shown} 个"
+msgstr "星5全{count}件のうち、最新{shown}件を表示"
+
+#: app/gacha/cards.py:236
+msgid "共 {count} 个五星 · 表格中可按星级、名称筛选"
+msgstr "星5は全{count}件 · 明細でレア度や名前を絞り込み"
+
+#: app/gacha/cards.py:282
+msgid "还没有记录"
+msgstr "履歴はまだありません"
+
+#: app/gacha/cards.py:283
+msgid "{start} 至 {end}"
+msgstr "{start}～{end}"
+
+#: app/gacha/cards.py:285
+msgid "总抽数"
+msgstr "合計跳躍回数"
+
+#: app/gacha/cards.py:287
+msgid "最近一次：{date}"
+msgstr "直近：{date}"
+
+#: app/gacha/cards.py:289
+msgid "还没有五星"
+msgstr "星5はまだありません"
+
+#: app/gacha/cards.py:290
+msgid "五星"
+msgstr "星5"
+
+#: app/gacha/cards.py:291
+msgid "出率 {rate}"
+msgstr "出現率 {rate}"
+
+#: app/gacha/cards.py:293
+msgid "平均出金"
+msgstr "星5までの平均"
+
+#: app/gacha/cards.py:294
+msgid "最快 {fast} 抽 · 最慢 {slow} 抽"
+msgstr "最短{fast}回 · 最長{slow}回"
+
+#: app/gacha/cards.py:296
+msgid "出过五星后显示"
+msgstr "星5獲得後に表示"
+
+#: app/gacha/cards.py:298
+msgid "平均每 {pulls} 抽一个四星"
+msgstr "平均{pulls}回で星4を獲得"
+
+#: app/gacha/cards.py:300
+msgid "还没有四星"
+msgstr "星4はまだありません"
+
+#: app/gacha/cards.py:301
+msgid "四星"
+msgstr "星4"
+
+#: app/gacha/charts.py:123
+msgid "{pulls} 概率提升"
+msgstr "{pulls}回から確率上昇"
+
+#: app/gacha/charts.py:147
+msgid "{first}～{last} 抽：{count} 个五星"
+msgstr "{first}～{last}回目：星5が{count}件"
+
+#: app/gacha/charts.py:296
+msgid "日期"
+msgstr "日付"
+
+#: app/gacha/charts.py:297
+msgid "抽数"
+msgstr "回数"
+
+#: app/gacha/charts.py:320
+msgid "用了多少抽（竖线为 {pulls} 抽）"
+msgstr "獲得までの回数（縦線は{pulls}回）"
+
+#: app/gacha/charts.py:320
+msgid "用了多少抽"
+msgstr "獲得までの回数"
+
+#: app/gacha/charts.py:380
+msgid "{name}：用了 {pulls} 抽，{time}"
+msgstr "{name}：{pulls}回目、{time}"
+
+#: app/gacha/charts.py:91
+msgid "第 {soft} 抽起五星概率提升，第 {limit} 抽必定获得五星"
+msgstr "{soft}回目から星5の確率が上がり、{limit}回以内に星5が確定します。"
+
+#: app/gacha/charts.py:93
+msgid "{limit} 抽内必定获得一个五星"
+msgstr "{limit}回以内に星5が確定します"
+
+#: app/gacha/chips.py:135
+msgid "{count} · 已结束"
+msgstr "{count} · 終了"
+
+#: app/gacha/detail.py:111
+msgid "返回统计"
+msgstr "統計に戻る"
+
+#: app/gacha/detail.py:112
+msgid "三星"
+msgstr "星3"
+
+#: app/gacha/detail.py:114
+msgid "搜索名称"
+msgstr "名前で検索"
+
+#: app/gacha/detail.py:118
+msgid "全部时间"
+msgstr "全期間"
+
+#: app/gacha/detail.py:118
+msgid "最近 30 天"
+msgstr "過去30日"
+
+#: app/gacha/detail.py:118
+msgid "最近 90 天"
+msgstr "過去90日"
+
+#: app/gacha/detail.py:118
+msgid "最近一年"
+msgstr "過去1年"
+
+#: app/gacha/detail.py:121
+msgid "全部卡池"
+msgstr "全ての跳躍"
+
+#: app/gacha/detail.py:122
+msgid "没有符合条件的记录"
+msgstr "条件に一致する履歴はありません"
+
+#: app/gacha/detail.py:153
+msgid "共 {count} 条"
+msgstr "全{count}件"
+
+#: app/gacha/detail.py:155
+msgid "筛选出 {count} 条，共 {total} 条"
+msgstr "全{total}件中{count}件"
+
+#: app/gacha/empty.py:111
+msgid "还没有抽卡记录"
+msgstr "跳躍履歴はまだありません"
+
+#: app/gacha/empty.py:113
+msgid "小助手读取的是游戏里的跃迁记录页，不会改动游戏数据。三步就好："
+msgstr "小助手はゲーム内の跳躍履歴を読み取るだけです。次の3ステップで取得できます。"
+
+#: app/gacha/empty.py:115
+msgid "这台电脑上不能从游戏更新抽卡记录，可以导入其他工具导出的文件。"
+msgstr "この端末ではゲームから跳躍履歴を更新できません。他のツールでエクスポートしたファイルをインポートできます。"
+
+#: app/gacha/empty.py:116
+msgid "在游戏里打开「跃迁」→「查看详情」→「跃迁记录」，等记录页加载出来"
+msgstr "ゲーム内で「跳躍」→「詳細表示」→「跳躍履歴」を開き、履歴が表示されるまで待ちます。"
+
+#: app/gacha/empty.py:117
+msgid "回到这里点「更新记录」，第一次会读取全部历史，可能需要一两分钟"
+msgstr "ここに戻り「履歴を更新」を押します。初回は履歴を全て読み込むため、1～2分かかることがあります。"
+
+#: app/gacha/empty.py:118
+msgid "换过电脑？也可以导入其他工具导出的 UIGF / SRGF 文件"
+msgstr "パソコンを替えた場合は、他のツールから書き出したUIGF／SRGFファイルも使えます。"
+
+#: app/gacha/empty.py:122
+msgid "更新记录"
+msgstr "履歴を更新"
+
+#: app/gacha/empty.py:124
+msgid "导入 UIGF / SRGF 文件"
+msgstr "UIGF／SRGFをインポート"
+
+#: app/warp_interface.py:114
+msgid "导入 / 导出"
+msgstr "入出力"
+
+#: app/warp_interface.py:115
+msgid "更多操作"
+msgstr "その他の操作"
+
+#: app/warp_interface.py:177
+msgid "UID {uid}"
+msgstr "UID {uid}"
+
+#: app/warp_interface.py:179
+msgid "还没有数据"
+msgstr "データはまだありません"
+
+#: app/warp_interface.py:199
+msgid "有 {count} 个抽卡记录文件没能读取，记录暂时不会显示："
+msgstr "読み込めない跳躍履歴ファイルが{count}件あるため、該当する履歴は表示できません。"
+
+#: app/warp_interface.py:202
+msgid "还有 {count} 个"
+msgstr "ほか{count}件"
+
+#: app/warp_interface.py:204
+msgid "打开所在文件夹"
+msgstr "保存先フォルダーを開く"
+
+#: app/warp_interface.py:225
+msgid "只获取新记录"
+msgstr "新しい履歴のみ取得"
+
+#: app/warp_interface.py:226
+msgid "重新获取全部记录"
+msgstr "全ての履歴を再取得"
+
+#: app/warp_interface.py:229
+msgid "导入 UIGF / SRGF 文件…"
+msgstr "UIGF／SRGFをインポート…"
+
+#: app/warp_interface.py:232
+msgid "导出 UIGF"
+msgstr "UIGFでエクスポート"
+
+#: app/warp_interface.py:234
+msgid "导出全部 {count} 个 UID（UIGF）"
+msgstr "全{count}件のUIDをエクスポート（UIGF）"
+
+#: app/warp_interface.py:235
+msgid "导出 SRGF"
+msgstr "SRGFでエクスポート"
+
+#: app/warp_interface.py:235
+msgid "导出 Excel"
+msgstr "Excelでエクスポート"
+
+#: app/warp_interface.py:242
+msgid "复制抽卡链接"
+msgstr "跳躍履歴のリンクをコピー"
+
+#: app/warp_interface.py:245
+msgid "更新一次记录后可以复制"
+msgstr "一度履歴を更新するとコピーできます"
+
+#: app/warp_interface.py:248
+msgid "打开数据文件夹"
+msgstr "データフォルダーを開く"
+
+#: app/warp_interface.py:250
+msgid "清空这个 UID 的记录…"
+msgstr "このUIDの履歴を消去…"
+
+#: app/warp_interface.py:255
+msgid "UID {uid} · {count} 抽"
+msgstr "UID {uid} · {count}回"
+
+#: app/warp_interface.py:276
+msgid "不能从游戏更新"
+msgstr "ゲームから更新できません"
+
+#: app/warp_interface.py:284
+msgid "正在更新…"
+msgstr "更新中…"
+
+#: app/warp_interface.py:289
+msgid "正在获取跃迁记录…"
+msgstr "跳躍履歴を取得中…"
+
+#: app/warp_interface.py:295
+msgid "{title}：{text}"
+msgstr "{title}：{text}"
+
+#: app/warp_interface.py:302
+msgid "UID {uid} 新增 {count} 条记录"
+msgstr "UID {uid} に{count}件の履歴を追加しました"
+
+#: app/warp_interface.py:303
+msgid "UID {uid} 没有新记录"
+msgstr "UID {uid} の新しい履歴はありません"
+
+#: app/warp_interface.py:304
+msgid "抽卡记录已更新"
+msgstr "跳躍履歴を更新しました"
+
+#: app/warp_interface.py:315
+msgid "导入成功"
+msgstr "インポートしました"
+
+#: app/warp_interface.py:315
+msgid "UID {uids}"
+msgstr "UID {uids}"
+
+#: app/warp_interface.py:340
+msgid "已清空"
+msgstr "履歴を消去しました"
+
+#: app/warp_interface.py:340
+msgid "UID {uid} 的记录已清空，原文件的备份留在数据文件夹里"
+msgstr "UID {uid} の履歴を消去しました。元のファイルのバックアップはデータフォルダーにあります。"
+
+#: app/warp_interface.py:342
+msgid "清空失败"
+msgstr "履歴を消去できませんでした"
+
+#: app/warp_interface.py:348
+msgid "复制失败"
+msgstr "コピーできませんでした"
+
+#: app/warp_interface.py:350
+msgid "已复制抽卡链接"
+msgstr "跳躍履歴のリンクをコピーしました"
+
+#: app/warp_interface.py:350
+msgid "链接里有临时登录凭据，只发给你信任的工具"
+msgstr "リンクには一時的な認証情報が含まれます。信頼できるツールにのみ共有してください。"
+
+#: app/run/history.py:83
+msgid "{count} 个账号"
+msgstr "アカウント数：{count}"
+
+#: app/accounts/detail.py:449
+msgid "{day} 日"
+msgstr "{day}日"
+
+#: module/overview/snapshot.py:40
+msgid "{name} · 第 {index} / {total} 个账号"
+msgstr "{name}・{index}／{total} アカウント目"
+
+#: module/accounts/differences.py:46
+msgid "{name} · 队伍 {number}"
+msgstr "{name}・チーム {number}"
+
+#: module/accounts/differences.py:54
+msgid "{name} × {count}"
+msgstr "{name} × {count}"
+
+#: utils/runs.py:418
+msgid "{name} 第 {index} / {total} 次"
+msgstr "{name}・{index}／{total} 回目"
+
+#: module/overview/run_data.py:190
+msgid "{name}（{reason}）"
+msgstr "{name}（{reason}）"
+
+#: app/content/run_models.py:362
+msgid "{name}（副本）"
+msgstr "{name}（コピー）"
+
+#: module/accounts/messages.py:86
+msgid "{result}（{reason}）"
+msgstr "{result}（{reason}）"
+
+#: app/accounts/dialogs.py:159
+msgid "· 「{name}」沿用现在的完成状态，其他账号从空的状态开始。"
+msgstr "・「{name}」は現在の進捗を引き継ぎます。他のアカウントは未実行から始まります。"
+
+#: app/accounts/dialogs.py:160
+msgid "· 现在的任务设置成为共享方案，每个账号可以改用独立方案。"
+msgstr "・現在のタスク設定が共有プランになります。アカウントごとに個別プランも選べます。"
+
+#: app/accounts/dialogs.py:161
+msgid "· 轮流运行时按顺序切换：关闭游戏、写回登录、重新启动并核对 UID。"
+msgstr "・順番にゲームを閉じ、ログイン情報を復元して再起動し、UIDを確認します。"
+
+#: app/content/settings/after_run.py:42
+msgid "“退出”会关闭游戏。需要定时运行时，请打开「运行」页的「定时计划」。"
+msgstr "「終了」でゲームを閉じます。予約実行は「実行」→「スケジュール」で設定できます。"
+
+#: app/accounts/editing.py:37
+msgid "「{name}」使用共享方案"
+msgstr "「{name}」は共有プランを使用中"
+
+#: app/accounts/dialogs.py:136
+msgid "「{name}」的登录过期时，小助手会在登录界面自动输入下面的账号密码。"
+msgstr "「{name}」のログインが期限切れになると、ログイン画面に以下のアカウントとパスワードを自動入力します。"
+
+#: app/content/run_models.py:274
+msgid "上一项完成后"
+msgstr "前のタスクの終了後"
+
+#: app/run_interface.py:112
+msgid "上次：{detail}"
+msgstr "前回：{detail}"
+
+#: app/content/run_models.py:315
+msgid "下次定时：{time} {name}"
+msgstr "次回：{time} {name}"
+
+#: app/accounts/detail.py:174
+msgid "不参与轮流"
+msgstr "順次実行の対象外"
+
+#: app/run/cards.py:363
+msgid "不执行完成后操作"
+msgstr "終了時の操作をスキップ"
+
+#: app/run/cards.py:27
+msgid "中断"
+msgstr "中断"
+
+#: module/accounts/reasons.py:5
+msgid "临时画质尚未恢复"
+msgstr "一時的な画質設定がまだ元に戻っていません"
+
+#: app/run/history.py:27
+msgid "今天"
+msgstr "今日"
+
+#: module/accounts/status.py:15
+msgid "今日失败"
+msgstr "今日は失敗"
+
+#: module/accounts/status.py:135
+msgid "今日失败（{reason}）"
+msgstr "今日は失敗（{reason}）"
+
+#: module/accounts/status.py:15
+msgid "今日完成"
+msgstr "今日は完了"
+
+#: module/accounts/status.py:15
+msgid "今日未运行"
+msgstr "今日は未実行"
+
+#: module/accounts/status.py:15
+msgid "今日部分完成"
+msgstr "今日は一部完了"
+
+#: app/accounts_interface.py:111
+msgid "从另一个游戏客户端导入…"
+msgstr "別のクライアントから取り込む…"
+
+#: app/accounts/switcher.py:134
+msgid "从当前游戏登录导入"
+msgstr "現在のログイン情報を取り込む"
+
+#: app/content/account_model.py:302
+msgid "任务或账号操作正在运行，请稍后再试"
+msgstr "タスクまたはアカウントの操作中です。しばらくしてからお試しください。"
+
+#: app/accounts/detail.py:359
+msgid "任务方案"
+msgstr "タスクプラン"
+
+#: app/accounts/detail.py:154
+msgid "任务方案：共享"
+msgstr "共有プラン"
+
+#: app/accounts/detail.py:154
+msgid "任务方案：独立"
+msgstr "個別プラン"
+
+#: app/content/account_model.py:328
+msgid "任务正在运行，结束后才能更改多账号开关"
+msgstr "順次実行の設定はタスク終了後に変更できます。"
+
+#: app/run_interface.py:57
+msgid "任务运行时，日志会显示在这里"
+msgstr "タスクを実行すると、ここにログが表示されます"
+
+#: app/accounts/detail.py:160
+msgid "任务页和总览改为查看、编辑这个账号；游戏没在运行时，同时切换登录"
+msgstr "タスクと概要をこのアカウントに切り替えます。ゲームを終了している場合はログインも切り替えます。"
+
+#: app/accounts/dialogs.py:168
+msgid "会删除它的登录快照、保存的密码、独立方案和完成状态。抽卡记录和运行记录不受影响，游戏账号本身也不受影响。"
+msgstr "ログインスナップショット、保存したパスワード、個別プラン、進捗を削除します。ゲームアカウント、ワープ履歴、実行履歴は保持されます。"
+
+#: app/accounts/detail.py:246
+msgid "使用 Windows 加密保存在本机，仅当前 Windows 用户可以解密"
+msgstr "このPCに暗号化して保存します。復号できるのは現在のWindowsユーザーだけです。"
+
+#: app/accounts/dialogs.py:142
+msgid "使用 Windows 加密保存在本机，仅当前 Windows 用户可以解密。自动输入密码有一定风险，需要验证码时仍要你自己处理。"
+msgstr ""
+"WindowsがこのPCに暗号化して保存し、現在のユーザーだけが復号できます。自動入力にはリスクがあります。認証コードはご自身で入力してください。"
+
+#: app/accounts/detail.py:259
+msgid "使用「运行方式」里设置的游戏路径"
+msgstr "「実行モード」のゲームパスを使用"
+
+#: app/accounts/detail.py:360
+msgid "使用哪套任务设置"
+msgstr "使用するタスク設定を選択"
+
+#: app/accounts/dialogs.py:90
+msgid "例如：小号"
+msgstr "例：サブアカウント"
+
+#: app/run/log_view.py:22
+msgid "信息"
+msgstr "情報"
+
+#: app/accounts/dialogs.py:120
+msgid "修改备注名"
+msgstr "表示名を変更"
+
+#: app/run/cards.py:323
+msgid "停止整轮；箭头里可以只跳过当前账号"
+msgstr "順次実行をすべて停止します。矢印から現在のアカウントだけをスキップできます。"
+
+#: app/accounts_interface.py:218
+msgid "先添加至少一个账号，再打开多账号轮流"
+msgstr "アカウントを追加してから順次実行を有効にしてください"
+
+#: app/run/cards.py:363
+msgid "全部完成后：{action}"
+msgstr "全アカウント終了後：{action}"
+
+#: app/run/history.py:252
+msgid "全部结果"
+msgstr "すべての結果"
+
+#: app/run/history.py:248
+msgid "全部账号"
+msgstr "全アカウント"
+
+#: app/content/run_models.py:272
+msgid "全部账号轮流"
+msgstr "全アカウントを順番に実行"
+
+#: app/accounts/detail.py:363
+msgid "共享方案"
+msgstr "共有プラン"
+
+#: app/accounts/detail.py:311
+msgid "共享方案：{value}"
+msgstr "共有プラン：{value}"
+
+#: app/pages/decorations.py:91
+msgid "共享方案：{value}。悬停卡片可以恢复共享"
+msgstr "共有プラン：{value}。カードにカーソルを合わせると共有設定に戻せます。"
+
+#: app/content/run_controller.py:2216
+msgid "关闭助手"
+msgstr "アシスタントを終了"
+
+#: app/accounts/detail.py:268
+msgid "其他服务器的刷新时间换算成本机时间后可能不同"
+msgstr "サーバーによって現地時間でのリセット時刻が異なります"
+
+#: app/content/run_controller.py:2220
+msgid "切换到「{name}」继续"
+msgstr "「{name}」に切り替えて続行"
+
+#: app/content/run_controller.py:2219
+msgid "切换到「{name}」继续，最后{action}"
+msgstr "「{name}」に切り替えて続行し、最後に{action}"
+
+#: app/accounts/detail.py:158
+msgid "切换到此账号"
+msgstr "このアカウントに切り替える"
+
+#: app/accounts/detail.py:163
+msgid "切换登录"
+msgstr "ログイン切替"
+
+#: module/accounts/reasons.py:5
+msgid "切换登录失败"
+msgstr "ログインの切り替えに失敗しました"
+
+#: app/content/account_model.py:400
+msgid "切换登录需要 Windows 本地客户端"
+msgstr "ログインの切り替えにはWindowsのローカルクライアントが必要です"
+
+#: app/accounts/switcher.py:93
+msgid "切换要查看和编辑的账号"
+msgstr "表示・編集するアカウントを選択"
+
+#: app/accounts/editing.py:39
+msgid "切换账号"
+msgstr "アカウント切替"
+
+#: app/accounts/detail.py:239
+msgid "切换账号时写回游戏的登录信息 · 上次保存于{time}"
+msgstr "切り替え時にログインを復元します・最終保存：{time}"
+
+#: app/run/schedule.py:420
+msgid "删除…"
+msgstr "削除…"
+
+#: app/accounts/dialogs.py:167
+msgid "删除「{name}」？"
+msgstr "「{name}」を削除しますか？"
+
+#: app/run/schedule.py:403
+msgid "删除定时计划"
+msgstr "スケジュールを削除"
+
+#: app/accounts_interface.py:290
+msgid "删除账号"
+msgstr "アカウントを削除"
+
+#: app/accounts/detail.py:178
+msgid "删除账号…"
+msgstr "アカウントを削除…"
+
+#: app/accounts_interface.py:100
+msgid "刷新时间"
+msgstr "リセット時刻"
+
+#: module/accounts/differences.py:86
+msgid "助燃券连续挑战"
+msgstr "点火チケットで連続挑戦"
+
+#: app/accounts/detail.py:174
+msgid "参与轮流"
+msgstr "順次実行に含める"
+
+#: app/accounts/detail.py:167
+msgid "只运行此账号"
+msgstr "このアカウントのみ実行"
+
+#: module/accounts/reasons.py:5
+msgid "启动或运行账号时出错"
+msgstr "このアカウントの起動または実行に失敗しました"
+
+#: module/overview/labels.py:4
+msgid "启动时自动运行"
+msgstr "起動時に自動実行"
+
+#: app/accounts/empty.py:84
+msgid "启动游戏，登录要添加的账号，完全进入游戏（看到角色）"
+msgstr "ゲームを起動し、追加したいアカウントでログインしてキャラクターが表示されるまで待ちます。"
+
+#: app/run/log_view.py:217
+msgid "回到最新"
+msgstr "最新へ"
+
+#: app/accounts/empty.py:85
+msgid "回到这里点「添加账号」，保存它的登录"
+msgstr "ここに戻り、「アカウントを追加」でログインを保存します。"
+
+#: app/accounts/account_list.py:24
+msgid "国服"
+msgstr "中国版"
+
+#: app/accounts/account_list.py:24
+msgid "国际服"
+msgstr "グローバル版"
+
+#: app/accounts/empty.py:86
+msgid "在游戏里换一个账号，再添加一次；全部添加好后打开多账号轮流"
+msgstr "ゲームで次のアカウントにログインし、同じように追加します。すべて保存したら順次実行を有効にします。"
+
+#: app/accounts/detail.py:251
+msgid "填写账号密码"
+msgstr "アカウントとパスワードを入力"
+
+#: app/accounts/dialogs.py:92
+msgid "备注名"
+msgstr "表示名"
+
+#: app/run/schedule.py:418
+msgid "复制一份"
+msgstr "複製"
+
+#: app/content/run_models.py:280
+msgid "外部程序 {name}"
+msgstr "外部プログラム：{name}"
+
+#: module/search/__init__.py:100
+msgid "多账号轮流"
+msgstr "アカウント順次実行"
+
+#: app/content/account_model.py:234
+msgid "多账号轮流仅支持 Windows 本地客户端，当前按单账号运行"
+msgstr "順次実行はWindowsのローカルクライアント専用です。ここでは単一アカウントで実行します。"
+
+#: app/accounts/panel.py:56
+msgid "多账号轮流运行"
+msgstr "アカウントの順次実行"
+
+#: module/accounts/messages.py:79
+msgid "多账号轮流运行结束"
+msgstr "順次実行が終了しました"
+
+#: app/run/history.py:253
+msgid "失败和异常"
+msgstr "失敗と異常"
+
+#: module/accounts/differences.py:86
+msgid "姬子试用"
+msgstr "お試し姫子"
+
+#: module/accounts/reasons.py:5
+msgid "子运行记录缺失"
+msgstr "子の実行記録がありません"
+
+#: module/accounts/reasons.py:5
+msgid "子进程意外退出"
+msgstr "子プロセスが予期せず終了しました"
+
+#: app/content/run_models.py:282
+msgid "完成后{action}"
+msgstr "終了後に{action}"
+
+#: app/run_interface.py:106
+msgid "完成后操作：{action}，{seconds} 秒后执行"
+msgstr "終了時の操作：{seconds}秒後に{action}"
+
+#: app/content/run_models.py:388
+msgid "定时计划已删除"
+msgstr "スケジュールを削除しました"
+
+#: app/accounts/dialogs.py:141
+msgid "密码"
+msgstr "パスワード"
+
+#: module/accounts/differences.py:86
+msgid "差分宇宙队伍类型"
+msgstr "差分宇宙のチームタイプ"
+
+#: app/accounts/detail.py:247
+msgid "已保存"
+msgstr "保存済み"
+
+#: app/accounts/switcher.py:93
+msgid "已保存的账号"
+msgstr "保存したアカウント"
+
+#: app/content/account_model.py:411
+msgid "已切换查看的账号，下次运行时切换登录"
+msgstr "表示するアカウントを変更しました。次の実行時にログインも切り替わります。"
+
+#: app/content/account_model.py:418
+msgid "已切换登录"
+msgstr "ログインを切り替えました"
+
+#: app/accounts_interface.py:277
+msgid "已加密保存"
+msgstr "暗号化して保存済み"
+
+#: app/content/run_models.py:319
+msgid "已启用 {count} 个按时计划"
+msgstr "有効な時刻指定スケジュール：{count}件"
+
+#: module/accounts/reasons.py:5
+msgid "已有任务在运行"
+msgstr "別のタスクを実行中です"
+
+#: app/run/schedule.py:331
+msgid "已有任务在运行时"
+msgstr "他のタスクの実行中"
+
+#: app/accounts/dialogs.py:109
+msgid "已经保存过，会更新它的登录快照"
+msgstr "保存済みのため、ログインスナップショットを更新します。"
+
+#: app/run/cards.py:384
+msgid "已运行 {time}"
+msgstr "経過：{time}"
+
+#: app/content/account_model.py:268
+msgid "开拓者"
+msgstr "開拓者"
+
+#: module/accounts/differences.py:86
+msgid "开拓者名称"
+msgstr "開拓者の名前"
+
+#: app/content/account_model.py:432
+msgid "当前没有可轮流运行的账号"
+msgstr "順次実行できるアカウントがありません"
+
+#: app/accounts/detail.py:163
+msgid "当前登录"
+msgstr "ログイン中"
+
+#: app/run_interface.py:182
+msgid "当前运行"
+msgstr "現在の実行"
+
+#: module/accounts/reasons.py:5
+msgid "当前运行方式不支持按账号运行"
+msgstr "この実行モードではアカウントを指定できません"
+
+#: app/run/stepper.py:18
+msgid "待执行"
+msgstr "実行待ち"
+
+#: app/run/cards.py:364
+msgid "恢复"
+msgstr "元に戻す"
+
+#: app/accounts/detail.py:312
+msgid "恢复共享"
+msgstr "共有設定に戻す"
+
+#: app/accounts/dialogs.py:138
+msgid "手机号、邮箱或用户名"
+msgstr "電話番号、メールアドレスまたはユーザー名"
+
+#: app/accounts/dialogs.py:157
+msgid "打开多账号轮流？"
+msgstr "アカウントの順次実行を有効にしますか？"
+
+#: app/run/history.py:232
+msgid "打开日志文件"
+msgstr "ログファイルを開く"
+
+#: app/accounts/detail.py:176
+msgid "打开账号文件夹"
+msgstr "アカウントフォルダーを開く"
+
+#: app/content/account_model.py:387
+msgid "找不到指定账号"
+msgstr "指定したアカウントが見つかりません"
+
+#: app/accounts/empty.py:79
+msgid "把登录保存下来，换号时不用重新登录；保存两个以上就可以按顺序轮流运行。只支持本地客户端。"
+msgstr "ログイン情報を保存すると、再ログインせずに切り替えられます。2つ以上保存すると順次実行できます。ローカルクライアント専用です。"
+
+#: app/accounts/detail.py:165
+msgid "把这个账号的登录信息写回游戏，需要先退出游戏"
+msgstr "このアカウントのログインを復元するには、先にゲームを終了してください"
+
+#: app/accounts/panel.py:73
+msgid "拖动调整顺序。一个账号失败后会记录原因并继续下一个账号，全部结束后合并发送一条通知。多账号只支持本地客户端。"
+msgstr "ドラッグで並べ替えます。失敗しても理由を記録して次へ進み、最後に結果をまとめて通知します。ローカルクライアント専用です。"
+
+#: module/accounts/differences.py:86
+msgid "拟造花萼（金）偏好地区"
+msgstr "疑似花萼（金）の優先エリア"
+
+#: app/schedule_dialog.py:320
+msgid "指定的账号不可用"
+msgstr "指定したアカウントは使用できません"
+
+#: app/content/run_controller.py:606
+msgid "指定的账号不可用，本次任务已跳过"
+msgstr "指定したアカウントを使用できないため、今回のタスクをスキップしました。"
+
+#: app/content/run_models.py:270
+msgid "指定的账号不可用，计划将跳过"
+msgstr "指定したアカウントを使用できないため、このスケジュールはスキップされます。"
+
+#: app/content/run_models.py:284
+msgid "推送通知"
+msgstr "プッシュ通知"
+
+#: app/accounts_interface.py:193
+msgid "操作没有完成，详情见日志"
+msgstr "操作を完了できませんでした。詳細はログを確認してください。"
+
+#: app/run/cards.py:26
+msgid "收尾中"
+msgstr "終了処理中"
+
+#: app/content/account_model.py:286
+msgid "无法读写账号文件或登录信息：{error}"
+msgstr "アカウントファイルまたはログイン情報の読み書きに失敗しました：{error}"
+
+#: app/accounts/detail.py:238
+msgid "时间未知"
+msgstr "時刻不明"
+
+#: app/run/history.py:29
+msgid "昨天"
+msgstr "昨日"
+
+#: app/run/schedule.py:226
+msgid "更多"
+msgstr "その他"
+
+#: app/accounts/detail.py:471
+msgid "最近 7 天"
+msgstr "過去7日間"
+
+#: app/content/account_model.py:272
+msgid "未保存账号"
+msgstr "未保存のアカウント"
+
+#: module/overview/run_data.py:190
+msgid "未完成"
+msgstr "未完了"
+
+#: app/run/cards.py:364
+msgid "本次不执行"
+msgstr "今回はスキップ"
+
+#: app/pages/decorations.py:100
+msgid "本账号独有"
+msgstr "このアカウントのみ"
+
+#: app/run/history.py:226
+msgid "查看截图"
+msgstr "スクリーンショットを見る"
+
+#: app/run/history.py:227
+msgid "查看整轮"
+msgstr "順次実行の全体を見る"
+
+#: app/run_interface.py:113
+msgid "查看记录"
+msgstr "記録を見る"
+
+#: app/content/account_model.py:231
+msgid "桌面分身中账号页只读，请在主桌面管理账号"
+msgstr "デスクトップ分身では閲覧のみです。管理はメインデスクトップで行ってください。"
+
+#: app/accounts/detail.py:158
+msgid "正在使用"
+msgstr "使用中"
+
+#: app/run/cards.py:25
+msgid "正在停止"
+msgstr "停止中"
+
+#: app/content/account_model.py:313
+msgid "正在处理账号操作"
+msgstr "アカウントを処理中…"
+
+#: app/content/account_model.py:293
+msgid "正在处理账号操作，请稍后再试"
+msgstr "アカウントの処理中です。しばらくしてからお試しください。"
+
+#: app/run/cards.py:25
+msgid "正在暂停"
+msgstr "一時停止中"
+
+#: app/main_window.py:850
+msgid "正在查看「{name}」"
+msgstr "「{name}」を表示中"
+
+#: app/accounts/editing.py:37
+msgid "正在编辑「{name}」的独立方案"
+msgstr "「{name}」の個別プランを編集中"
+
+#: module/accounts/status.py:15
+msgid "正在运行"
+msgstr "実行中"
+
+#: app/content/account_model.py:373
+msgid "此账号正在运行或等待轮流，暂时无法删除"
+msgstr "このアカウントは実行中か順番待ちのため、今は削除できません。"
+
+#: app/content/account_model.py:426
+msgid "此账号现在无法运行"
+msgstr "現在このアカウントでは実行できません"
+
+#: app/accounts/panel.py:57
+msgid "每个账号使用自己的任务方案和完成状态，定时运行按下面的顺序依次切换"
+msgstr "各アカウントのプランと進捗は個別に管理されます。予約実行は以下の順で切り替えます。"
+
+#: app/accounts_interface.py:108
+msgid "每个账号有自己的登录和任务方案，可以按顺序轮流运行"
+msgstr "ログイン情報とタスクプランをアカウントごとに保存し、順番に実行できます。"
+
+#: app/run/cards.py:337
+msgid "没有任务在运行"
+msgstr "実行中のタスクはありません"
+
+#: app/accounts/detail.py:429
+msgid "没有完整运行"
+msgstr "完全実行の記録はありません"
+
+#: app/pages/decorations.py:118
+msgid "没有恢复共享"
+msgstr "共有設定に戻せませんでした"
+
+#: app/accounts/dialogs.py:103
+msgid "没有检测到登录"
+msgstr "ログインを検出できませんでした"
+
+#: module/accounts/reasons.py:5
+msgid "没有检测到账号登录"
+msgstr "ログイン中のアカウントが見つかりません"
+
+#: app/accounts_interface.py:141
+msgid "没有登录快照"
+msgstr "ログインスナップショットなし"
+
+#: app/run/schedule.py:330
+msgid "添加后，到点会自动运行任务、流程或外部程序"
+msgstr "タスク、ワークフロー、外部プログラムを指定した時刻に自動実行できます。"
+
+#: app/run/schedule.py:328
+msgid "添加定时计划"
+msgstr "スケジュールを追加"
+
+#: app/accounts/dialogs.py:68
+msgid "添加账号"
+msgstr "アカウントを追加"
+
+#: app/accounts/dialogs.py:174
+msgid "清除"
+msgstr "クリア"
+
+#: app/accounts/detail.py:221
+msgid "清除保存的密码"
+msgstr "保存したパスワードを削除"
+
+#: app/accounts_interface.py:242
+msgid "清除游戏登录信息"
+msgstr "ゲームのログイン情報を消去"
+
+#: app/accounts_interface.py:112
+msgid "清除游戏登录信息…"
+msgstr "ゲームのログイン情報を消去…"
+
+#: app/accounts/dialogs.py:174
+msgid "清除游戏登录信息？"
+msgstr "ゲームのログイン情報を消去しますか？"
+
+#: module/accounts/reasons.py:5
+msgid "游戏仍在运行"
+msgstr "ゲームはまだ起動中です"
+
+#: app/accounts/detail.py:262
+msgid "游戏客户端"
+msgstr "ゲームクライアント"
+
+#: app/accounts/dialogs.py:109
+msgid "游戏当前登录的账号"
+msgstr "ゲームにログイン中のアカウント"
+
+#: app/content/account_model.py:412
+msgid "游戏或任务仍在运行，请结束后再切换登录"
+msgstr "ゲームを終了するかタスクの完了を待ってからログインを切り替えてください。"
+
+#: app/accounts/detail.py:268
+msgid "游戏每日刷新时间"
+msgstr "デイリー更新時刻"
+
+#: app/accounts/detail.py:242
+msgid "游戏登录快照"
+msgstr "ゲームのログインスナップショット"
+
+#: app/accounts/detail.py:472
+msgid "点击某天查看当次运行"
+msgstr "日付を選ぶと、その日の実行を確認できます"
+
+#: app/accounts/detail.py:364
+msgid "独立方案"
+msgstr "個別プラン"
+
+#: app/accounts/detail.py:361
+msgid "独立方案从共享方案复制而来，只记录与共享方案不同的地方；共享方案更新时，未改动的项目会一起更新"
+msgstr "個別プランは共有プランを引き継ぎ、変更した項目だけを保存します。他の項目には共有プランの変更が反映されます。"
+
+#: app/run/history.py:318
+msgid "用时 {time}"
+msgstr "所要時間：{time}"
+
+#: app/accounts/detail.py:232
+msgid "登录"
+msgstr "ログイン"
+
+#: module/accounts/reasons.py:5
+msgid "登录信息写入失败"
+msgstr "ログイン情報を書き込めませんでした"
+
+#: app/accounts_interface.py:228
+msgid "登录已保存"
+msgstr "ログインを保存しました"
+
+#: app/accounts/detail.py:236
+msgid "登录已过期。在游戏里重新登录这个账号，完全进入游戏后点「重新保存」。"
+msgstr "ログインの期限が切れました。ゲームに再ログインし、キャラクターの表示後に「再保存」を押してください。"
+
+#: module/accounts/reasons.py:5
+msgid "登录快照损坏或不属于这个账号"
+msgstr "ログインスナップショットが破損しているか、別のアカウントのものです"
+
+#: module/accounts/reasons.py:5
+msgid "登录的 UID 与指定账号不符"
+msgstr "ログイン中のUIDが指定したアカウントと一致しません"
+
+#: app/content/account_model.py:264
+msgid "登录过期"
+msgstr "ログイン期限切れ"
+
+#: app/accounts/detail.py:245
+msgid "登录过期时自动填写账号密码"
+msgstr "ログイン期限切れ時に自動入力"
+
+#: app/run/schedule.py:403
+msgid "确定删除「{name}」吗？"
+msgstr "「{name}」を削除しますか？"
+
+#: module/accounts/differences.py:31
+msgid "第 {level} 层"
+msgstr "第{level}層"
+
+#: app/run/cards.py:28
+msgid "等待中"
+msgstr "待機中"
+
+#: app/accounts/switcher.py:136
+msgid "管理账号与轮流顺序"
+msgstr "アカウントと実行順を管理"
+
+#: app/run/cards.py:375
+msgid "继续"
+msgstr "再開"
+
+#: app/content/run_controller.py:2212
+msgid "继续执行：{task}"
+msgstr "実行を再開：{task}"
+
+#: app/schedule_dialog.py:111
+msgid "编辑定时计划"
+msgstr "スケジュールを編集"
+
+#: app/accounts/detail.py:387
+msgid "编辑此账号的任务"
+msgstr "このアカウントのタスクを編集"
+
+#: app/accounts_interface.py:97
+msgid "自动填写"
+msgstr "自動入力"
+
+#: app/run/log_view.py:22
+msgid "警告"
+msgstr "警告"
+
+#: app/run/log_view.py:249
+msgid "警告和错误"
+msgstr "警告とエラー"
+
+#: app/content/run_models.py:392
+msgid "计划未能启动，请查看运行日志"
+msgstr "スケジュールを開始できませんでした。実行ログを確認してください。"
+
+#: app/main_window.py:1396
+msgid "请为这个账号设置同一服务器的游戏路径"
+msgstr "このアカウントと同じサーバーのゲームパスを指定してください"
+
+#: app/accounts/dialogs.py:104
+msgid "请先启动游戏并登录要添加的账号，进入游戏后点「重新检测」。"
+msgstr "追加するアカウントでゲームにログインしてから「再検出」を押してください。"
+
+#: app/accounts/dialogs.py:93
+msgid "请先完全进入游戏（看到角色）再添加。否则读到的是上一个账号的 UID，保存的登录和账号会对不上。"
+msgstr "キャラクターが表示されてから追加してください。早すぎると前のアカウントのUIDが読み取られ、ログインと一致しません。"
+
+#: app/pages/decorations.py:118
+msgid "请在账号页的任务方案里恢复"
+msgstr "アカウントページのタスクプランで共有設定に戻してください"
+
+#: app/accounts_interface.py:55
+msgid "调整顺序"
+msgstr "並べ替え"
+
+#: app/run/log_view.py:22
+msgid "调试"
+msgstr "デバッグ"
+
+#: module/accounts/reasons.py:5
+msgid "账号任务失败"
+msgstr "アカウントのタスクが失敗しました"
+
+#: app/accounts/account_list.py:132
+msgid "账号列表"
+msgstr "アカウント一覧"
+
+#: module/accounts/reasons.py:5
+msgid "账号和客户端服务器不符"
+msgstr "アカウントとクライアントのサーバーが一致しません"
+
+#: app/content/account_model.py:356
+msgid "账号和密码都需要填写"
+msgstr "アカウントとパスワードを両方入力してください"
+
+#: app/accounts_interface.py:96
+msgid "账号密码"
+msgstr "アカウントとパスワード"
+
+#: module/search/__init__.py:101
+msgid "账号密码自动填写"
+msgstr "ログイン自動入力"
+
+#: app/accounts_interface.py:290
+msgid "账号已删除"
+msgstr "アカウントを削除しました"
+
+#: app/content/account_model.py:309
+msgid "账号操作未完成"
+msgstr "アカウント操作を完了できませんでした"
+
+#: app/content/account_model.py:291
+msgid "账号资料当前只读"
+msgstr "アカウント情報は読み取り専用です"
+
+#: module/accounts/reasons.py:5
+msgid "账号运行超时"
+msgstr "アカウントの実行がタイムアウトしました"
+
+#: app/schedule_dialog.py:308
+msgid "账号："
+msgstr "アカウント："
+
+#: app/run/cards.py:28
+msgid "超时"
+msgstr "タイムアウト"
+
+#: app/content/run_models.py:286
+msgid "超时 {minutes} 分钟"
+msgstr "タイムアウト：{minutes}分"
+
+#: app/accounts/detail.py:271
+msgid "跟随设置（{hour}:00）"
+msgstr "設定に従う（{hour}:00）"
+
+#: app/run/cards.py:320
+msgid "跳过当前账号"
+msgstr "現在のアカウントをスキップ"
+
+#: app/accounts_interface.py:110
+msgid "轮流运行全部"
+msgstr "全アカウントを順次実行"
+
+#: module/accounts/reasons.py:5
+msgid "轮流运行收尾失败"
+msgstr "順次実行の終了処理に失敗しました"
+
+#: module/accounts/reasons.py:5
+msgid "轮流运行进程已退出"
+msgstr "順次実行のプロセスが終了しました"
+
+#: app/accounts/switcher.py:96
+msgid "轮流运行：关"
+msgstr "順次実行：オフ"
+
+#: app/accounts/switcher.py:96
+msgid "轮流运行：开"
+msgstr "順次実行：オン"
+
+#: module/accounts/reasons.py:35
+msgid "运行未完成"
+msgstr "実行未完了"
+
+#: app/navigation.py:78
+msgid "运行记录"
+msgstr "実行履歴"
+
+#: app/run/history.py:229
+msgid "运行过的任务会按天列在这里，可以查看步骤、原因和日志。"
+msgstr "実行したタスクを日別に表示します。ステップ、結果の理由、ログを確認できます。"
+
+#: module/overview/run_data.py:193
+msgid "运行进程已退出"
+msgstr "実行プロセスが終了しました"
+
+#: app/run/schedule.py:120
+msgid "还有 {count} 项"
+msgstr "残り{count}件"
+
+#: app/accounts/detail.py:234
+msgid "还没有保存登录。在游戏里登录这个账号，完全进入游戏后点「保存」。"
+msgstr "まだログイン情報がありません。このアカウントでログインし、キャラクターが表示されたら「保存」を押してください。"
+
+#: app/accounts/empty.py:82
+msgid "还没有保存账号"
+msgstr "保存したアカウントはありません"
+
+#: app/content/run_models.py:320
+msgid "还没有启用的计划"
+msgstr "有効なスケジュールはありません"
+
+#: app/accounts/detail.py:382
+msgid "还没有和共享方案不同的设置。在任务页修改的内容只对这个账号生效。"
+msgstr "共有プランとの差分はまだありません。タスクページでの変更はこのアカウントだけに適用されます。"
+
+#: app/run/schedule.py:329
+msgid "还没有定时计划"
+msgstr "スケジュールはまだありません"
+
+#: app/run/history.py:228
+msgid "还没有运行记录"
+msgstr "実行履歴はまだありません"
+
+#: app/pages/tasks.py:90
+msgid "这个账号改过，和共享方案不同"
+msgstr "このアカウントで変更済み"
+
+#: app/accounts/detail.py:261
+msgid "这个账号是{server}，和「运行方式」里的游戏客户端不同，需要单独选择。"
+msgstr "このアカウントは{server}で、「実行モード」のクライアントとはサーバーが異なります。専用のクライアントを選んでください。"
+
+#: app/accounts/detail.py:380
+msgid "这个账号有 {count} 项独立设置，切回独立方案后会恢复。"
+msgstr "このアカウントには独自の設定が{count}件あります。個別プランに戻すと復元されます。"
+
+#: app/navigation.py:78
+msgid "这条运行记录已清理"
+msgstr "この実行記録は削除されています"
+
+#: app/accounts/panel.py:74
+msgid "这里保存的是本地客户端的登录快照，换号时不用重新登录。打开上面的开关后，可以按顺序轮流运行。"
+msgstr "ローカルクライアントのログインを保存すると、再ログインせずに切り替えられます。順次実行を有効にすると、上から順番に実行できます。"
+
+#: module/overview/labels.py:10
+msgid "退出游戏"
+msgstr "ゲームを終了"
+
+#: app/accounts/detail.py:267
+msgid "选择…"
+msgstr "選択…"
+
+#: app/accounts_interface.py:232
+msgid "选择游戏客户端"
+msgstr "ゲームクライアントを選択"
+
+#: app/accounts/detail.py:428
+msgid "部分完成"
+msgstr "一部完了"
+
+#: app/accounts/detail.py:243
+msgid "重新保存"
+msgstr "再保存"
+
+#: app/accounts/detail.py:220
+msgid "重新填写…"
+msgstr "再入力…"
+
+#: app/accounts/dialogs.py:76
+msgid "重新检测"
+msgstr "再検出"
+
+#: app/run/log_view.py:247
+msgid "重要信息"
+msgstr "重要な情報"
+
+#: app/run/schedule.py:332
+msgid "链式任务失败后"
+msgstr "連続タスクが失敗した場合"
+
+#: module/accounts/differences.py:79
+msgid "队伍 {number}"
+msgstr "チーム {number}"
+
+#: module/accounts/reasons.py:5
+msgid "需要先完成首次使用确认"
+msgstr "先に初回利用の確認を完了してください"
+
+#: module/accounts/status.py:15
+msgid "需要设置游戏路径"
+msgstr "ゲームパスの設定が必要です"
+
+#: app/accounts/detail.py:247
+msgid "需要重新保存"
+msgstr "再保存が必要です"
+
+#: app/run/cards.py:357
+msgid "（{index} / {total}）"
+msgstr "（{index}／{total}）"
+
+#: app/accounts/detail.py:241
+msgid "，运行结束后自动更新"
+msgstr "。実行終了後に自動更新します。"
+
+#: module/accounts/store.py:22
+msgid "账号列表曾经损坏，已按登录快照重建，损坏的副本留在账号文件夹里"
+msgstr "アカウント一覧が破損していたため、ログインスナップショットから再構築しました。破損したコピーはアカウントフォルダーに残っています。"
+
+#: module/accounts/store.py:23
+msgid "{account} 的 {name} 曾经损坏，已从空数据开始，损坏的副本留在账号文件夹里"
+msgstr "{account} の {name} が破損していたため、空のデータから始めました。破損したコピーはアカウントフォルダーに残っています。"
+
+#: module/accounts/store.py:24
+msgid "旧账号名称无法读取，可重新命名"
+msgstr "以前のアカウント名を読み取れませんでした。名前を付け直してください。"
+
+#: module/accounts/store.py:25
+msgid "部分登录快照无法校验，请在客户端重新保存"
+msgstr "一部のログインスナップショットを検証できません。ゲームクライアントから保存し直してください。"
+
+#: module/accounts/store.py:26
+msgid "旧快照损坏，已保留此前可用的备份"
+msgstr "以前のスナップショットが破損しています。使用できる直前のバックアップを残しました。"
+
+#: module/accounts/store.py:27
+msgid "暂时无法整理账号目录，本次按只读方式显示资料"
+msgstr "アカウントフォルダーを今は整理できないため、読み取り専用で表示しています。"
+
+#: module/accounts/store.py:28
+msgid "部分旧账号文件尚未转换，原件已保留，下次打开时重试"
+msgstr "一部の旧アカウントファイルを変換できませんでした。元のファイルは残してあり、次回開いたときに再試行します。"
+
+#: module/accounts/store.py:29
+msgid "旧账号缺少登录快照，相关文件已保留"
+msgstr "旧アカウントにログインスナップショットがありません。関連ファイルは残してあります。"
+
+#: module/accounts/store.py:30
+msgid "{name} 损坏，已按空数据读取"
+msgstr "{name} が破損しているため、空のデータとして読み込みました。"
+
+#: module/accounts/store.py:31
+msgid "{name} 暂时无法留存损坏副本，请稍后重试"
+msgstr "{name} の破損コピーを今は保存できません。後でもう一度お試しください。"
+
+#: app/setup/steps.py:205
+msgid "Epic 渠道版需要从 Epic 启动，请提前在 Epic 里登录"
+msgstr "Epic 版は Epic から起動します。先に Epic にログインしてください。"
+
+#: app/content/setup_model.py:52
+msgid "Epic 游戏商城"
+msgstr "Epic Gamesストア"
+
+#: app/setup/steps.py:26
+msgid "Windows、macOS、Linux 都能用"
+msgstr "Windows、macOS、Linux に対応"
+
+#: app/content/setup_model.py:404
+msgid "{days} {time}"
+msgstr "{days} {time}"
+
+#: module/setup/run_plan.py:228
+msgid "{error}；恢复原开机启动设置失败：{reason}"
+msgstr "{error}。元の自動起動設定を復元できませんでした：{reason}"
+
+#: module/setup/tasks.py:108
+msgid "{minutes} 分钟–{hours} 小时"
+msgstr "{minutes} 分～{hours} 時間"
+
+#: app/content/setup_model.py:428
+msgid "{names}等 {count} 项"
+msgstr "{names}など計 {count} 件"
+
+#: app/content/setup_model.py:424
+msgid "{task}（{category} · {name}）"
+msgstr "{task}（{category}・{name}）"
+
+#: app/content/setup_model.py:432
+msgid "{when} 自动运行"
+msgstr "{when} に自動実行"
+
+#: app/content/setup_model.py:436
+msgid "{when}，完成后{action}"
+msgstr "{when}、完了後：{action}"
+
+#: app/setup/dialog.py:84
+msgid "上一步"
+msgstr "戻る"
+
+#: app/setup/steps.py:417
+msgid "云·星穹铁道在浏览器里运行，登录一次就能一直用。"
+msgstr "クラウド版はブラウザーで動作します。一度ログインすれば、次回からもそのまま使えます。"
+
+#: app/content/setup_model.py:413
+msgid "什么时候运行"
+msgstr "実行時間"
+
+#: app/setup/steps.py:564
+msgid "什么时候运行？"
+msgstr "いつ実行しますか？"
+
+#: app/setup/dialog.py:79
+msgid "以后再设置"
+msgstr "あとで設定"
+
+#: app/setup/steps.py:118
+msgid "以后可以在「设置 › 运行方式」更换。"
+msgstr "あとから「設定 › 実行方法」で変更できます。"
+
+#: app/setup/steps.py:703
+msgid "任务完成或失败时告诉你。可以跳过，以后在「设置 › 消息推送」添加。"
+msgstr "タスクの完了や失敗を通知します。スキップして、あとから「設定 › 通知送信」で追加することもできます。"
+
+#: app/setup/steps.py:702
+msgid "做完了怎么通知你？"
+msgstr "通知方法を選んでください"
+
+#: app/setup/steps.py:447
+msgid "先跳过"
+msgstr "スキップ"
+
+#: app/content/setup_model.py:301
+msgid "全部打开"
+msgstr "すべて選択"
+
+#: app/setup/steps.py:210
+msgid "关闭 HDR、N 卡滤镜、帧率显示和微星小飞机等悬浮窗"
+msgstr "HDR、NVIDIA フィルター、FPS 表示、MSI Afterburner などのオーバーレイをオフにします。"
+
+#: app/setup/steps.py:412
+msgid "准备云游戏"
+msgstr "クラウドの準備"
+
+#: app/setup/steps.py:23
+msgid "分辨率会自动调成 1920×1080，不用自己改"
+msgstr "解像度は自動で 1920×1080 に調整されます。"
+
+#: module/search/terms.py:7
+msgid "初始化"
+msgstr "初期化"
+
+#: app/setup/steps.py:572
+msgid "到点自动开始，需要小助手保持打开。"
+msgstr "指定時刻に開始します。アシスタントは開いたままにしてください。"
+
+#: app/setup/steps.py:654
+msgid "{hint}另外还有 {count} 个启用的定时计划，可以在「运行」页调整。"
+msgstr "{hint}ほかに有効なスケジュールが {count} 件あります。「実行」で変更できます。"
+
+#: app/content/setup_model.py:301
+msgid "只做日常"
+msgstr "デイリーのみ"
+
+#: app/setup/steps.py:29
+msgid "只支持清体力、每日实训、领取奖励和历战余响"
+msgstr "開拓力消化、デイリー訓練、報酬受け取り、歴戦余韻にのみ対応しています。"
+
+#: app/content/setup_model.py:382
+msgid "只有 Windows 通知"
+msgstr "Windows 通知のみ"
+
+#: app/main_window.py:790
+msgid "可以在「设置 › 高级」重新打开向导"
+msgstr "「設定 › 詳細設定」からウィザードを開き直せます。"
+
+#: app/setup/steps.py:564
+msgid "可以自己点，也可以让小助手按时开始。"
+msgstr "手動で開始するか、スケジュールを設定できます。"
+
+#: app/setup/steps.py:299
+msgid "可执行文件 (*.exe)"
+msgstr "実行ファイル (*.exe)"
+
+#: app/setup/dialog.py:236
+msgid "可跳过"
+msgstr "スキップ可"
+
+#: module/search/terms.py:7
+msgid "向导"
+msgstr "ウィザード"
+
+#: app/setup/steps.py:614
+msgid "国际服各服务器不同，请换算成电脑时间，用来判断今天做没做完"
+msgstr "サーバーごとの更新時刻を PC の現地時刻に換算してください。当日の進行判定に使います。"
+
+#: app/setup/steps.py:335
+msgid "在后台运行，看不到画面；锄大地和模拟宇宙不支持"
+msgstr "画面を表示せずバックグラウンドで実行します。フィールド探索と模擬宇宙には非対応です。"
+
+#: app/setup/steps.py:25
+msgid "在浏览器里运行，不占显卡，也可以无窗口运行"
+msgstr "ブラウザーで動作し、GPU を使いません。ウィンドウなしでも実行できます。"
+
+#: module/setup/tasks.py:46
+msgid "委托、邮件、无名勋礼、兑换码等"
+msgstr "依頼、メール、ナナシの勲功、交換コードなど"
+
+#: app/setup/dialog.py:235
+msgid "安装位置或连接方式"
+msgstr "インストール先・接続方法"
+
+#: app/setup/dialog.py:90
+msgid "完成"
+msgstr "完了"
+
+#: module/setup/tasks.py:45
+msgid "完成实训，领取 500 活跃度奖励"
+msgstr "訓練を進め、活躍度 500 の報酬を獲得"
+
+#: app/setup/steps.py:715
+msgid "完成设置"
+msgstr "設定を完了"
+
+#: app/content/setup_model.py:51
+msgid "官方启动器"
+msgstr "公式ランチャー"
+
+#: app/setup/dialog.py:236
+msgid "定时与完成后操作"
+msgstr "スケジュールと完了後の操作"
+
+#: app/setup/steps.py:651
+msgid "定时运行需要小助手保持打开，可以最小化到托盘；电脑不能睡眠。"
+msgstr "定時実行には、アシスタントを開いたまま PC をスリープさせないでください。トレイへの最小化は可能です。"
+
+#: app/setup/steps.py:338
+msgid "小助手会打开浏览器，请在里面登录米哈游账号，之后会记住登录"
+msgstr "開いたブラウザーで HoYoverse アカウントにログインしてください。次回からログイン状態が保持されます。"
+
+#: app/setup/steps.py:421
+msgid "小助手需要知道 StarRail.exe 的位置，才能替你启动游戏。"
+msgstr "ゲームを起動するため、StarRail.exe の場所を指定してください。"
+
+#: module/setup/tasks.py:51
+msgid "差分宇宙积分"
+msgstr "差分宇宙ポイント"
+
+#: module/setup/tasks.py:79
+msgid "已启用体力计划，清体力时会按计划选择副本。"
+msgstr "開拓力プランが有効です。ステージはプランに従って選ばれます。"
+
+#: module/setup/tasks.py:81
+msgid "已启用培养目标，清体力时会按培养目标选择副本。"
+msgstr "育成目標が有効です。ステージは育成目標に従って選ばれます。"
+
+#: app/content/setup_model.py:381
+msgid "已添加 {names}"
+msgstr "追加済み：{names}"
+
+#: app/content/setup_model.py:400
+msgid "已选 {count} 项"
+msgstr "{count} 件選択"
+
+#: app/setup/steps.py:599
+msgid "开始时间"
+msgstr "開始時刻"
+
+#: app/content/setup_model.py:52
+msgid "开始菜单"
+msgstr "スタートメニュー"
+
+#: module/setup/run_plan.py:210
+msgid "开机启动设置失败，请检查 Windows 计划任务权限后重试。"
+msgstr "自動起動を設定できませんでした。Windows タスク スケジューラの権限を確認し、再試行してください。"
+
+#: module/search/terms.py:7
+msgid "引导"
+msgstr "ガイド"
+
+#: app/content/setup_model.py:178
+msgid "当前系统不支持这种运行方式。"
+msgstr "この環境ではこの実行方法を利用できません。"
+
+#: app/content/setup_model.py:51
+msgid "当前设置"
+msgstr "現在の設定"
+
+#: app/setup/steps.py:471
+msgid "快速选择"
+msgstr "プリセット"
+
+#: app/content/setup_model.py:407
+msgid "我自己点开始"
+msgstr "手動で開始"
+
+#: app/content/setup_model.py:53
+msgid "手动选择"
+msgstr "手動選択"
+
+#: app/setup/steps.py:384
+msgid "手机：在开发者选项打开 USB 调试，用数据线连接后允许调试"
+msgstr "スマホでは開発者向けオプションで USB デバッグを有効にし、ケーブル接続後にデバッグを許可してください。"
+
+#: app/content/settings/advanced.py:25
+msgid "打开向导"
+msgstr "ウィザードを開く"
+
+#: app/setup/steps.py:570
+msgid "打开小助手，点总览的「开始完整运行」。"
+msgstr "アシスタントの「概要」で「一括実行を開始」を押します。"
+
+#: app/setup/steps.py:493
+msgid "打开的项目会加入「完整运行」，已经做完的会自动跳过。之后可以在「任务」页细调。"
+msgstr "選んだタスクを一括実行に追加します。完了済みのものはスキップします。あとから「タスク」で変更できます。"
+
+#: app/content/setup_model.py:413
+msgid "找到游戏"
+msgstr "ゲームを探す"
+
+#: module/setup/tasks.py:45
+msgid "把开拓力用在你选择的副本上"
+msgstr "選んだステージで開拓力を消費"
+
+#: module/setup/tasks.py:127
+msgid "按当前选择，每天大约 {daily}（按常见配置估算）。"
+msgstr "現在の選択では 1 日約 {daily}（一般的な環境での目安）。"
+
+#: module/setup/tasks.py:125
+msgid "按当前选择，每天大约 {daily}，周常每周另外 {weekly}（按常见配置估算）。"
+msgstr "現在の選択では 1 日約 {daily}、週課は別に週約 {weekly}（一般的な環境での目安）。"
+
+#: app/setup/steps.py:756
+msgid "接下来点「开始完整运行」就可以，以后改主意随时再调。"
+msgstr "「一括実行を開始」を押せば準備完了です。設定はあとからいつでも変更できます。"
+
+#: app/setup/steps.py:22
+msgid "支持全部任务，可以在前台运行，也可以设成后台运行，边挂机边用电脑"
+msgstr "全タスクに対応します。バックグラウンド実行に切り替えると、実行中も PC を使えます。"
+
+#: module/search/terms.py:7
+msgid "新手"
+msgstr "初心者"
+
+#: app/main_window.py:788
+msgid "无法保存设置"
+msgstr "設定を保存できません"
+
+#: app/content/setup_model.py:125
+msgid "无法保存设置：{error}"
+msgstr "設定を保存できません：{error}"
+
+#: app/main_window.py:769
+msgid "无法打开首次配置向导"
+msgstr "初期設定を開けません"
+
+#: app/setup/steps.py:335
+msgid "无窗口运行"
+msgstr "ウィンドウなしで実行"
+
+#: app/setup/steps.py:339
+msgid "无窗口运行时如果没有登录，会自动换成有窗口让你登录"
+msgstr "未ログインの場合は、ウィンドウなしの設定でもログイン用の画面が開きます。"
+
+#: app/content/setup_model.py:301
+msgid "日常 + 周常（推荐）"
+msgstr "デイリー＋週課（推奨）"
+
+#: app/setup/steps.py:602
+msgid "最小化到托盘，不会忘记打开"
+msgstr "トレイに最小化して起動し、開き忘れを防ぎます。"
+
+#: app/content/setup_model.py:392
+msgid "有窗口"
+msgstr "ウィンドウあり"
+
+#: app/content/setup_model.py:134
+msgid "桌面分身正在使用设置，请回到主桌面并结束托管后打开向导。"
+msgstr "デスクトップ分身が設定を使用中です。メインデスクトップで管理を終了してからウィザードを開いてください。"
+
+#: app/setup/steps.py:385
+msgid "模拟器：填地址后点「连接」，MuMu 默认是 127.0.0.1:16384"
+msgstr "エミュレーターはアドレスを入力して「接続」を押します。MuMu の既定値は 127.0.0.1:16384 です。"
+
+#: app/setup/dialog.py:119
+msgid "欢迎使用三月七小助手"
+msgstr "三月なのかアシスタントへようこそ"
+
+#: app/setup/steps.py:183
+msgid "正在查找游戏…"
+msgstr "ゲームを検索中…"
+
+#: app/content/setup_model.py:331
+msgid "正在设置「{name}」的任务"
+msgstr "「{name}」のタスクを設定中"
+
+#: app/content/setup_model.py:51
+msgid "正在运行的游戏"
+msgstr "起動中のゲーム"
+
+#: app/setup/dialog.py:121
+msgid "每一步点「下一步」时保存"
+msgstr "「次へ」で各手順を保存します"
+
+#: module/setup/tasks.py:47
+msgid "每周 3 次，优先消耗开拓力"
+msgstr "週 3 回、優先して開拓力を消費"
+
+#: module/setup/tasks.py:47
+msgid "每周自动完成积分奖励"
+msgstr "毎週のポイント報酬を自動で獲得"
+
+#: app/content/setup_model.py:413
+msgid "每天做什么"
+msgstr "毎日のタスク"
+
+#: app/setup/steps.py:571
+msgid "每天定时运行"
+msgstr "毎日定時に実行"
+
+#: app/setup/steps.py:492
+msgid "每天想让小助手做什么？"
+msgstr "毎日どのタスクを実行しますか？"
+
+#: app/setup/steps.py:599
+msgid "每天，按电脑时间"
+msgstr "毎日、PC の現地時刻で実行"
+
+#: module/setup/tasks.py:46
+msgid "每日签到和双倍掉落"
+msgstr "毎日のチェックインとドロップ 2 倍イベント"
+
+#: app/setup/steps.py:575
+msgid "每次登录后自动打开小助手，开始完整运行。"
+msgstr "ログイン時にアシスタントを起動し、一括実行を開始します。"
+
+#: app/setup/steps.py:261
+msgid "没有自动找到游戏，请选择安装目录里的 StarRail.exe。也可以先跳过，以后在「设置 › 运行方式」设置。"
+msgstr "ゲームが見つかりません。インストール先の StarRail.exe を選ぶか、スキップしてあとから「設定 › 実行方法」で指定してください。"
+
+#: app/content/setup_model.py:382
+msgid "没有通知"
+msgstr "通知なし"
+
+#: app/setup/steps.py:334
+msgid "浏览器"
+msgstr "ブラウザー"
+
+#: module/setup/tasks.py:48
+msgid "混沌回忆等三项，需要先配好队伍"
+msgstr "混沌の記憶など 3 種。先に編成を設定してください"
+
+#: module/setup/run_plan.py:134
+msgid "游戏刷新时间应在 0 至 23 点之间。"
+msgstr "更新時刻は 0～23 時の範囲で選んでください。"
+
+#: app/content/setup_model.py:413
+msgid "游戏在哪里运行"
+msgstr "実行方法"
+
+#: app/setup/steps.py:118
+msgid "游戏在哪里运行？"
+msgstr "どこでゲームを実行しますか？"
+
+#: app/setup/steps.py:421
+msgid "游戏安装在哪里？"
+msgstr "ゲームのインストール先は？"
+
+#: app/setup/steps.py:208
+msgid "游戏已经登录过一次，能正常进入"
+msgstr "一度ログインし、ゲームに入れることを確認してください。"
+
+#: app/content/setup_model.py:224
+msgid "游戏文件不存在，请重新选择。"
+msgstr "ゲームファイルが見つかりません。選び直してください。"
+
+#: app/setup/steps.py:209
+msgid "游戏语言是简体中文"
+msgstr "ゲームの言語を簡体字中国語に設定してください。"
+
+#: module/setup/run_plan.py:160
+msgid "现有定时计划无法读取，请到「运行」检查后再设置。"
+msgstr "既存のスケジュールを読み取れません。「実行」で確認してから設定し直してください。"
+
+#: app/setup/steps.py:28
+msgid "用数据线或网络连接手机、模拟器，手机屏幕可以照常使用"
+msgstr "スマホやエミュレーターを USB またはネットワークで接続します。スマホの画面は引き続き使えます。"
+
+#: app/setup/dialog.py:235
+msgid "电脑、云游戏或安卓设备"
+msgstr "PC、クラウド、Android 端末"
+
+#: app/content/setup_model.py:406
+msgid "登录 Windows 后"
+msgstr "Windows ログイン時"
+
+#: app/setup/steps.py:602
+msgid "登录 Windows 后自动打开小助手"
+msgstr "Windows ログイン時に自動起動"
+
+#: app/content/setup_model.py:434
+msgid "登录 Windows 后自动运行"
+msgstr "Windows ログイン時に自動実行"
+
+#: app/setup/steps.py:574
+msgid "登录 Windows 后运行"
+msgstr "Windows ログイン時"
+
+#: app/setup/steps.py:652
+msgid "登录后大约半分钟开始，小助手会最小化到托盘。今天已经做完的任务会自动跳过。"
+msgstr "ログインから約 30 秒後にトレイに最小化して開始します。今日完了したタスクはスキップします。"
+
+#: app/setup/dialog.py:248
+msgid "第 {index} 步，共 {total} 步"
+msgstr "{index} / {total} ステップ"
+
+#: app/setup/steps.py:336
+msgid "第一次运行"
+msgstr "初回実行"
+
+#: app/setup/steps.py:775
+msgid "细调每个任务"
+msgstr "タスクを調整"
+
+#: app/setup/dialog.py:119
+msgid "花 1 分钟，设好每天要做的事"
+msgstr "1 分で毎日のタスクを設定"
+
+#: app/setup/steps.py:756
+msgid "设置好了"
+msgstr "設定が完了しました"
+
+#: app/setup/steps.py:386
+msgid "请先在设备上安装国服客户端并登录一次"
+msgstr "先に端末に中国本土版クライアントをインストールし、一度ログインしてください。"
+
+#: app/content/setup_model.py:222
+msgid "请先选择游戏文件。"
+msgstr "先にゲームファイルを選択してください。"
+
+#: module/setup/tasks.py:96
+msgid "请选择列表中的副本。"
+msgstr "一覧からステージを選んでください。"
+
+#: module/setup/run_plan.py:200
+msgid "请选择可用的完成后操作。"
+msgstr "利用可能な完了後の操作を選んでください。"
+
+#: app/content/setup_model.py:269
+msgid "请选择可用的浏览器。"
+msgstr "利用可能なブラウザーを選んでください。"
+
+#: module/setup/run_plan.py:166
+msgid "请选择有效的运行时间。"
+msgstr "有効な開始時刻を選んでください。"
+
+#: app/content/setup_model.py:226
+msgid "请选择游戏目录里的 StarRail.exe。"
+msgstr "ゲームフォルダー内の StarRail.exe を選んでください。"
+
+#: module/setup/tasks.py:51
+msgid "货币战争积分"
+msgstr "貨幣戦争ポイント"
+
+#: app/setup/steps.py:607
+msgid "跑完之后"
+msgstr "完了後の操作"
+
+#: app/setup/steps.py:775
+msgid "边挂机边用电脑"
+msgstr "実行中も PC を使う"
+
+#: app/setup/steps.py:206
+msgid "运行前请确认"
+msgstr "実行前に確認"
+
+#: app/content/setup_model.py:191
+msgid "运行方式已保存，界面刷新失败：{error}"
+msgstr "実行方法は保存しましたが、画面を更新できません：{error}"
+
+#: app/setup/steps.py:770
+msgid "还想多了解一点？"
+msgstr "もっと詳しく"
+
+#: app/content/setup_model.py:397
+msgid "还没有找到游戏"
+msgstr "ゲームが見つかりません"
+
+#: module/setup/tasks.py:118
+msgid "还没有选择任何任务，完整运行不会做任何事。"
+msgstr "タスクが選ばれていないため、一括実行しても何も行いません。"
+
+#: module/setup/run_plan.py:162
+msgid "这个定时计划已被移除，请重新打开向导后再设置。"
+msgstr "このスケジュールは削除されました。ウィザードを開き直して設定してください。"
+
+#: app/setup/steps.py:419
+msgid "连接要运行游戏的手机或模拟器。"
+msgstr "ゲームを実行するスマホやエミュレーターを接続してください。"
+
+#: app/setup/steps.py:412
+msgid "连接设备"
+msgstr "端末を接続"
+
+#: app/setup/steps.py:298
+msgid "选择 StarRail.exe"
+msgstr "StarRail.exe を選択"
+
+#: app/setup/steps.py:192
+msgid "选择其他位置"
+msgstr "別の場所を選ぶ"
+
+#: app/setup/dialog.py:235
+msgid "选择要自动完成的内容"
+msgstr "自動実行する内容を選択"
+
+#: app/content/setup_model.py:413
+msgid "通知我"
+msgstr "通知"
+
+#: app/setup/steps.py:194
+msgid "重新查找"
+msgstr "再検索"
+
+#: app/content/settings/advanced.py:26
+msgid "重新设置游戏位置、每天要做的任务、运行时间和通知"
+msgstr "ゲームの場所、毎日のタスク、実行時間、通知を設定し直します。"
+
+#: module/search/terms.py:7
+msgid "重新配置"
+msgstr "再設定"
+
+#: app/content/setup_model.py:260
+msgid "集成浏览器"
+msgstr "内蔵ブラウザー"
+
+#: app/setup/steps.py:334
+msgid "集成浏览器会在第一次运行时自动下载，效果最好"
+msgstr "内蔵ブラウザーを推奨します。初回実行時に自動でダウンロードします。"
+
+#: app/setup/steps.py:27
+msgid "需要云游戏时长；锄大地和模拟宇宙要有窗口才能运行"
+msgstr "クラウドのプレイ時間が必要です。フィールド探索と模擬宇宙にはウィンドウ表示が必要です。"
+
+#: module/setup/tasks.py:49
+msgid "需要前台全屏，通常超过 1 小时"
+msgstr "前面フルスクリーンが必要。通常 1 時間以上"
+
+#: app/setup/steps.py:30
+msgid "需要安卓 10 以上、国服客户端，并打开 USB 调试"
+msgstr "Android 10 以上、中国本土版クライアント、USB デバッグが必要です。"
+
+#: app/setup/steps.py:340
+msgid "需要有云游戏时长，高峰期可能要排队"
+msgstr "クラウドのプレイ時間が必要です。混雑時は待機列が発生することがあります。"
+
+#: module/search/terms.py:7
+msgid "首次设置"
+msgstr "初回設定"
+
+#: app/content/settings/advanced.py:25
+msgid "首次配置向导"
+msgstr "初期設定ウィザード"
+
+#: app/setup/steps.py:24
+msgid "默认在前台运行，任务期间会操作鼠标和键盘，先别用电脑"
+msgstr "既定の前面実行ではマウスとキーボードを操作します。タスク中は PC の操作を控えてください。"
+
+#: app/content/setup_model.py:52
+msgid "默认安装位置"
+msgstr "既定のインストール先"
+
 #: module/game/adb_startup_frames.py:110
 msgid "游戏已启动，但后台虚拟屏持续输出黑帧，请导出本轮日志反馈"
 msgstr ""
@@ -8357,3 +12504,183 @@ msgstr ""
 msgid "游戏已启动，但后台虚拟屏持续没有新帧，请导出本轮日志反馈"
 msgstr ""
 "ゲームは起動しましたが、バックグラウンドの仮想ディスプレイから新しいフレームが届いていません。今回の実行ログをエクスポートし、問題の報告に添付してください。"
+
+#: app/tools_interface.py:114
+msgid "不参与完整运行，需要时单独打开"
+msgstr "完全実行には含まれません。必要なときに開いてください"
+
+#: app/tools_interface.py:115
+msgid "游戏辅助"
+msgstr "ゲーム補助"
+
+#: app/tools_interface.py:115
+msgid "排查"
+msgstr "トラブルシューティング"
+
+#: app/tools_interface.py:118
+msgid "选项"
+msgstr "オプション"
+
+#: app/toolbox/autoplot.py:174
+msgid "快捷键 {hotkey}"
+msgstr "ショートカットキー {hotkey}"
+
+#: app/tools_interface.py:137
+msgid "第三方程序"
+msgstr "外部プログラム"
+
+#: module/content_pages.py:64
+msgid "社区与工具"
+msgstr "コミュニティとツール"
+
+#: app/pages/about.py:33
+msgid "崩坏：星穹铁道自动化助手，免费开源"
+msgstr "『崩壊：スターレイル』用の無料・オープンソースの自動化アシスタント"
+
+#: app/tools/check_update.py:149
+msgid "发现新版本"
+msgstr "新しいバージョンがあります"
+
+#: app/card/messagebox_custom.py:274
+msgid "更新日志 |･ω･)"
+msgstr "更新履歴 |･ω･)"
+
+#: app/content/gacha_dialogs.py:94
+msgid "SRGF 格式 (*.json)"
+msgstr "SRGF 形式 (*.json)"
+
+#: app/overview/cards.py:141
+msgid "按上次记录的数值和每 6 分钟恢复 1 点估算，可能和游戏里差几点"
+msgstr "前回記録した値から 6 分ごとに 1 回復するものとして計算した目安です。ゲーム内と数ポイント異なる場合があります"
+
+#: app/overview/cards.py:149
+msgid "{time} 时为 {value}"
+msgstr "{time} 時点で {value}"
+
+#: app/overview/cards.py:154
+msgid "已回满"
+msgstr "全回復"
+
+#: app/pages/nav_search.py:15
+msgid "搜索"
+msgstr "検索"
+
+#: app/pages/notify.py:50
+msgid "删除渠道"
+msgstr "チャンネルを削除"
+
+#: app/pages/notify.py:293
+msgid "删除渠道「{name}」？"
+msgstr "「{name}」を削除しますか？"
+
+#: app/pages/notify.py:291
+msgid "填写的内容会一起清除，以后要用得重新填写。"
+msgstr "入力した内容も消去されます。再び使うときは入力し直してください。"
+
+#: app/pages/notify.py:291
+msgid "以后要用可以重新添加。"
+msgstr "必要になったら再び追加できます。"
+
+#: app/pages/notify.py:292
+msgid "只是暂时不用的话，关掉开关就行。"
+msgstr "一時的に使わないだけなら、スイッチをオフにしてください。"
+
+#: app/pages/notify.py:304
+msgid "无法删除这个渠道"
+msgstr "このチャンネルを削除できません"
+
+#: app/pages/notify.py:306
+msgid "已删除"
+msgstr "削除しました"
+
+#: app/pages/power_order.py:87
+msgid "按从上到下的顺序用开拓力：前一步用不上或刷完了，才轮到下一步"
+msgstr "開拓力は上から順に使います。前の手順が終わるか使われないときに、次へ進みます"
+
+#: module/task_catalog.py:114
+msgid "计划刷完就停，不会刷"
+msgstr "プラン完了で終了"
+
+#: module/task_catalog.py:114
+msgid "计划刷完再刷"
+msgstr "プラン完了後"
+
+#: module/task_catalog.py:116
+msgid "先刷 {count} 项"
+msgstr "先に {count} 件"
+
+#: module/task_catalog.py:118
+msgid "计划已刷完，跳过"
+msgstr "プラン完了、スキップ"
+
+#: module/task_catalog.py:118
+msgid "暂无计划，跳过"
+msgstr "プランなし、スキップ"
+
+#: module/task_catalog.py:120
+msgid "未启用，跳过"
+msgstr "無効、スキップ"
+
+#: module/task_catalog.py:122
+msgid "先刷这里"
+msgstr "ここから開始"
+
+#: module/task_catalog.py:126
+msgid "没选副本，不会刷"
+msgstr "ダンジョン未選択"
+
+#: module/task_catalog.py:128
+msgid "培养目标用不上时才刷"
+msgstr "育成目標が使えないときのみ"
+
+#: module/task_catalog.py:130
+msgid "直接刷这里"
+msgstr "すぐにここを周回"
+
+#: module/task_catalog.py:132
+msgid "先刷体力计划"
+msgstr "まず開拓力プラン"
+
+#: module/task_catalog.py:132
+msgid "按列表里的副本和次数"
+msgstr "リストのダンジョンと回数"
+
+#: module/task_catalog.py:133
+msgid "再刷培养目标"
+msgstr "次に育成目標"
+
+#: module/task_catalog.py:133
+msgid "按游戏里的培养目标自动选副本"
+msgstr "ゲーム内の育成目標から自動選択"
+
+#: module/task_catalog.py:134
+msgid "最后刷默认副本"
+msgstr "最後に既定のダンジョン"
+
+#: module/task_catalog.py:159
+msgid "现在约有 {power} 开拓力，{name}可挑战 {count} 轮"
+msgstr "現在の開拓力は約 {power}。{name} に {count} ウェーブ挑戦できます"
+
+#: module/task_catalog.py:161
+msgid "现在约有 {power} 开拓力，{name}可挑战 {count} 次（每次 {waves} 轮）"
+msgstr "現在の開拓力は約 {power}。{name} に {count} 回挑戦できます（1回 {waves} ウェーブ）"
+
+#: module/task_catalog.py:47
+msgid "按体力计划、培养目标、默认副本的顺序消耗开拓力。"
+msgstr "開拓力プラン、育成目標、既定のダンジョンの順に開拓力を消費します。"
+
+#: module/search/setting_text.py:3
+msgid "按列表里的副本和次数刷，排在培养目标和默认副本前面"
+msgstr "リストのダンジョンと回数で周回します。育成目標と既定のダンジョンより優先されます"
+
+#: module/overview/shortcuts.py:23
+msgid "中途接管"
+msgstr "途中から引き継ぐ"
+
+#: app/overview/cards.py:471
+msgid "当前连接方式没有可用的快捷启动"
+msgstr "この接続では使えるショートカットがありません"
+
+#: app/content/run_models.py:377
+msgid "复制定时计划"
+msgstr "スケジュールを複製"

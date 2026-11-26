@@ -1,18 +1,15 @@
 from copy import deepcopy
-import sys
 from unittest.mock import Mock
 
 import pytest
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QDialog, QWidget
 
 from app import schedule_dialog
-from app.schedule_dialog import AddEditScheduleDialog, ScheduleManagerDialog, _strip_jsonc_comments
+from app.schedule_dialog import AddEditScheduleDialog, _strip_jsonc_comments
 
 
 @pytest.fixture
 def schedule_editor(request, monkeypatch):
-    if sys.platform != 'win32':
-        pytest.skip('GUI 测试仅在 Windows 平台运行')
     qtbot = request.getfixturevalue('qtbot')
     parent = QWidget()
     parent.resize(1400, 900)
@@ -61,7 +58,7 @@ def test_missing_workflow_cannot_be_saved_without_a_new_selection(schedule_edito
     monkeypatch.setattr(schedule_dialog, 'MessageBox', Mock(return_value=message))
     editor.accept()
     message.exec.assert_called_once()
-    assert editor.result() != schedule_dialog.QDialog.DialogCode.Accepted
+    assert editor.result() != QDialog.DialogCode.Accepted
 
 
 def test_builtin_editor_loads_workflows_only_when_needed(schedule_editor):
@@ -96,7 +93,7 @@ def test_time_task_requires_at_least_one_weekday(schedule_editor, monkeypatch):
     monkeypatch.setattr(schedule_dialog, 'MessageBox', Mock(return_value=message))
     editor.accept()
     message.exec.assert_called_once()
-    assert editor.result() != schedule_dialog.QDialog.DialogCode.Accepted
+    assert editor.result() != QDialog.DialogCode.Accepted
 
 
 @pytest.mark.parametrize('existing_days', [[2, 4], [3, 5]])
@@ -117,34 +114,35 @@ def test_same_time_conflicts_only_when_weekdays_overlap(schedule_editor, monkeyp
         accepted.assert_called_once()
 
 
-@pytest.mark.skipif(sys.platform != 'win32', reason='GUI 测试仅在 Windows 平台运行')
-def test_table_refresh_reuses_unchanged_rows_and_preserves_selection(qtbot, monkeypatch):
+def test_schedule_page_refresh_reuses_rows_without_saving(qtbot, monkeypatch):
+    from app.content.run_models import ScheduleModel
+    from app.content.run_controller import RunController
+    from app.run.schedule import SchedulePage
     parent = QWidget()
     qtbot.addWidget(parent)
-    monkeypatch.setattr(schedule_dialog.cfg, 'get_value', lambda key, default=None: default)
-    saved = Mock()
-    tasks = [
-        {'id': str(index), 'name': str(index), 'program': 'self', 'args': 'daily', 'time': f'{index:02}:00'}
-        for index in range(3)
-    ]
-    manager = ScheduleManagerDialog(parent, scheduled_tasks=tasks, save_callback=saved)
-    qtbot.addWidget(manager)
-    manager.table.setCurrentCell(1, 1)
-    unchanged_item = manager.table.item(0, 1)
-    enabled_widget = manager.table.cellWidget(1, 0)
-    tasks[1]['name'] = 'edited'
-    tasks[1]['enabled'] = False
-    manager._reload_table()
-    assert manager.table.item(0, 1) is unchanged_item
-    assert manager.table.cellWidget(1, 0) is enabled_widget
-    assert manager.table.currentRow() == 1
-    assert manager.table.item(1, 1).text() == 'edited'
-    assert not enabled_widget.findChild(schedule_dialog.CheckBox).isChecked()
-    saved.assert_not_called()
-    tasks[1]['weekdays'] = [1, 3]
-    manager._reload_table()
-    assert schedule_dialog.format_task_weekdays(tasks[1]) in manager.table.item(1, 2).toolTip()
-    saved.assert_not_called()
+    tasks = [{"id": str(i), "name": str(i), "program": "self", "args": "daily", "time": f"{i:02}:00"}
+             for i in range(3)]
+    monkeypatch.setattr(schedule_dialog.cfg, "get_value", lambda key, default=None: tasks if key == "scheduled_tasks" else default)
+    save = Mock()
+    monkeypatch.setattr(schedule_dialog.cfg, "set_value", save)
+    parent.runController = RunController.__new__(RunController)
+    from PySide6.QtCore import QObject
+    QObject.__init__(parent.runController, parent)
+    model = ScheduleModel(parent)
+    page = SchedulePage(model, parent)
+    rows = list(page.rows)
+    tasks[1].update(name="edited", enabled=False, weekdays=[1, 3])
+    page.refresh()
+    assert page.rows == rows
+    item = model.items()[1]
+    assert item.name == "edited" and not item.enabled and schedule_dialog.format_task_weekdays(tasks[1]) in item.detail
+    menus = []
+    monkeypatch.setattr("app.run.schedule.popup_menu", lambda page, menu, position: menus.append(menu))
+    model.duplicate = Mock()
+    page._menu("1", rows[1][0].moreButton)
+    next(action for action in menus[0].actions() if action.text() == schedule_dialog.tr("复制一份")).trigger()
+    model.duplicate.assert_called_once_with("1", parent)
+    save.assert_not_called()
 
 
 class TestStripJsoncComments:
@@ -227,3 +225,27 @@ class TestStripJsoncComments:
         text = '"hello /* not a comment */ world"'
         result = _strip_jsonc_comments(text)
         assert "/* not a comment */" in result
+
+
+@pytest.mark.parametrize("accepted", [True, False])
+def test_remove_schedule_shows_box_and_preserves_cancel_focus(qtbot, monkeypatch, accepted):
+    from types import SimpleNamespace
+    from qfluentwidgets import MessageBox
+    from app.common.mascot import Mascot
+    from app.run.schedule import SchedulePage
+    from tests.test_app.mascot_assertions import assert_pose
+
+    parent = QWidget()
+    qtbot.addWidget(parent)
+    model = Mock()
+    model.items.return_value = [SimpleNamespace(id="one", name="每日任务")]
+    def answer(box):
+        assert_pose(box.mascotLabel.pixmap(), Mascot.BOX)
+        assert box.focusWidget() is box.cancelButton and "每日任务" in box.content
+        return accepted
+    monkeypatch.setattr(MessageBox, "exec", answer)
+    SchedulePage._remove(SimpleNamespace(model=model, window=lambda: parent), "one")
+    if accepted:
+        model.remove.assert_called_once_with("one")
+    else:
+        model.remove.assert_not_called()

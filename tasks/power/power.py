@@ -9,13 +9,15 @@ from tasks.power.instance import ChallengePageUnavailable, Instance, TeamPresetU
 from tasks.power.policy import (
     ECHO, ORNAMENT, INSTANCE_LIMITS, BattleDefeat, InstanceTeamUnavailable, InstanceUnavailable, RelicBagFull,
     PowerError, SupportDemand,
-    DEFEAT_RETRIES, batch_limit, parse_pc_power, plan_paid_batch, run_plan,
+    DEFEAT_RETRIES, batch_limit, parse_pc_power, plan_paid_batch, remaining_plan, run_plan,
 )
 from tasks.power.readout import read_immersifier_stock, read_number
 from tasks.power.supplement import supplement
 from tasks.power.team import restore_main
 from tasks.power.weekly_relic_cleanup import WeeklyRelicCleanup
 from utils.date import Date
+from module.overview.plan import relic_due
+from module.overview.readings import save_reading
 
 
 MAP_POWER = (1588 / 1920, 35 / 1080, 198 / 1920, 56 / 1080)
@@ -39,7 +41,7 @@ class Power:
             lookup_ok = run_steps((("查询支援实训", query_support),))
 
         log.hr("开始清体力", 0)
-        plan = cfg.power_plan
+        plan = remaining_plan(cfg)
         if plan:
             complete = Power.execute_power_plan(support=support)
             if not complete or not cfg.power_plan_continue:
@@ -63,19 +65,14 @@ class Power:
 
     @staticmethod
     def run_weekly_relic_cleanup():
-        if (cfg.get_value("break_down_level_four_relicset", False)
-                and Date.is_weekly_day_due(
-                    cfg.get_value("weekly_relic_cleanup_timestamp", 0),
-                    cfg.get_value("weekly_relic_cleanup_day_of_week", 1),
-                    cfg.refresh_hour,
-                )):
+        if relic_due(cfg):
             if not WeeklyRelicCleanup.run():
                 raise RuntimeError("每周遗器清理未完成")
             cfg.save_timestamp("weekly_relic_cleanup_timestamp")
 
     @staticmethod
     def execute_power_plan(*, support=None):
-        plan = cfg.power_plan
+        plan = remaining_plan(cfg)
         if not plan:
             return False
         return run_plan(cfg, plan, lambda kind, name, count: Power._run_instance(kind, name, count, support=support))
@@ -104,6 +101,17 @@ class Power:
 
     @staticmethod
     def _run_instance(instance_type, name, planned, *, support=None, immersifier_only=False):
+        """逐批挑战。结束时记下剩余的开拓力，总览从这个数估算恢复。"""
+        balance = []
+        try:
+            yield from Power._run_batches(instance_type, name, planned, balance, support=support,
+                                          immersifier_only=immersifier_only)
+        finally:
+            if balance:
+                save_reading(cfg, "overview_power", balance[-1])
+
+    @staticmethod
+    def _run_batches(instance_type, name, planned, balance, *, support=None, immersifier_only=False):
         if (instance_type not in INSTANCE_LIMITS
                 or not name or name not in get_raw_instance_names().get(instance_type, {}) or name == "无"):
             raise PowerError(f"未配置有效的副本：{instance_type} · {name}")
@@ -129,6 +137,7 @@ class Power:
             return
 
         remaining = planned
+        completed = 0
         # Opt-in PC feature. Explicitly pending support training still needs a
         # real battle; afterwards the remaining paid waves may use tickets.
         quick_enabled = (getattr(cfg, "prefer_fuel_tickets", False) is True
@@ -136,7 +145,7 @@ class Power:
                          and instance_type in ("拟造花萼（金）", "拟造花萼（赤）", "凝滞虚影"))
 
         def quick_batches():
-            nonlocal available, remaining, quick_enabled
+            nonlocal available, remaining, quick_enabled, completed
             if not quick_enabled or support.pending:
                 return
             from tasks.power.fuel_ticket_ui import PCFuelTicketScreen
@@ -145,6 +154,8 @@ class Power:
             ui = PCFuelTicketScreen(auto, Instance, display_name)
             while available >= cost_per_wave and (remaining is None or remaining > 0):
                 requested = available // cost_per_wave if remaining is None else min(remaining, available // cost_per_wave)
+                from utils.runs import DETAIL_TEXT, publish_detail
+                publish_detail(DETAIL_TEXT["instance"], name=name, index=completed + 1, total=planned or completed + requested)
                 done = (ui.run_batch(instance_type, name, available, requested)
                         if getattr(cfg, "fuel_ticket_batch_enable", False) is True
                         else ui.run_one(instance_type, name, available))
@@ -152,7 +163,9 @@ class Power:
                     quick_enabled = False
                     log.info("助燃券速刷不可用，保留剩余计划并回退普通战斗")
                     break
+                completed += done
                 available -= done * cost_per_wave
+                balance.append(available)
                 if remaining is not None:
                     remaining -= done
                 log.info(f"助燃券已确认结算 {done} 次")
@@ -197,7 +210,12 @@ class Power:
         retries = 0
         cleaned = False
         while remaining is None or remaining > 0:
+            from utils.runs import DETAIL_TEXT, publish_detail
             practice = rewards == 0
+            total = planned or (completed + min(rewards, available // cost_per_wave) if is_echo else
+                                completed + immersifiers + available // cost_per_wave)
+            if total > completed:
+                publish_detail(DETAIL_TEXT["instance"], name=name, index=completed + 1, total=total)
             requested = limit if remaining is None else min(limit, remaining)
             if quick_enabled and support.pending and getattr(cfg, "borrow_enable", False):
                 # Only one real battle is needed for support training. The
@@ -277,7 +295,10 @@ class Power:
             was_support_pending = support.pending
             support.won(borrowed)
             available -= cost
+            if cost:
+                balance.append(available)
             immersifiers -= used_immersifiers
+            completed += waves
             yield waves
             log.info(f"已结算 {waves} 次")
             previous, retries = waves, 0
@@ -324,5 +345,6 @@ class Power:
             balance = supplement(auto, screen, cfg, balance, lambda: auto.find_element(
                 "./assets/images/share/power/trailblaze_power/trailblaze_power.png", "image", 0.9, crop=MAP_POWER,
             ), read, return_screen="map", desktop=True)
+        save_reading(cfg, "overview_power", balance)
         log.info(f"开拓力：{balance}/300")
         return balance

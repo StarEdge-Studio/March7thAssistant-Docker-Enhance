@@ -19,7 +19,7 @@ license: GPL-3.0
 3. 少数常见位置（如 `~\Games\March7thAssistant`、`D:\March7thAssistant`）。**不要全盘搜索**；找不到就问用户。
 
 安装目录里有 `March7th Launcher.exe`（图形界面）、`March7th Assistant.exe`（命令行，需要管理员权限）、
-`m7a.exe`（给脚本与 AI 用的命令行）、`config.yaml`、`logs\`。
+`m7a.exe`（给脚本与 AI 用的命令行）。`--status` 返回 `data_dir`、`config_file`、`logs_dir` 和 `runs_dir` 的完整路径。
 源码目录（有 `main.py`、`app.py`）用 `python main.py` 代替 `m7a.exe`，参数完全相同。
 还没安装：按 [安装说明](references/install.md) 操作。
 
@@ -72,16 +72,31 @@ license: GPL-3.0
 `apocalyptic` 末日幻影、`character_export` 角色面板导出、`redemption` 兑换码、`game` 启动游戏、`app_update` 更新小助手。
 每个任务做什么见 `assets/docs/TasksTable.md`。
 
+### 按账号运行
+
+先读 `--status` 中的 `accounts`。`effective` 为真才可以指定账号；`enabled` 是保存的开关，`current` 是当前查看的 UID。`list` 每项含 `uid`、`name` 和 `rotate`。用户只指定某个账号时，传 `--account <UID或名称>`，重名时用 UID。未指定账号的任务沿用已登录身份。用户要求轮流时，运行 `.\m7a.exe main --account all --after-finish None --detach`。中途接管任务与 workflow 带账号时只核对当前登录。
+
+记下返回的父编号，用 `--control <父运行编号> skip` 跳过当前账号，`stop` 停止整轮。读父 JSON 的 `rotation.accounts`，逐项核对 `uid`、`status`、`reason` 和子 `run_id`。用子编号读取 `<编号>.json` 的 `account`、`parent_run_id`、`steps`、`detail`，再查 `<编号>.log`。向用户汇报每个账号的结果。要标记本次调用来自 AI，可在启动命令的进程环境中设置 `M7A_RUN_TRIGGER=ai`。
+
+| 原因码 | 处理 |
+| --- | --- |
+| `account_unsupported`、`account_not_found` | 核对 Windows 主桌面、本地客户端、账号开关和 UID。 |
+| `account_no_login`、`account_login_expired` | 请持有人在客户端登录，看到角色后重新保存快照。 |
+| `account_mismatch`、`account_server_mismatch` | 核对 UID、服务器和本账号的游戏路径。 |
+| `account_switch_failed` | 查看错误详情，确认游戏已退出、临时画质已恢复、快照属于此账号。 |
+| `account_timeout`、`child_failed`、`child_error`、`child_crashed`、`child_record_missing` | 查该账号的子记录和输出，确认整轮是否已继续。 |
+| `rotation_parent_lost`、`rotation_finish_failed` | 查父记录和日志里的退出或收尾错误。 |
+
 ## 4. 修改配置
 
-- 直接编辑安装目录的 `config.yaml`（YAML）。改之前先在 `assets/config/config.example.yaml` 里找到同名配置项，读它的注释与可选值。
+- 直接编辑 `--status` 的 `config_file` 指向的文件（YAML）。改之前先在 `assets/config/config.example.yaml` 里找到同名配置项，读它的注释与可选值。
 - 只改需要改的键，保留其余内容和注释，不要整份重写。图形界面会自动重新加载被外部修改的配置；**正在运行的任务不一定读取新值**，下次运行生效。
 - 推送令牌、Mirror酱 CDK、账号等敏感值不要显示在对话中；需要填写时让用户在图形界面里输入。
 - 常见修改（体力计划、副本、定时任务、消息推送、云游戏）见 [配置说明](references/config.md)。
 
 ## 5. 定时与无人值守
 
-- 优先用小助手自己的定时：`config.yaml` 的 `scheduled_tasks`（可按星期、可链式执行），由**图形界面**执行，图形界面需要保持运行（最小化到托盘即可）；开机自启在图形界面「设置 → 杂项」配置。
+- 优先用小助手自己的定时：`config.yaml` 的 `scheduled_tasks`（界面入口在「运行」的「定时计划」，支持星期和链式执行；内置任务的 `account` 可设为 UID 或 `all`），由**图形界面**执行，图形界面需要保持运行（最小化到托盘即可）；开机自启在图形界面「设置 → 高级」配置。
 - 不要让自己充当调度器，也不要另建 Windows 计划任务，除非用户明确要求。
 
 ### 免 UAC 运行（用户不在电脑前时）
@@ -90,7 +105,7 @@ license: GPL-3.0
 
 - **作用**：开启后，`m7a.exe` 运行任务时由计划任务 `March7thAssistantNoUAC` 以管理员权限启动，不弹 UAC。
   命令、参数、输出和退出码都与平时相同，你不需要改变任何用法。
-- **只能由用户本人开启**：在图形界面「设置 → 杂项 → 免 UAC 运行」打开开关，阅读风险说明后确认。
+- **只能由用户本人开启**：在图形界面「设置 → 高级 → 免 UAC 运行」打开开关，阅读风险说明后确认。
   这是用户自己的安全决定：**不要代为开启，不要替用户点确认，也不要自己创建计划任务、修改 UAC 设置或用其他方式绕过 UAC。**
 - **向用户说明风险**（用自己的话转述）：开启后，这台电脑上以用户账户运行的其他程序（包括你执行的命令）
   也能借助小助手获得管理员权限，不再需要用户确认；电脑中了病毒或 AI 助手被他人冒用时，损害可能更大。
@@ -108,7 +123,7 @@ license: GPL-3.0
 1. **导出角色面板**：运行 `.\m7a.exe character_export --after-finish None`，运行前按第 3 节确认。
    后台模式实测 57 个角色约 13 分钟，角色多时按第 3 节用 `--detach`。目前只支持简体中文游戏客户端。
    已有 `characters.json`、`exported_at` 之后用户也没有换过遗器和光锥、没有抽到新角色时，可以直接用，不必重新导出。
-2. **读安装目录的 `characters.json`**：每个角色约 5 KB，不要整份读进对话，先用脚本筛出需要的角色和字段。
+2. **读 `--status` 的 `characters_file` 指向的角色面板**：每个角色约 5 KB，不要整份读进对话，先用脚本筛出需要的角色和字段。
    - `complete` 为 false 或 `failed` 不为空时结果不完整，要告诉用户缺了哪些角色。任务中途停止时，这次的结果在 `characters.partial.json`，`characters.json` 还是上一次的。
    - `characters` 每项的字段：`name`、`path`（命途）、`element`（属性）、`level`、`eidolon`（星魂）、`stats`（面板属性）、
      `light_cone`（光锥，`superimposition` 是叠影）、`skills`（技能等级）、`relics`（`sets` 是套装，`pieces` 是每件的主词条和副词条）、
@@ -123,8 +138,8 @@ license: GPL-3.0
 ## 7. 排查失败
 
 1. `.\m7a.exe --follow latest` 查看最近一次运行的末尾输出与结论；或看 `--status` 的 `recent_runs`。
-2. 运行记录 `logs\runs\<运行编号>.json`：`status`、`reason`、`error`、`screenshot`（失败时的游戏截图，可以直接查看图片）。
-3. 完整输出 `logs\runs\<运行编号>.log`；当天全部日志 `logs\<日期>.log`（含图形界面启动的任务）。
+2. 在 `--status` 的 `runs_dir` 中读取 `<运行编号>.json`：`status`、`reason`、`error`、`screenshot`（失败时的游戏截图，可以直接查看图片）。
+3. 完整输出在 `runs_dir` 的 `<运行编号>.log`，当天全部日志在 `logs_dir` 的 `<日期>.log`（含图形界面启动的任务）。
 4. 对照 `assets/docs/FAQ.md` 与 [排查说明](references/troubleshooting.md)。确认原因、修正配置后再重跑；不确定时把证据和推测分开告诉用户。
 
 ## 8. 更新与其他

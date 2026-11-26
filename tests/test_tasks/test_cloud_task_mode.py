@@ -79,6 +79,43 @@ def runner():
     )
 
 
+@pytest.mark.parametrize("touch", [False, True])
+def test_overview_retry_dispatches_only_requested_full_run_step(runner, monkeypatch, touch):
+    from tasks.touch import rewards
+
+    runner.cfg.control_backend = "local"
+    runner.cfg.ui_profile = "touch_720" if touch else "pc_1080"
+    runner.run_session.record = {"retry_step": "echo"}
+    touch_routine = MagicMock(return_value=True)
+    monkeypatch.setattr(rewards, "routine", touch_routine)
+    assert runner.main(action="routine") is not False
+    if touch:
+        touch_routine.assert_called_once_with(full_run=True, only="echo")
+        runner.Daily.start.assert_not_called()
+    else:
+        runner.Daily.start.assert_called_once_with(only="echo")
+        touch_routine.assert_not_called()
+    runner.Daily.routine.assert_not_called()
+
+
+@pytest.mark.parametrize("page,touch,allowed", [
+    ("reward", False, True), ("echo", True, True), ("assets", True, False), ("activity", False, True),
+])
+def test_task_page_dispatch_keeps_routine_guard_and_scope(runner, monkeypatch, page, touch, allowed):
+    from tasks import page_actions
+    runner.cfg.control_backend = "local"
+    runner.cfg.ui_profile = "touch_720" if touch else "pc_1080"
+    runner.run_session.record = {"page_task": page}
+    dispatch = MagicMock(return_value=True)
+    monkeypatch.setattr(page_actions, "run_page", dispatch)
+    assert (runner.main(action="routine") is not False) == allowed
+    if allowed:
+        dispatch.assert_called_once_with(page, runner.cfg, touch=touch)
+    else:
+        dispatch.assert_not_called()
+    runner.Daily.routine.assert_not_called()
+
+
 # PC 内置任务的入口及其处理函数。
 PC_TASK_HANDLERS = {
     "main": "Daily.start",

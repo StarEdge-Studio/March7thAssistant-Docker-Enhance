@@ -1,6 +1,5 @@
 """Exercise the Easter egg and theme preferences through the real window."""
 import sys
-from copy import deepcopy
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -10,11 +9,13 @@ from PySide6.QtGui import QIcon, QPalette, QPixmap, QShortcut
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QWidget
 from qfluentwidgets import Theme, isDarkTheme, qconfig, setTheme, themeColor
 
-from app.common.evernight import EVEY_ANIMATION, EVERNIGHT_AVATAR, EVERNIGHT_BANNER, EvernightEasterEgg
+from app.common.evernight import EVEY_ANIMATION, EvernightEasterEgg
+from app.common.mascot import Mascot, load_mascot
 from app.common.theme_assets import application_icon_path
-from app.common.accent import EVERNIGHT_RED, MARCH7TH_PINK, accent_color
+from app.common.accent import EVERNIGHT_RED, MARCH7TH_PINK
 from app.common.window_icon import set_application_icon
 from app.components.evey_animation import EveyAnimation
+from app.overview.style import animations_enabled
 from module.config import cfg
 from tests.test_app.test_language_switch import window, switch_language
 
@@ -53,106 +54,79 @@ def click_logo(window, qtbot, count=1):
 
 
 
-def first_card(page):
-    return page.basicInputView.flowLayout.itemAt(0).widget()
-
-
-def test_home_artwork_crossfades_at_midpoint_without_fading_labels(window, qtbot):
+def test_greeting_background_crossfades_at_midpoint_below_text_and_buttons(window, qtbot):
     window.resize(1100, 800)
     setTheme(Theme.DARK)
     click_logo(window, qtbot, 10)
     intro = window._evey_animation
     intro.timeline.pause()
     intro.timeline.setCurrentTime(intro.DURATION_MS // 2 - 1)
-    page = window.homeInterface
-    card = first_card(page)
-    widgets = (page.banner, card.iconWidget)
-    transitions = (page.banner.imageTransition, page._task_icon_transitions[card])
-
-    def pixels(widget):
-        image = widget.grab().toImage()
-        # Sample image areas away from the banner's title, clip edges and hint.
-        return [image.pixelColor(int(image.width() * x), int(image.height() * y)).getRgb()[:3]
-                for x in (0.25, 0.5, 0.75) for y in (0.65, 0.8)]
-
-    before = [pixels(widget) for widget in widgets]
+    greeting = window.homeInterface.greeting
+    fade = greeting.crossfade
+    before = greeting.grab().toImage()
+    mascot = greeting.mascot
+    march7th = mascot._pixmap.cacheKey()
     intro.timeline.setCurrentTime(intro.DURATION_MS // 2)
-    for transition in transitions:
-        transition.animation.pause()
-    QApplication.processEvents()
-    assert page.banner.galleryLabel.text() == '长夜月小助手\nEvernightAssistant'
-    assert all(transition.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-               for transition in transitions)
-
+    fade.animation.pause()
+    assert mascot._pixmap.cacheKey() not in (0, march7th)
+    assert (mascot.animation.state() == mascot.animation.State.Running) == animations_enabled()
+    assert fade.isVisible() and fade.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+    assert greeting._mode() == "evernight"
+    layers = greeting.children()
+    for widget in (greeting.titleLabel, greeting.descriptionLabel, greeting.buttonBox):
+        assert layers.index(fade) < layers.index(widget) and widget.isVisible()
+        assert widget.graphicsEffect() is None
     frames = []
-    for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
-        for transition in transitions:
-            transition.animation.setCurrentTime(round(transition.DURATION_MS * fraction))
-        frames.append([pixels(widget) for widget in widgets])
-
-    for i in range(len(widgets)):
-        def difference(a, b):
-            return sum(abs(x - y) for p, q in zip(a, b) for x, y in zip(p, q))
-
-        # The two banner aspect ratios round to heights one pixel apart; allow
-        # that resampling, but require the first frame to retain the old artwork.
-        assert difference(frames[0][i], before[i]) < difference(frames[-1][i], before[i]) * 0.2
-        assert frames[-1][i] != before[i]
-        for samples in zip(*(frame[i] for frame in frames)):
-            for channel in zip(*samples):
-                start, quarter, middle, three_quarter, end = channel
-                assert abs(middle - (start + end) / 2) <= 3, (type(widgets[i]).__name__, channel)
-                assert min(start, end) - 2 <= quarter <= max(start, end) + 2
-                assert min(quarter, end) - 2 <= three_quarter <= max(quarter, end) + 2
-    assert all(transition.isHidden() and transition._previous is None for transition in transitions)
-    assert intro.DURATION_MS == 5200  # The original intro timing is unchanged.
-
+    for fraction in (0, 0.5, 1):
+        fade.animation.setCurrentTime(round(fade.DURATION_MS * fraction))
+        frames.append(greeting.grab().toImage())
+    point = QPoint(18, greeting.height() - 14)
+    start, middle, end = [frame.pixelColor(point).getRgb()[:3] for frame in frames]
+    assert start == before.pixelColor(point).getRgb()[:3] and start != end
+    assert all(abs(m - (a + b) / 2) <= 2 for a, m, b in zip(start, middle, end))
+    assert fade.isHidden() and fade._previous is None
+    assert intro.DURATION_MS == 5200
 
 
 def test_real_button_changes_all_branding_and_restores_without_starting_tasks(window, qtbot, monkeypatch):
-    from app import home_interface
-    from app.log_interface import GameLogOverlay
-    from app.sub_interfaces.accounts_interface import AccountsCard
-    from app.help_interface import DOC_OF_TAB
+    from app.run.overlay import GameLogOverlay
+    from app.pages.common import is_evernight
+    from app.common.design_tokens import DARK, LIGHT
+    from tests.test_app.test_help_interface import link_colors
     start_task = Mock()
-    monkeypatch.setattr(home_interface, 'start_task', start_task)
+    monkeypatch.setattr(window, 'startFullTask', start_task)
     setTheme(Theme.LIGHT)
-    accounts = window.settingInterface.findChild(AccountsCard)
-    assert (accounts is not None) == (sys.platform == 'win32')
-    tips = (accounts.tipsText, accounts.tipsText2) if accounts is not None else ()
-    for label in tips:
-        label.ensurePolished()
-        assert label.palette().color(QPalette.ColorRole.WindowText).name() == '#f94e9b'
+    accounts = window.accountsInterface
+    normal_style = accounts.runAllButton.property("lightCustomQss")
+    assert not is_evernight()
     overlay = GameLogOverlay()
     qtbot.addWidget(overlay)
     original_overlay_style = overlay.panel.styleSheet()
     window.stackedWidget.setAnimationEnabled(False)
     assert not window._evernight.unlocked
     page = window.homeInterface
-    original_banner = page.banner.banner_image
+    mascot = page.greeting.mascot
+    original_pose = mascot.pose()
     original_icon = window.windowIcon().pixmap(32, 32).toImage()
-    card = first_card(page)
-    original_card_icon = card.iconWidget.pixmap().toImage()
-    action = card.action
     current_page = window.stackedWidget.currentWidget()
     cfg.set_value.reset_mock()
     cfg.set_values.reset_mock()
 
     setTheme(Theme.DARK)
+    dark_style = accounts.runAllButton.property("darkCustomQss")
     click_logo(window, qtbot)
     dark_march_icon = window.windowIcon().pixmap(32, 32).toImage()
     dark_march_titlebar = window.titleBar.iconLabel.pixmap().toImage()
-    dark_march_card = card.iconWidget.pixmap().toImage()
     click_logo(window, qtbot, 3)
     assert not window._evernight.unlocked
-    assert 'March7thAssistant' in page.banner.galleryLabel.text()
+    assert page.greeting._mode() == "dark"
     click_logo(window, qtbot)
-    hint = page.banner.logoHint
-    assert hint.isVisible()
+    hint = page.greeting.logoHint
+    assert hint.isVisible() and mascot.pose() == Mascot.DIZZY
     assert hint.text() == '别晃啦！本姑娘头好晕( ꩜ ᯅ ꩜;)'
     assert '#ff91c1' in hint.styleSheet()
     assert hint.width() >= hint.sizeHint().width()
-    assert page.banner.rect().contains(hint.geometry())
+    assert page.greeting.rect().contains(hint.geometry())
     assert window._evey_animation is None
     click_logo(window, qtbot, 4)
     assert not window._evernight.unlocked
@@ -163,54 +137,52 @@ def test_real_button_changes_all_branding_and_restores_without_starting_tasks(wi
     assert animation is not None
     for moment in (0, animation.DURATION_MS // 2 - 1):
         animation.timeline.setCurrentTime(moment)
-        assert page.banner.galleryLabel.text() == '三月七小助手\nMarch7thAssistant'
+        assert page.greeting._mode() == 'dark'
         assert window.windowTitle() == 'March7th Assistant'
-        assert page.banner.banner_image is original_banner
-        assert card.iconWidget.pixmap().toImage() == dark_march_card
+        assert mascot.pose() == original_pose
         assert window.windowIcon().pixmap(32, 32).toImage() == dark_march_icon
         assert window.titleBar.iconLabel.pixmap().toImage() == dark_march_titlebar
         assert all(art.isHidden() for art in (
             window._evey_title_decoration, window.settingInterface.themeCard.eveyDecoration,
             window._evey_settings_decoration))
         assert qconfig.get(qconfig.themeColor).name() == MARCH7TH_PINK
-        assert all(label.palette().color(QPalette.ColorRole.WindowText).name() == '#f94e9b' for label in tips)
-    from app.common import theme_assets
+        assert accounts.runAllButton.property("darkCustomQss") == dark_style
+    from app.common import evernight_artwork as artwork
     with monkeypatch.context() as midpoint:
-        midpoint.setattr(theme_assets, 'QPixmap', Mock(side_effect=AssertionError('portrait decoding at midpoint')))
-        midpoint.setattr(home_interface.Image, 'open', Mock(side_effect=AssertionError('banner decoding at midpoint')))
+        midpoint.setattr(artwork, '_pixmap', Mock(side_effect=AssertionError('decoration decoded at midpoint')))
         midpoint.setattr(window.stackedWidget, 'setStyleSheet',
                          Mock(side_effect=AssertionError('unchanged parent stylesheet reset at midpoint')))
-        for attr in DOC_OF_TAB:
-            midpoint.setattr(getattr(window.helpInterface, attr), 'setText',
-                             Mock(side_effect=AssertionError('hidden help document parsed at midpoint')))
+        midpoint.setattr('app.help_interface.load_document',
+                         Mock(side_effect=AssertionError('hidden help document parsed at midpoint')))
         animation.timeline.setCurrentTime(animation.DURATION_MS // 2)
     assert window._evey_animation is animation and animation.isVisible()
     assert all(not art.isHidden() for art in (
         window._evey_title_decoration, window.settingInterface.themeCard.eveyDecoration,
         window._evey_settings_decoration))
     assert qconfig.get(qconfig.themeColor).name() == EVERNIGHT_RED
-    assert all(label.palette().color(QPalette.ColorRole.WindowText).name() == themeColor().name() for label in tips)
+    assert is_evernight() and accounts.runAllButton.property("lightCustomQss") != normal_style
     assert 'rgba(241, 140, 185,' not in overlay.panel.styleSheet()
-    assert page.banner.galleryLabel.text() == '长夜月小助手\nEvernightAssistant'
+    assert page.greeting._mode() == 'evernight'
     assert window.windowTitle() == 'Evernight Assistant'
     assert window.titleBar.titleLabel.text() == f'Evernight Assistant {cfg.version}'
-    assert page.banner.banner_image is not original_banner
-    assert card.iconWidget.pixmap().toImage() == QPixmap(EVERNIGHT_AVATAR).toImage()
+    assert mascot.pose() == original_pose and mascot._evernight
+    empty_mascots = ((accounts.empty.mascot, 200), (window.logInterface.historyPage.mascot, 180))
+    for label, height in empty_mascots:
+        evernight = load_mascot(Mascot.OK, height, label.devicePixelRatioF(), evernight=True)
+        assert label.pixmap().cacheKey() == evernight.cacheKey()
     assert window.windowIcon().pixmap(32, 32).toImage() != original_icon
     assert window.windowIcon().pixmap(32, 32).toImage() == QIcon(
         application_icon_path(True)).pixmap(32, 32).toImage()
     assert window.titleBar.iconLabel.pixmap().toImage() == QIcon(
         application_icon_path(True)).pixmap(window.titleBar.iconLabel.size()).toImage()
     assert window.stackedWidget.currentWidget() is current_page
-    # Deferred HTML adopts the current accent before the page's first paint.
+    # The lazily opened manual uses the active palette on its first visit.
     window.switchTo(window.helpInterface)
     qtbot.wait(20)
-    assert page.banner.imageTransition.isHidden()
-    assert all(transition.isHidden() for transition in page._task_icon_transitions.values())
-    assert themeColor().name() in window.helpInterface.tutorialLabel.toHtml()
-    assert MARCH7TH_PINK not in window.helpInterface.tutorialLabel.toHtml()
+    assert page.greeting.crossfade.isHidden()
+    qtbot.waitUntil(lambda: window.helpInterface.current == 'Tutorial')
+    assert link_colors(window.helpInterface.currentPage()) == {DARK.evernight_accent}
     window.switchTo(current_page)
-    assert card.action is action
     qtbot.waitUntil(lambda: window._evey_animation is None, timeout=6500)
     assert window.windowTitle() == 'Evernight Assistant'
     cfg.set_value.assert_not_called()
@@ -223,14 +195,15 @@ def test_real_button_changes_all_branding_and_restores_without_starting_tasks(wi
     assert qconfig.get(qconfig.themeColor).name() == MARCH7TH_PINK
     window.switchTo(window.helpInterface)
     qtbot.wait(20)
-    assert MARCH7TH_PINK in window.helpInterface.tutorialLabel.toHtml()
+    assert link_colors(window.helpInterface.currentPage()) == {LIGHT.deep_pink}
     window.switchTo(current_page)
-    assert all(label.palette().color(QPalette.ColorRole.WindowText).name() == '#f94e9b' for label in tips)
+    assert accounts.runAllButton.property("lightCustomQss") == normal_style
     assert overlay.panel.styleSheet() == original_overlay_style
-    assert page.banner.galleryLabel.text() == '三月七小助手\nMarch7thAssistant'
+    assert page.greeting._mode() == 'light'
     assert window.windowTitle() == 'March7th Assistant'
-    assert page.banner.banner_image is original_banner
-    assert card.iconWidget.pixmap().toImage() == original_card_icon
+    assert mascot.pose() == original_pose and not mascot._evernight
+    for label, height in empty_mascots:
+        assert label.pixmap().cacheKey() == load_mascot(Mascot.OK, height, label.devicePixelRatioF()).cacheKey()
     assert window.windowIcon().pixmap(32, 32).toImage() == original_icon
     assert window.titleBar.iconLabel.pixmap().toImage() == QIcon(
         application_icon_path(False)).pixmap(window.titleBar.iconLabel.size()).toImage()
@@ -243,8 +216,6 @@ def test_real_button_changes_all_branding_and_restores_without_starting_tasks(wi
     assert [call.args for call in cfg.set_value.call_args_list] == [
         ('ui_theme', 'light'), ('ui_theme', 'dark'), ('ui_theme', 'evernight'),
     ]
-    card.action()  # mock only: the complete-run action still dispatches the original task.
-    start_task.assert_called_once_with('main')
 
 
 
@@ -271,9 +242,8 @@ def test_tenth_logo_click_saves_unlock_and_theme(
     assert not window._evernight.animation_played
     check_theme_change.applyTheme(window)
     original_dark = isDarkTheme()
-    original_banner = window.homeInterface.banner.banner_image
     click_logo(window, qtbot, 5)
-    assert window.homeInterface.banner.logoHint.isVisible()
+    assert window.homeInterface.greeting.logoHint.isVisible()
     click_logo(window, qtbot, 4)
     assert not window._evernight.unlocked and isDarkTheme() is original_dark
     assert window._evey_animation is None
@@ -291,7 +261,7 @@ def test_tenth_logo_click_saves_unlock_and_theme(
     assert window._evey_animation is not None
     check_theme_change.applyTheme(window, Theme.LIGHT)  # System events cannot override Evernight.
     assert isDarkTheme()
-    assert window.homeInterface.banner.banner_image is original_banner
+    assert window.homeInterface.greeting._mode() == "dark"
     assert window.windowTitle() == 'March7th Assistant'
     if cancel_after_midpoint:
         animation = window._evey_animation
@@ -299,9 +269,8 @@ def test_tenth_logo_click_saves_unlock_and_theme(
         assert window.windowTitle() == 'Evernight Assistant'
     combo.setCurrentIndex(combo.findData(cancel_theme))
     assert window._evey_animation is None
-    assert window.homeInterface.banner.imageTransition.isHidden()
-    assert all(transition.isHidden() and transition._previous is None
-               for transition in window.homeInterface._task_icon_transitions.values())
+    assert window.homeInterface.greeting.crossfade.isHidden()
+    assert window.homeInterface.greeting.crossfade._previous is None
     assert window.windowTitle() == 'March7th Assistant'
     assert isDarkTheme() is (system_dark if cancel_theme == 'auto' else cancel_theme == 'dark')
     writes_before = cfg.set_value.call_count
@@ -372,7 +341,7 @@ def test_unlocked_theme_survives_settings_reload_and_restart(window, qtbot, monk
         combo.setCurrentIndex(combo.findData('evernight'))
         assert cfg._read_file_config()['ui_theme'] == 'evernight'
     assert restarted.windowTitle() == 'Evernight Assistant'
-    assert restarted.homeInterface.banner.galleryLabel.text() == '长夜月小助手\nEvernightAssistant'
+    assert restarted.homeInterface.greeting._mode() == 'evernight'
     assert qconfig.get(qconfig.themeColor).name() == EVERNIGHT_RED
     assert restarted._evey_animation is None
 
@@ -436,7 +405,7 @@ def test_evey_artwork_positions_preserve_controls(window, qtbot, monkeypatch, tm
     monkeypatch.setattr(window, 'setMicaEffectEnabled', lambda _: None)
     window.stackedWidget.setAnimationEnabled(False)
     window.switchTo(settings)
-    settings.stackedWidget.setCurrentWidget(settings.ProgramGroup)
+    settings.showCategory("appearance")
     qtbot.wait(20)
     title_art = window._evey_title_decoration
     card_art = settings.themeCard.eveyDecoration
@@ -481,10 +450,13 @@ def test_evey_artwork_positions_preserve_controls(window, qtbot, monkeypatch, tm
                 assert window.titleBar.childAt(button.geometry().center()) is button
         assert card_art.geometry().contains(combo.geometry())
         assert settings.themeCard.childAt(combo.geometry().center()) is combo
-        assert nav_art.geometry().contains(nav_settings.geometry())
+        icon_rect = QRect(nav_settings.geometry())
+        icon_rect.setWidth(40)
+        assert nav_art.geometry().contains(icon_rect)
         assert nav_art.y() < nav_settings.y()
-        assert nav_settings.parentWidget().childAt(nav_settings.geometry().center()) is nav_settings
-        settings.ensureWidgetVisible(settings.themeCard, 0, 20)
+        hit = nav_settings.parentWidget().childAt(icon_rect.center())
+        assert hit is nav_settings or nav_settings.isAncestorOf(hit)
+        settings.pages["appearance"].ensureWidgetVisible(settings.themeCard, 0, 20)
         qtbot.wait(20)
         title_region = QRect(window.titleBar.mapTo(window, QPoint()), window.titleBar.size())
         card_region = QRect(settings.themeCard.mapTo(window, QPoint()), settings.themeCard.size())
@@ -500,7 +472,7 @@ def test_evey_artwork_positions_preserve_controls(window, qtbot, monkeypatch, tm
     combo.dropMenu.close()
 
     window.switchTo(window.homeInterface)
-    qtbot.mouseClick(nav_settings, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(nav_settings.itemWidget, Qt.MouseButton.LeftButton)
     assert window.stackedWidget.currentWidget() is settings
     if window.titleBar.maxBtn.isVisible():
         qtbot.mouseClick(window.titleBar.maxBtn, Qt.MouseButton.LeftButton)
@@ -518,56 +490,31 @@ def test_evey_artwork_positions_preserve_controls(window, qtbot, monkeypatch, tm
     assert nav_settings.icon().pixmap(32, 32).toImage() == original_nav_icon
 
 
-def test_custom_assets_survive_language_and_card_refresh(window, qtbot, monkeypatch):
-    from app import home_interface
+def test_custom_background_and_shortcut_survive_language_and_evernight(window, qtbot, monkeypatch, tmp_path):
+    custom = QPixmap(30, 30)
+    custom.fill(Qt.GlobalColor.blue)
+    path = str(tmp_path / "my-picture.png")
+    assert custom.save(path)
+    shortcuts = [{"id": "main", "name": "我的运行按钮", "icon": "FIF.PLAY"}]
+    cfg.config.update(overview_shortcuts=shortcuts, banner_path=path)
     monkeypatch.setattr(cfg, 'set_value', Mock(side_effect=lambda key, value: cfg.config.__setitem__(key, value)))
-    custom_banner = str(Path('assets/app/images/March7th.jpg').resolve())
-    custom_cards = [{
-        'icon': './assets/app/images/bg37.jpg', 'title': '我的运行卡片',
-        'action_type': 'single', 'task_id': 'main', 'menu_items': [],
-    }]
-    cfg.config['home_cards'] = deepcopy(custom_cards)
     page = window.homeInterface
-    page.refreshBackendTasks()
-    monkeypatch.setattr(home_interface.QFileDialog, 'getOpenFileName', lambda *a: (custom_banner, ''))
-    page.banner.menu.actions()[0].trigger()
-    custom_image = page.banner.banner_image
-    custom_icon = first_card(page).iconWidget.pixmap().toImage()
-    cfg.set_value.reset_mock()
-    setTheme(Theme.DARK)
+    page.model.refresh()
     click_logo(window, qtbot, 10)
     window._evey_animation.timeline.pause()
-    page.refreshBackendTasks()
-    assert first_card(page).iconWidget.pixmap().toImage() == custom_icon
-    assert page.banner.banner_image is custom_image
     switch_language(qtbot, window, 'en_US')
     combo = window.settingInterface.themeCard.comboBox
-    assert combo.currentData() == 'evernight'
-    assert combo.currentText() == 'Long Night'
-    assert window.settingInterface.themeCard.eveyDecoration.isHidden()
-    assert window.settingInterface.themeCard.height() == 70
-    assert window._evey_settings_decoration.isHidden()
-    assert page.banner.galleryLabel.text() == 'March7th Assistant'
-    assert first_card(page).iconWidget.pixmap().toImage() == custom_icon
-    qtbot.keyClick(window, Qt.Key.Key_Escape)  # skip the intro, then reveal together
-    assert window._evey_animation is None
-    assert not window.settingInterface.themeCard.eveyDecoration.isHidden()
-    assert window._evey_settings_decoration.isVisible()
-    assert qconfig.get(qconfig.themeColor).name() == EVERNIGHT_RED
-    window.stackedWidget.setAnimationEnabled(False)
-    window.switchTo(window.helpInterface)
-    qtbot.wait(20)
-    assert accent_color() in window.helpInterface.tutorialLabel.toHtml()
-    window.switchTo(page)
-    assert page.banner.galleryLabel.text() == 'Evernight Assistant'
-    assert first_card(page).titleLabel.text() == '我的运行卡片'
-    assert first_card(page).iconWidget.pixmap().toImage() == QPixmap(EVERNIGHT_AVATAR).toImage()
-    combo.setCurrentIndex(combo.findData('light'))
-    assert page.banner.banner_image is custom_image
-    assert first_card(page).iconWidget.pixmap().toImage() == custom_icon
-    assert cfg.config['home_cards'] == custom_cards
-    assert not any(call.args[0] in ('banner_path', 'home_cards') for call in cfg.set_value.call_args_list)
-
+    assert combo.currentText() == 'Long Night' and window._evey_settings_decoration.isHidden()
+    qtbot.keyClick(window, Qt.Key.Key_Escape)
+    assert window._evey_animation is None and window._evey_settings_decoration.isVisible()
+    for theme in ('evernight', 'light'):
+        combo.setCurrentIndex(combo.findData(theme))
+        assert page.greeting._mode() == theme
+        assert page.greeting._background.pixelColor(0, 0).blue() == 255
+        button, = page.shortcutsCard._buttons
+        assert button.text() == '我的运行按钮' and not button.icon().isNull()
+    assert cfg.config['overview_shortcuts'] == shortcuts
+    assert not any(c.args[0] in ('banner_path', 'overview_shortcuts') for c in cfg.set_value.call_args_list)
 
 
 def test_floating_sprite_is_transparent_moves_and_releases_itself(qtbot):
@@ -632,9 +579,9 @@ def test_floating_sprite_can_be_dismissed(qtbot, cancel):
 
 
 def test_evernight_artwork_is_loadable_and_transparent(qtbot):
-    assert not QPixmap(EVERNIGHT_BANNER).isNull()
-    dark = QPixmap(EVERNIGHT_AVATAR)
-    assert not dark.isNull() and dark.hasAlphaChannel()
+    from app.common.evernight_artwork import evernight_artwork
+    for sprite in evernight_artwork().values():
+        assert not sprite.isNull() and sprite.hasAlphaChannel()
     sprite = QPixmap(EVEY_ANIMATION)
     assert not sprite.isNull() and sprite.hasAlphaChannel()
     icon = QIcon(application_icon_path(True))
@@ -696,7 +643,7 @@ def test_logo_hit_target_covers_padding_without_maximizing(window, qtbot):
     title_position = window.titleBar.titleLabel.pos()
     state = window.windowState()
     for point in (QPoint(1, 1), QPoint(46, 1), QPoint(1, 46), QPoint(46, 46)):
-        assert not logo.rect().contains(target.mapTo(logo, point))
+        assert not logo.rect().contains(logo.mapFromGlobal(target.mapToGlobal(point)))
         assert window.titleBar.childAt(target.mapTo(window.titleBar, point)) is target
         qtbot.mouseClick(target, Qt.MouseButton.LeftButton, pos=point)
         qtbot.mouseDClick(target, Qt.MouseButton.LeftButton, pos=point)
@@ -704,7 +651,7 @@ def test_logo_hit_target_covers_padding_without_maximizing(window, qtbot):
         assert window.windowState() == state
     assert logo.geometry() == icon_geometry
     assert window.titleBar.titleLabel.pos() == title_position
-    assert window.homeInterface.banner.logoHint.isVisible()  # The padded area counts clicks too.
+    assert window.homeInterface.greeting.logoHint.isVisible()  # The padded area counts clicks too.
     assert not window._evernight.unlocked  # Eight completed clicks, not ten.
 
 
@@ -712,15 +659,17 @@ def test_logo_warning_expires_and_requires_two_fresh_groups(window, qtbot):
     now = [0.0]
     window._evernight = EvernightEasterEgg(clock=lambda: now[0])
     setTheme(Theme.DARK)
-    hint = window.homeInterface.banner.logoHint
+    hint = window.homeInterface.greeting.logoHint
     click_logo(window, qtbot, 5)
     assert hint.isVisible() and not window._evernight.unlocked
     assert isDarkTheme()
     assert hint.animation.duration() == 5000
     click_logo(window, qtbot, 4)
     now[0] = 5.001
+    assert window.homeInterface.greeting.mascot.pose() == Mascot.DIZZY
     hint.animation.setCurrentTime(5000)  # Advance the visual alongside the injected clock.
     qtbot.waitUntil(hint.isHidden, timeout=1000)
+    assert window.homeInterface.greeting.mascot.pose() != Mascot.DIZZY
     click_logo(window, qtbot, 5)
     assert hint.isVisible() and not window._evernight.unlocked
     assert window._evey_animation is None
@@ -730,17 +679,17 @@ def test_logo_warning_expires_and_requires_two_fresh_groups(window, qtbot):
 
 
 def test_logo_hint_rises_fades_and_restarts(qtbot):
-    from app.home_interface import FloatingLogoHint
+    from app.overview.greeting import LogoHint
     parent = QWidget()
     parent.resize(900, 320)
     qtbot.addWidget(parent)
     parent.show()
-    hint = FloatingLogoHint(parent)
+    hint = LogoHint(parent, lambda: None)
     hint.play()
     hint.animation.pause()
     start = hint.textRect()
     assert start.center().x() == pytest.approx(parent.width() / 2)
-    assert start.center().y() == pytest.approx(parent.height() * 0.82)
+    assert start.center().y() == pytest.approx(parent.height() * 0.80)
     first = parent.grab().toImage()
     # Adjacent frames move and repaint, including fractions of a logical pixel.
     hint.animation.setCurrentTime(16)
@@ -755,13 +704,13 @@ def test_logo_hint_rises_fades_and_restarts(qtbot):
     assert parent.grab().toImage() != first
     hint.animation.resume()
     hint.animation.setCurrentTime(5000)
-    assert hint.textRect().center().y() == pytest.approx(parent.width() * 0.10)
+    assert hint.textRect().center().y() == pytest.approx(parent.height() * 0.16)
     assert hint.isHidden()
     hint.play()
     assert hint.isVisible() and hint.textRect() == start
     parent.resize(1100, 400)
     assert hint.textRect().center().x() == pytest.approx(550)
-    assert hint.textRect().center().y() == pytest.approx(328)
+    assert hint.textRect().center().y() == pytest.approx(320)
     hint.dismiss()
     assert hint.isHidden()
     assert hint.animation.state() == hint.animation.State.Stopped
@@ -769,12 +718,14 @@ def test_logo_hint_rises_fades_and_restarts(qtbot):
 
 
 @pytest.mark.parametrize('active', [False, True])
-def test_application_icons_keep_white_tiles(qtbot, active):
-    image = QIcon(application_icon_path(active)).pixmap(256, 256).toImage()
+def test_application_icons_share_the_same_tile(qtbot, active):
+    icon = QIcon(application_icon_path(active))
+    assert icon.availableSizes() == QIcon(application_icon_path()).availableSizes()
+    image = icon.pixmap(256, 256).toImage()
     assert not image.isNull()
-    assert image.pixelColor(128, 16).alpha() >= 245
+    assert all(image.pixelColor(x, y).alpha() >= 245 for x, y in ((128, 8), (8, 128), (247, 128), (128, 247)))
     assert image.pixelColor(0, 0).alpha() == 0
-    assert image.pixelColor(128, 16).lightness() > 225
+    assert (image.pixelColor(128, 16).lightness() > 225) is not active
 
 
 
@@ -823,8 +774,7 @@ def test_shell_group_rebuilds_for_each_icon_and_restores_original_identity(qtbot
 
 
 def test_locked_session_does_not_decode_evernight_artwork(qtbot, monkeypatch, request):
-    from PIL import Image
-    from app.common import evernight_artwork as artwork, theme_assets
+    from app.common import evernight_artwork as artwork
     from app.components import evey_animation
 
     reads = []
@@ -832,28 +782,26 @@ def test_locked_session_does_not_decode_evernight_artwork(qtbot, monkeypatch, re
         def read(path, *args, **kwargs):
             if isinstance(path, (str, Path)):
                 normalized = Path(path).as_posix().lower()
-                if '/evernight/' in normalized or normalized.endswith('/dark/evernight.png'):
+                if '/evernight/' in normalized:
                     reads.append(Path(path).name)
             return reader(path, *args, **kwargs)
         return read
 
     artwork.evernight_artwork.cache_clear()
     try:
-        monkeypatch.setattr(Image, 'open', watched(Image.open))
         monkeypatch.setattr(artwork, 'QPixmap', watched(artwork.QPixmap))
         monkeypatch.setattr(artwork, 'QIcon', watched(artwork.QIcon))
-        monkeypatch.setattr(theme_assets, 'QPixmap', watched(theme_assets.QPixmap))
         monkeypatch.setattr(evey_animation, 'QPixmap', watched(evey_animation.QPixmap))
         window = request.getfixturevalue('window')  # install readers before constructing a real main window
         combo = window.settingInterface.themeCard.comboBox
         combo.setCurrentIndex(combo.findData('dark'))
         click_logo(window, qtbot, 5)
-        assert window.homeInterface.banner.logoHint.isVisible()
+        assert window.homeInterface.greeting.logoHint.isVisible()
         click_logo(window, qtbot, 4)
         assert reads == []
         assert artwork.evernight_artwork.cache_info().currsize == 0
         click_logo(window, qtbot)
-        expected = sorted(('banner.png', 'Evernight.png', 'icon.ico', 'evey-floating.png',
+        expected = sorted(('icon.ico', 'evey-floating.png',
                            'evey-decoration-folded.png', 'evey-decoration-upright.png', 'evey-decoration-wide.png'))
         assert sorted(reads) == expected
         intro = window._evey_animation
@@ -865,21 +813,21 @@ def test_locked_session_does_not_decode_evernight_artwork(qtbot, monkeypatch, re
         artwork.evernight_artwork.cache_clear()
 
 
-def test_unreadable_optional_banner_leaves_ordinary_app_usable(qtbot, monkeypatch, request, tmp_path):
+def test_unreadable_optional_icon_leaves_ordinary_app_usable(qtbot, monkeypatch, request, tmp_path):
     from app.common import evernight_artwork as artwork
 
     broken = tmp_path / 'broken.png'
     broken.write_bytes(b'not an image')
     artwork.evernight_artwork.cache_clear()
-    monkeypatch.setattr(artwork, 'EVERNIGHT_BANNER', str(broken))
+    monkeypatch.setattr(artwork, 'application_icon_path', lambda active: str(broken))
     window = request.getfixturevalue('window')
     combo = window.settingInterface.themeCard.comboBox
-    old = (window.windowTitle(), combo.currentData(), isDarkTheme(), window.homeInterface.banner.banner_image)
+    old = (window.windowTitle(), combo.currentData(), isDarkTheme(), window.homeInterface.greeting._mode())
     cfg.set_value.reset_mock()
     click_logo(window, qtbot, 10)
     assert not window._evernight.unlocked and not window._evernight.selected
     assert window._evey_animation is None and combo.findData('evernight') < 0
-    assert (window.windowTitle(), combo.currentData(), isDarkTheme(), window.homeInterface.banner.banner_image) == old
+    assert (window.windowTitle(), combo.currentData(), isDarkTheme(), window.homeInterface.greeting._mode()) == old
     cfg.set_value.assert_not_called()
     cfg.set_values.assert_not_called()
     assert artwork.evernight_artwork.cache_info().currsize == 0
@@ -888,17 +836,16 @@ def test_unreadable_optional_banner_leaves_ordinary_app_usable(qtbot, monkeypatc
     cfg.set_value.assert_called_once_with('ui_theme', target)
 
 
-@pytest.mark.parametrize('missing', ['dark/Evernight.png', 'evernight/evey-decoration-folded.png', 'icon.ico'])
+@pytest.mark.parametrize('missing', ['evernight/evey-decoration-upright.png', 'evernight/evey-decoration-folded.png', 'icon.ico'])
 def test_incomplete_optional_asset_set_is_not_cached(qtbot, monkeypatch, tmp_path, missing):
     from PIL import Image
     from app.common import evernight_artwork as artwork
 
     monkeypatch.chdir(tmp_path)
     root = Path('assets/app/images')
-    (root / 'dark').mkdir(parents=True)
-    (root / 'evernight').mkdir()
+    (root / 'evernight').mkdir(parents=True)
     img = Image.new('RGB', (32, 32), '#ff91c1')
-    for name in ('dark/Evernight.png', 'evernight/banner.png', 'evernight/evey-decoration-folded.png',
+    for name in ('evernight/evey-decoration-folded.png',
                  'evernight/evey-decoration-upright.png', 'evernight/evey-decoration-wide.png'):
         img.save(root / name)
     monkeypatch.setattr(artwork, 'application_icon_path', lambda active: str(root / 'icon.ico'))
@@ -921,7 +868,7 @@ def test_missing_intro_still_completes_a_valid_theme(qtbot, monkeypatch, window,
 
 def test_logo_hint_all_languages_keep_motion_and_update_cached_glyphs(qtbot):
     from PySide6.QtGui import QPainterPath
-    from app.home_interface import FloatingLogoHint
+    from app.overview.greeting import LogoHint
     from module.localization import get_current_language, load_language
 
     translations = {
@@ -936,7 +883,7 @@ def test_logo_hint_all_languages_keep_motion_and_update_cached_glyphs(qtbot):
     parent.resize(900, 320)
     qtbot.addWidget(parent)
     parent.show()
-    hint = FloatingLogoHint(parent)
+    hint = LogoHint(parent, lambda: None)
     try:
         hint.play()
         hint.animation.pause()
@@ -958,7 +905,7 @@ def test_logo_hint_all_languages_keep_motion_and_update_cached_glyphs(qtbot):
 
 def test_mid_warning_application_language_switch_retains_click_deadline(window, qtbot):
     click_logo(window, qtbot, 5)
-    hint = window.homeInterface.banner.logoHint
+    hint = window.homeInterface.greeting.logoHint
     hint.animation.pause()
     hint.animation.setCurrentTime(1000)
     deadline = window._evernight._warning_until
@@ -968,30 +915,28 @@ def test_mid_warning_application_language_switch_retains_click_deadline(window, 
     assert window._evernight._warning_until == deadline
 
 
-@pytest.mark.parametrize('background', ['white', 'dark', 'busy'])
-def test_logo_hint_paints_visible_outline_and_shadow_on_different_banners(qtbot, tmp_path, background):
-    from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath
-    from app.home_interface import FloatingLogoHint
+@pytest.mark.parametrize('background', ['light', 'dark', 'evernight'])
+def test_logo_hint_stays_legible_on_greeting_backgrounds(qtbot, tmp_path, background):
+    from PySide6.QtGui import QImage, QPainterPath
+    from app.overview.greeting import GreetingCard
     from module.localization import get_current_language, load_language
+    from module.overview.samples import sample_snapshot
     import numpy as np
 
-    class Surface(QWidget):
-        def paintEvent(self, event):
-            painter = QPainter(self)
-            painter.fillRect(self.rect(), QColor('#ffffff' if background == 'white' else '#191824'))
-            if background == 'busy':
-                for x in range(0, self.width(), 8):
-                    painter.fillRect(x, 0, 4, self.height(), QColor('#ffe5ea' if x % 16 else '#ff91c1'))
-
     original = get_current_language()
-    parent = Surface()
+    previous_theme = qconfig.get(qconfig.themeMode)
+    setTheme(Theme.LIGHT if background == 'light' else Theme.DARK, save=False)
+    parent = GreetingCard()
     qtbot.addWidget(parent)
-    parent.resize(720, 160)
+    parent.resize(960, 216)
+    parent.render(sample_snapshot("running").greeting, evernight=background == 'evernight')
     parent.show()
     try:
         load_language('en_US')  # known glyph coverage on all CI runners
-        hint = FloatingLogoHint(parent)
-        hint.play()
+        original_pose = parent.mascot.pose()
+        parent.playLogoHint()
+        assert parent.mascot.pose() == Mascot.DIZZY
+        hint = parent.logoHint
         hint.animation.pause()
         hint.animation.setCurrentTime(0)
 
@@ -1009,5 +954,11 @@ def test_logo_hint_paints_visible_outline_and_shadow_on_different_banners(qtbot,
         _, no_shadow = render()
         delta = abs(full.astype('int16') - no_shadow.astype('int16')).max(axis=2)
         assert (delta > 2).sum() > 50
+        parent.dismissLogoHint()
+        assert parent.mascot.pose() == original_pose and hint.isHidden()
+        parent.playLogoHint()
+        hint.animation.setCurrentTime(hint.animation.duration())
+        assert parent.mascot.pose() == original_pose and hint.isHidden()
     finally:
+        setTheme(previous_theme, save=False)
         load_language(original)

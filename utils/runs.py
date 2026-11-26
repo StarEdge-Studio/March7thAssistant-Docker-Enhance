@@ -24,6 +24,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from typing import NamedTuple, Optional
 
+from utils import paths
 from utils.pause import CONTROL_FILE_ENV, STATE_FILE_SUFFIX, _atomic_write_json, _read_json, pause_ctl, reset_files
 
 # ---------- 退出码约定（--help、AGENTS.md 与 Agent Skill 同步说明）----------
@@ -60,7 +61,8 @@ _LOCK_RETRY_DELAY = 0.1
 
 RUN_SCHEMA = 1
 # 保留最近多少次运行的记录与输出
-KEEP_RUNS = 100
+KEEP_RUNS = 300
+AFTER_FINISH_CHOICES = ("None", "Exit", "Loop", "Shutdown", "Sleep", "Hibernate", "Restart", "Logoff", "TurnOffDisplay", "RunScript")
 
 _RUN_ID_RE = re.compile(r"^\d{8}-\d{6}-[0-9a-f]{4}$")
 # 控制台颜色等 ANSI 控制序列（日志控制台输出带颜色，写入运行日志时去掉）
@@ -69,7 +71,7 @@ _ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
 
 def runs_dir() -> str:
     """运行记录目录（相对程序目录；入口脚本启动时已切换到程序所在目录）。"""
-    return os.path.abspath(os.path.join("logs", "runs"))
+    return os.path.abspath(paths.runs_dir())
 
 
 def new_run_id() -> str:
@@ -165,15 +167,33 @@ def recent_runs(limit: int = 5) -> list:
 
 
 def cleanup_old_runs(keep: int = KEEP_RUNS):
-    """只保留最近 keep 次运行的文件；仍在运行中的不删除。"""
-    run_ids = list_run_ids()
-    if len(run_ids) <= keep:
+    """以最近的记录作保留线，父子记录作为一组一起回收。"""
+    ids = list_run_ids()
+    if len(ids) <= keep:
         return
-    for run_id in run_ids[:-keep]:
-        record = load_run(run_id)
+    retained = set(ids[-keep:]) if keep else set()
+    groups = {}
+    for run_id in ids:
+        record = load_run(run_id) or {}
+        parent = record.get("parent_run_id")
+        group = parent if is_valid_run_id(parent) else run_id
+        groups.setdefault(group, set()).add(run_id)
         if record and effective_status(record) == STATUS_RUNNING:
+            retained.add(run_id)
+        rotation = record.get("rotation") or {}
+        if isinstance(rotation, dict):
+            for row in rotation.get("accounts") or []:
+                child = row.get("run_id") if isinstance(row, dict) else None
+                if is_valid_run_id(child):
+                    groups[group].add(child)
+    for group, members in groups.items():
+        if members & retained or group in retained:
+            retained.update(members)
+    for run_id in ids:
+        if run_id in retained:
             continue
-        for suffix in (".json", ".log", ".control", ".control" + STATE_FILE_SUFFIX):
+        for suffix in (".json", ".log", ".control", ".control" + STATE_FILE_SUFFIX, ".control.skip",
+                       ".after-finish", ".cancel", ".notices"):
             try:
                 os.remove(run_file(run_id, suffix))
             except OSError:
@@ -225,12 +245,24 @@ def _link_or_create(tmp_path: str, path: str, data: dict):
             f.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
 
-def read_active_run():
+def read_active_run(lock_path=None):
     """当前持有运行锁且进程仍在的运行（锁信息字典），没有则返回 None。"""
-    holder = _read_json(_lock_path())
+    holder = _read_json(lock_path or _lock_path())
     if isinstance(holder, dict) and is_process_alive(holder.get("pid"), holder.get("pid_create_time")):
         return holder
     return None
+
+
+def live_run_in(directory):
+    """Also find forced/idle runs which do not currently own active.json."""
+    if read_active_run(directory / "active.json"):
+        return True
+    for file in directory.glob("*.json"):
+        if is_valid_run_id(file.stem):
+            record = _read_json(file)
+            if isinstance(record, dict) and effective_status(record) == STATUS_RUNNING:
+                return True
+    return False
 
 
 def acquire_run_lock(info: dict, force: bool = False):
@@ -254,7 +286,7 @@ def acquire_run_lock(info: dict, force: bool = False):
             if alive and holder.get("run_id") == info.get("run_id"):
                 return True, None
             if alive:
-                if not force or INVOKER_DESKTOP_TWIN in (info.get("invoker"), holder.get("invoker")):
+                if not force or holder.get("rotation") or INVOKER_DESKTOP_TWIN in (info.get("invoker"), holder.get("invoker")):
                     return False, holder
                 _atomic_write_json(path, info)
                 return True, holder
@@ -372,6 +404,85 @@ def exit_code_of(exc: SystemExit) -> int:
 _current_session = None
 
 
+def publish_progress(**fields):
+    """进度记录只供旁观界面使用，写入失败不改变自动化结果。"""
+    if _current_session is not None:
+        try:
+            if "current_step" in fields and fields["current_step"] != _current_session.record.get("current_step"):
+                fields.setdefault("detail", None)
+            _current_session.update_record(**fields)
+        except Exception:
+            logging.getLogger("March7thAssistant").warning("本次运行进度未能保存", exc_info=True)
+
+
+DETAIL_TEXT = {"instance": "{name} 第 {index} / {total} 次", "challenge": "第 {level} 层"}
+
+
+def publish_detail(msgid, **args):
+    publish_progress(detail={"msgid": msgid, "args": args})
+
+
+def publish_full_plan(config, *, touch, backend, task="main"):
+    if _current_session is None or _current_session._finished:
+        return
+    from module.overview.plan import planned_steps
+    publish_progress(plan=planned_steps(config, task, touch=touch, backend=backend))
+
+
+def set_after_finish(run_id, action):
+    record = load_run(run_id)
+    if action not in AFTER_FINISH_CHOICES or not record or effective_status(record) != STATUS_RUNNING:
+        raise ValueError("运行已结束或完成后操作无效")
+    target = record.get("parent_run_id") or run_id
+    if not is_valid_run_id(target):
+        raise ValueError("运行编号无效")
+    _atomic_write_json(run_file(target, ".after-finish"), {"action": action})
+
+
+def effective_after_finish(default, run_id=None):
+    if run_id is None and _current_session:
+        if _current_session.record.get("parent_run_id"):
+            return "None"
+        run_id = _current_session.run_id
+    if not is_valid_run_id(run_id):
+        return default
+    data = _read_json(run_file(run_id, ".after-finish")) or {}
+    action = data.get("action")
+    return action if action in AFTER_FINISH_CHOICES else default
+
+
+def observe_step(key, action, skipped=None):
+    session = _current_session
+    if session is None:
+        return action
+
+    def observed():
+        started = time.monotonic()
+        item = {"id": key, "status": "running"}
+        items = list(session.record.get("steps", ()))
+        items.append(item)
+        publish_progress(phase="execute", current_step=key, steps=items)
+        state = "interrupted"
+        try:
+            skip = False
+            if skipped is not None:
+                try:
+                    skip = skipped()
+                except Exception:
+                    logging.getLogger("March7thAssistant").debug("无法判断步骤跳过原因", exc_info=True)
+            result = action()
+            state = "failed" if result is False else "skipped" if skip else "success"
+            return result
+        except Exception:
+            state = "failed"
+            raise
+        finally:
+            item.update(status=state, seconds=round(time.monotonic() - started, 2))
+            publish_progress(current_step=None, steps=items)
+
+    return observed
+
+
 class LockResult(NamedTuple):
     """RunSession.acquire_lock 的结果。"""
     status: str                     # LOCK_ACQUIRED / LOCK_FORCED / LOCK_BUSY / LOCK_UNAVAILABLE
@@ -387,14 +498,16 @@ class RunSession:
         self.run_id = record["run_id"]
         self._pending = {}
         self._finished = False
+        self._record_write_failed = False
         self.lock_held = False
+        self.account_prepared = False
         self.print_json = False
         # 最后一条错误日志：任务失败但调用方没有显式登记错误时，写入运行记录的 error
         self.last_error = None
 
     @classmethod
     def begin(cls, *, run_id=None, task=None, workflow=None, workflow_step_path=None,
-              argv=None, invoker="cli", version=None, capture=True):
+              argv=None, invoker="cli", version=None, capture=True, retry_step=None, trigger=None):
         """开始一次运行：分配编号、捕获输出、准备控制文件并写入初始记录。"""
         if not is_valid_run_id(run_id):
             run_id = new_run_id()
@@ -424,6 +537,9 @@ class RunSession:
             "task": task,
             "workflow": workflow,
             "workflow_step_path": workflow_step_path,
+            "account": None,
+            "plan": [],
+            "detail": None,
             "args": list(argv or []),
             "invoker": invoker,
             "version": version,
@@ -440,8 +556,29 @@ class RunSession:
             "log_file": log_path,
             "control_file": os.path.abspath(control_path),
         }
+        if trigger:
+            record["trigger"] = trigger
+        if retry_step:
+            record["retry_step"] = retry_step
+        record["phase"] = "prepare"
         session = cls(record)
-        session._save()
+        # Publish under the restore lock so a new task and an import cannot pass each other's idle check.
+        from utils.data_files import data_lock
+        try:
+            with data_lock(paths.layout().storage):
+                if os.getenv(paths.RECOVERY_ENV) or (paths.layout().storage / "backup" / paths.RESTORE_RECORD).is_file():
+                    from utils.data_migration import recovery_instruction
+                    raise TimeoutError(recovery_instruction())
+                session._save()
+        except TimeoutError as exc:
+            message = str(exc).rstrip("。") + "。本次任务未启动。"
+            print(message, file=sys.stderr)
+            session.note(status=STATUS_BLOCKED, reason="data_busy", error=message)
+            session.finish(EXIT_BUSY)
+            raise SystemExit(EXIT_BUSY) from None
+        except OSError:
+            # Existing behavior for installations with read-only/unavailable run history.
+            session._save()
         global _current_session
         _current_session = session
         return session
@@ -449,8 +586,11 @@ class RunSession:
     def _save(self):
         try:
             _atomic_write_json(run_file(self.run_id, ".json"), self.record)
+            self._record_write_failed = False
         except Exception:
-            pass
+            if not self._record_write_failed:
+                logging.getLogger("March7thAssistant").warning("本次运行记录未能写入，任务继续", exc_info=True)
+                self._record_write_failed = True
 
     def update_record(self, **fields):
         """登记本次运行的元数据，供其他进程立即读取。"""
@@ -484,6 +624,7 @@ class RunSession:
             "workflow": self.record["workflow"],
             "invoker": self.record["invoker"],
             "started_at": self.record["started_at"],
+            **({"rotation": True} if self.record.get("rotation") else {}),
         }
 
     def acquire_lock(self, force: bool = False) -> "LockResult":
@@ -525,6 +666,9 @@ class RunSession:
         if error is None and status != STATUS_SUCCESS:
             error = self.last_error
         self.record.update({
+            "phase": "finish",
+            "detail": None,
+            "current_step": None,
             "status": status,
             "reason": self._pending.get("reason", reason),
             "error": error,

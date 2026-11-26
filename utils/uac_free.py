@@ -2,7 +2,7 @@
 """免 UAC 运行（Windows）：m7a.exe 通过计划任务以管理员权限启动任务，不再弹出 UAC。
 
 设计说明：
-- 由用户在图形界面「设置 → 杂项」中自行开启：已提权的图形界面注册一个没有触发器、以最高权限运行的
+- 由用户在图形界面「设置 → 高级」中自行开启：已提权的图形界面注册一个没有触发器、以最高权限运行的
   计划任务，操作为 ``March7th Assistant.exe $(Arg0)``（源码运行时为 ``python main.py $(Arg0)``）。
 - 任务的安全描述符只给当前用户读取与执行权限：未提权的 m7a.exe 可以按需启动它，但不能修改它；
   其他 Windows 账户无法使用。
@@ -97,7 +97,7 @@ def enable() -> bool:
             program_path=program,
             program_args=arguments,
             working_dir=os.getcwd(),
-            description="三月七小助手：供 m7a.exe 免 UAC 以管理员权限运行任务（在图形界面「设置 → 杂项」中开启或关闭）",
+            description="三月七小助手：供 m7a.exe 免 UAC 以管理员权限运行任务（在图形界面「设置 → 高级」中开启或关闭）",
             sddl=task_sddl(user_sid),
             user_sid=user_sid,
         )
@@ -162,12 +162,12 @@ def launch(args, run_id: str, timeout: float = START_TIMEOUT_SECONDS, poll_inter
         run_task(TASK_NAME, list2cmdline(list(args)))
     except Exception as e:
         raise LaunchError(f"启动计划任务 {TASK_NAME} 失败：{describe_com_error(e)}") from e
-    deadline = time.time() + timeout
+    deadline = time.monotonic() + timeout
     while True:
         record = load_run(run_id)
         if record is not None:
             return TaskRun(record)
-        if time.time() >= deadline:
+        if time.monotonic() >= deadline:
             break
         time.sleep(poll_interval)
     detail = ""

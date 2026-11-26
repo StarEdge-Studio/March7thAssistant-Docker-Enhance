@@ -157,31 +157,57 @@ def cleanup_residual_m7a_processes(profile_dir: Optional[str] = None) -> int:
     return len(to_terminate)
 
 
+def _active_lock_files() -> List[str]:
+    """返回可能存在运行锁 active.json 的全部路径（兼容旧 logs 目录、userdata 目录与自定义 M7A_DATA_DIR）。"""
+    candidates = [
+        ACTIVE_LOCK_FILE,
+        os.path.abspath(os.path.join("userdata", "logs", "runs", "active.json")),
+    ]
+    try:
+        from utils import paths
+
+        candidates.insert(0, os.path.abspath(os.path.join(paths.runs_dir(), "active.json")))
+    except Exception:
+        pass
+
+    result: List[str] = []
+    seen = set()
+    for path in candidates:
+        key = os.path.normcase(path)
+        if key not in seen:
+            seen.add(key)
+            result.append(path)
+    return result
+
+
 def clear_stale_active_run_lock(force: bool = False) -> bool:
     """
-    检查并清理 logs/runs/active.json 运行锁。
+    检查并清理运行锁 active.json（同时兼容 userdata/logs/runs 与 logs/runs）。
     当上一账号异常中断或被杀死后，若锁文件残留会导致下一账号报 EXIT_BUSY (退出码 4)。
     """
-    if not os.path.exists(ACTIVE_LOCK_FILE):
-        return False
+    removed = False
+    for lock_file in _active_lock_files():
+        if not os.path.exists(lock_file):
+            continue
 
-    if not force:
+        if not force:
+            try:
+                with open(lock_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                pid = data.get("pid")
+                if isinstance(pid, int) and pid > 0 and psutil.pid_exists(pid):
+                    proc = psutil.Process(pid)
+                    if proc.status() != psutil.STATUS_ZOMBIE:
+                        continue
+            except Exception:
+                pass
+
         try:
-            with open(ACTIVE_LOCK_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            pid = data.get("pid")
-            if isinstance(pid, int) and pid > 0 and psutil.pid_exists(pid):
-                proc = psutil.Process(pid)
-                if proc.status() != psutil.STATUS_ZOMBIE:
-                    return False
-        except Exception:
+            os.remove(lock_file)
+            removed = True
+        except OSError:
             pass
-
-    try:
-        os.remove(ACTIVE_LOCK_FILE)
-        return True
-    except OSError:
-        return False
+    return removed
 
 
 def start_background_zombie_reaper(interval_sec: float = 10.0) -> None:
