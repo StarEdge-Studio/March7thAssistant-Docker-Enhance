@@ -29,13 +29,13 @@ def legacy(cfg, *, touch, full):
         return previous < day
 
     result = []
+    if cfg.reward_enable and cfg.reward_redemption_code_enable:
+        result.append("redemption")
     if not touch:
-        if cfg.reward_enable and cfg.reward_redemption_code_enable:
-            result.append("redemption")
         if cfg.power_enable:
             result.append("relic_cleanup")
-        if cfg.build_target_enable:
-            result.append("build_target")
+    if cfg.build_target_enable and (not touch or (cfg.control_backend == "adb" and cfg.power_enable)):
+        result.append("build_target")
     has_activity = cfg.activity_enable and (cfg.activity_gardenofplenty_enable or
                                             cfg.activity_realmofthestrange_enable or cfg.activity_planarfissure_enable)
     if cfg.power_enable or (not touch and has_activity):
@@ -111,6 +111,7 @@ def test_entry_matrix(monkeypatch, mask, age):
     monkeypatch.setattr(daily, "run_steps", collect)
     monkeypatch.setattr(rewards, "run_steps", collect)
     for touch in (False, True):
+        cfg.control_backend = "adb" if touch else "local"
         group.clear()
         if touch:
             rewards.routine(full_run=True)

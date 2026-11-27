@@ -14,7 +14,7 @@ SCOPES = {key: item.key_scope(key) for item in SETTINGS for key in item.keys}
 _EXTRA = {
     Scope.STATE: "weekly_relic_cleanup_timestamp already_used_codes",
     Scope.PLAN: (
-        "calyx_golden_preference fuel_ticket_batch_enable daily_himeko_try_enable daily_tasks "
+        "calyx_golden_preference fuel_ticket_batch_enable daily_tasks "
         "divergent_team_type currencywars_remembrance_trailblazer_name"
     ),
     Scope.SECRET: "telemetry_secret",
@@ -27,7 +27,8 @@ _EXTRA = {
         "browser_debug_port browser_mirror_urls hotkey_toggle_autoplot_enable genshin_starRail_fps_unlocker_path "
         "scheduled_run_enable autoplot_phone_detect_enable window_x adb_service_jar autoplot_enable "
         "window_height auto_update browser_dump_cookies_enable log_retention_days autoplot_hero_chronicle_enable "
-        "window_width evernight_unlocked scheduled_on_conflict game_title_name fight_path game_process_name universe_path"
+        "window_width evernight_unlocked evernight_theme_button_used scheduled_on_conflict game_title_name fight_path "
+        "game_process_name universe_path"
     ),
 }
 for scope, names in _EXTRA.items():
@@ -137,6 +138,10 @@ class AccountLayer:
         self.verify_identity = None
         self.login_prompt_seen = False
         self.select_client_at_launch = False
+        self.switch_method = "snapshot"
+        # 在游戏登录框里切换：None 不处理，"logout" 要登出换号，"keep" 只在出现登录框时选回本账号，"done" 已核对。
+        self.login_switch = None
+        self.previous_uid = None
         self.renewed = False
         self.values = {}
 

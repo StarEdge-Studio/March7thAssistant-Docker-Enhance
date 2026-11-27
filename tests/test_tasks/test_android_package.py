@@ -94,6 +94,16 @@ class Bridge:
         # 日常编排和体力进度在进入游戏后才调用这些延迟依赖。
         select_steps(TOUCH, cfg, dict.fromkeys(TOUCH, lambda: True), touch=True)
         save_reading(cfg, "overview_power", 120)
+        # routine 里延迟导入的兑换码和培养目标，连同它们读取的数据文件。
+        from tasks.daily.buildtarget import BuildTarget
+        from tasks.daily.redemption import Redemption, load_codes
+        from tasks.touch.buildtarget import TouchDefaultHandler, TouchDropHandler
+        assert isinstance(load_codes("assets/config/redemption_codes.json"), list)
+        assert TouchDropHandler()._instance_drops
+        assert TouchDefaultHandler()._valid_instance_names
+        # 培养目标读完后会走真实通知入口，关闭推送也不能依赖 APK 外的模块。
+        from tasks.base.base import Base
+        Base.send_notification_with_screenshot("培养目标已读取", screenshot=Image.new("RGB", (1280, 720)))
         from module.accounts.errors import AccountError
         account_error = AccountError("account_mismatch", "测试账号不符")
         class WrongAccountConfig:
@@ -143,7 +153,7 @@ def cold_start(workspace, task):
     )
 
 
-@pytest.mark.parametrize("task", ["ROUTINE", "DAILY", "POWER"])
+@pytest.mark.parametrize("task", ["ROUTINE", "DAILY", "POWER", "REDEEM"])
 def test_packaged_android_tasks_finish_python_initialization(packaged_project, task):
     result = cold_start(packaged_project, task)
     assert result.returncode == 0, result.stdout + result.stderr

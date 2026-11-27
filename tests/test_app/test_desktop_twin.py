@@ -71,6 +71,36 @@ def test_tools_button_opens_one_desktop_twin_window(qtbot, monkeypatch):
     qtbot.waitUntil(lambda: page._desktop_twin is None)
 
 
+def test_window_taskbar_and_launcher_follow_the_theme(qtbot):
+    from pathlib import Path
+    from PySide6.QtGui import QIcon
+    from PySide6.QtWidgets import QWidget
+    from qfluentwidgets import qconfig, setThemeColor
+    from win32com.propsys import propsys, pscon
+    from app.common.design_tokens import EVERNIGHT_RED, MARCH7TH_PINK
+    from app.common.theme_assets import application_icon_path
+    from app.tools.desktop_twin import DesktopTwinDialog
+
+    parent = QWidget()
+    qtbot.addWidget(parent)
+    previous = qconfig.get(qconfig.themeColor)
+    try:
+        setThemeColor(EVERNIGHT_RED, save=False)
+        dialog = DesktopTwinDialog(parent, Mock())
+        dialog.show()
+        for connected_view, night in ((False, True), (True, True), (True, False), (False, False)):
+            dialog._set_screen_visible(connected_view)
+            setThemeColor(EVERNIGHT_RED if night else MARCH7TH_PINK, save=False)
+            path = application_icon_path(night)
+            expected = QIcon(path).pixmap(32, 32).toImage()
+            assert dialog.windowIcon().pixmap(32, 32).toImage() == expected
+            assert dialog._assistant_button.icon().pixmap(32, 32).toImage() == expected
+            store = propsys.SHGetPropertyStoreForWindow(int(dialog.winId()))
+            assert store.GetValue(pscon.PKEY_AppUserModel_RelaunchIconResource).GetValue() == str(Path(path).resolve()) + ',0'
+    finally:
+        setThemeColor(previous, save=False)
+
+
 def test_login_opens_gui_and_hide_keeps_session(qtbot, monkeypatch):
     from PySide6.QtWidgets import QWidget
     from app.tools import desktop_twin as ui
@@ -92,6 +122,7 @@ def test_login_opens_gui_and_hide_keeps_session(qtbot, monkeypatch):
     dialog.show()
 
     dialog._poll_connection(0)
+    dialog._log.startDesktopTwinLog.assert_called_once_with(identity)
     launcher.start.assert_called_once_with(identity)
     dialog._poll()
     launcher.remove_registration.assert_called_once()
@@ -796,7 +827,7 @@ def main_window(qtbot, monkeypatch, tmp_path):
     yield build
 
 
-def test_host_window_explains_why_pages_are_disabled(main_window):
+def test_host_window_explains_why_pages_are_disabled(main_window, qtbot, monkeypatch):
     from app.tools import desktop_twin as ui
 
     window = main_window()
@@ -818,6 +849,20 @@ def test_host_window_explains_why_pages_are_disabled(main_window):
     assert not window.toolsInterface.twinPill.isHidden()
     assert window.toolsInterface.twinPill.text() == ui.tr("运行中")
     assert not window.toolsInterface.gameScreenshotCard.fileButton.isEnabled()
+    run_page = window.logInterface
+    window.stackedWidget.setAnimationEnabled(False)
+    window.switchTo(run_page)
+    run_page.showPage("current")
+    panel = run_page.currentPage.log
+    assert panel.isEnabled() and not run_page.currentPage.card.isEnabled()
+    assert not run_page.historyPage.retryButton.isEnabled() and not run_page.schedulePage.isEnabled()
+    window.runController._append("12:34:56 | DEBUG | 分身调试信息\n")
+    panel.chips["all"].click()
+    qtbot.waitUntil(lambda: "分身调试信息" in panel.view.toPlainText())
+    copy = Mock()
+    monkeypatch.setattr("utils.clipboard.copy", copy)
+    panel.copyButton.click()
+    copy.assert_called_once_with(panel.view.toPlainText())
     notice.openButton.click()
     window.toolsInterface.openDesktopTwin.assert_called_once()
 
@@ -833,6 +878,7 @@ def test_host_window_explains_why_pages_are_disabled(main_window):
 
     window.setDesktopTwinHosting(False)
     assert not notice.isVisible() and window.homeInterface.isEnabled()
+    assert run_page.currentPage.card.isEnabled() and run_page.schedulePage.isEnabled()
     assert window.toolsInterface.twinPill.isHidden()
     assert window.toolsInterface.gameScreenshotCard.fileButton.isEnabled()
     window.hide()

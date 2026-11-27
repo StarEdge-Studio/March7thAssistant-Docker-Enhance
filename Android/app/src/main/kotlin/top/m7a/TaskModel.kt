@@ -1,7 +1,7 @@
 package top.m7a
 
-/** 与 Windows 触屏入口一一对应：日常、每日实训、清体力。 */
-enum class TaskId { ROUTINE, DAILY, POWER }
+/** 与 Windows 的入口一一对应：日常、每日实训、清体力和兑换码。 */
+enum class TaskId { ROUTINE, DAILY, POWER, REDEEM }
 
 /**
  * typeName 对应共享配置的副本类型，声明顺序与 Windows 的副本清单相同。
@@ -27,8 +27,10 @@ enum class InstanceType(val typeName: String, val cost: Int, val maxBatch: Int) 
     }
 }
 
-/** 界面上显示的步骤。pythonName 是 tasks.touch.rewards.routine 里的步骤名。 */
+/** 界面上显示的步骤，顺序与 tasks.touch.rewards.routine 相同。pythonName 是 Python 报来的步骤名。 */
 enum class StepId(val pythonName: String) {
+    REDEMPTION("兑换码"),
+    BUILD_TARGET("培养目标"),
     ECHO("历战余响"),
     POWER("清体力"),
     REWARDS("日常领奖"),
@@ -40,6 +42,9 @@ enum class StepId(val pythonName: String) {
 }
 
 enum class StepStatus { PENDING, RUNNING, DONE, FAILED, STOPPED, DISABLED }
+
+/** 培养目标的识别方案，value 是共享配置 build_target_scheme 的取值。 */
+enum class BuildTargetScheme(val value: String) { INSTANCE("instance"), DROP("drop") }
 
 /**
  * 本轮的一个步骤。step 为空的是 Python 报来的其他步骤，name 是它的原名。
@@ -79,6 +84,12 @@ data class TaskConfig(
     val instanceType: InstanceType = InstanceType.GOLDEN_CALYX,
     /** 每种类型各记一个副本，换类型时回到上次的选择。没有记录的类型取清单第一项。 */
     val instanceNames: Map<InstanceType, String> = DEFAULT_INSTANCE_NAMES,
+    val buildTarget: Boolean = false,
+    val buildTargetScheme: BuildTargetScheme = BuildTargetScheme.INSTANCE,
+    /** 培养目标只剩侵蚀隧洞和饰品提取时，每周最后几天改刷饰品提取。 */
+    val ornamentDays: Int = 1,
+    /** 培养目标只剩侵蚀隧洞和饰品提取时，改刷 instanceType 里选的副本。 */
+    val targetFallback: Boolean = false,
     val reserve: Boolean = false,
     val fuel: Boolean = false,
     val teamEnable: Boolean = false,
@@ -100,6 +111,11 @@ data class TaskConfig(
     val assist: Boolean = true,
     val quest: Boolean = true,
     val srpass: Boolean = true,
+    val redemption: Boolean = true,
+    /** 「兑换码」任务要兑换的码，按 [parseRedemptionCodes] 整理过。 */
+    val redemptionCodes: List<String> = emptyList(),
+    /** 兑换过、过期或无效的码，Python 记下新的就交回。获取最新和「日常」都跳过它们。 */
+    val usedCodes: List<String> = emptyList(),
     val message: Boolean = false,
     val dailyEnable: Boolean = true,
     val synthesis: Boolean = true,
@@ -110,6 +126,9 @@ data class TaskConfig(
             powerPlan.all { it.count in 1..MAX_PLAN_COUNT && it.name.isNotBlank() } &&
             instanceType != InstanceType.ECHO &&
             instanceNames.values.all { it.isNotBlank() } &&
+            ornamentDays in 0..MAX_ORNAMENT_DAYS &&
+            redemptionCodes == parseRedemptionCodes(redemptionCodes.joinToString("\n")) &&
+            usedCodes == parseUsedCodes(usedCodes) &&
             teamNumber in 1..MAX_TEAM &&
             teamRules.all { it.team in 1..MAX_TEAM && it.instance.isNotBlank() } &&
             teamRules.distinctBy { it.instance }.size == teamRules.size &&
@@ -138,6 +157,10 @@ data class TaskConfig(
         const val MAX_SUPPORTS = 6
         const val MAX_TEAM = 12
         const val MAX_SCROLL_TIMES = 10
+        const val MAX_ORNAMENT_DAYS = 7
+        const val MAX_CODES = 20
+        const val MAX_CODE_LENGTH = 32
+        const val MAX_USED_CODES = 200
 
         // 取自 config.example.yaml。模板里凝滞虚影是「无」，没有记录时取清单第一项。
         val DEFAULT_INSTANCE_NAMES = mapOf(
@@ -151,6 +174,30 @@ data class TaskConfig(
     }
 }
 
+private val CODE_SEPARATOR = Regex("[\\s,，、;；]+")
+private val NON_CODE_CHARACTER = Regex("[^A-Za-z0-9\\u4e00-\\u9fff]")
+
+/**
+ * 把输入框里的文字整理成兑换码。空白、逗号、顿号和分号都算分隔，和电脑版一样只保留字母、数字和汉字。
+ * 去掉重复的和超过 [TaskConfig.MAX_CODE_LENGTH] 个字的片段，最多保留 [TaskConfig.MAX_CODES] 个。
+ */
+fun parseRedemptionCodes(text: String): List<String> = text.split(CODE_SEPARATOR)
+    .map { it.replace(NON_CODE_CHARACTER, "") }
+    .filter { it.isNotEmpty() && it.length <= TaskConfig.MAX_CODE_LENGTH }
+    .distinct()
+    .take(TaskConfig.MAX_CODES)
+
+/** 已使用的兑换码原样保留，去掉空项和重复，只留最近的 [TaskConfig.MAX_USED_CODES] 个。不是列表时返回 null。 */
+fun parseUsedCodes(value: Any?): List<String>? = (value as? List<*>)
+    ?.filterIsInstance<String>()?.filter { it.isNotBlank() }?.distinct()?.takeLast(TaskConfig.MAX_USED_CODES)
+
+/** 获取到的兑换码并入待兑换列表：原有的排在前面，已使用的都去掉。 */
+fun TaskConfig.withFetchedCodes(fetched: List<String>): TaskConfig {
+    val used = usedCodes.toSet()
+    val codes = (redemptionCodes + fetched).filterNot { it in used }
+    return copy(redemptionCodes = parseRedemptionCodes(codes.joinToString("\n")))
+}
+
 /** 写入 Python 配置的设置，键与 android_task.SETTING_KEYS 一一对应。 */
 fun TaskConfig.toSettings(catalog: Catalog): Map<String, Any> = linkedMapOf(
     "power_enable" to powerEnable,
@@ -161,6 +208,10 @@ fun TaskConfig.toSettings(catalog: Catalog): Map<String, Any> = linkedMapOf(
     "instance_names" to InstanceType.entries.associate { it.typeName to instanceName(it, catalog) },
     "use_reserved_trailblaze_power" to reserve,
     "use_fuel" to fuel,
+    "build_target_enable" to buildTarget,
+    "build_target_scheme" to buildTargetScheme.value,
+    "build_target_ornament_weekly_count" to ornamentDays,
+    "build_target_use_user_instance_when_only_erosion_and_ornament" to targetFallback,
     "instance_team_enable" to teamEnable,
     "instance_team_number" to teamNumber.toString(),
     "instance_teams" to teamRules.map { mapOf("instance_name" to it.instance, "team_number" to it.team) },
@@ -181,7 +232,10 @@ fun TaskConfig.toSettings(catalog: Catalog): Map<String, Any> = linkedMapOf(
     "reward_assist_enable" to assist,
     "reward_quest_enable" to quest,
     "reward_srpass_enable" to srpass,
+    "reward_redemption_code_enable" to redemption,
     "reward_message_enable" to message,
+    "redemption_code" to redemptionCodes,
+    "already_used_codes" to usedCodes,
     "daily_enable" to dailyEnable,
     "daily_material_enable" to synthesis,
 )
@@ -197,6 +251,10 @@ fun TaskConfig.encode(): String = Json.encode(
         "planContinue" to planContinue,
         "instanceType" to instanceType.name,
         "instanceNames" to instanceNames.mapKeys { it.key.name },
+        "buildTarget" to buildTarget,
+        "buildTargetScheme" to buildTargetScheme.name,
+        "ornamentDays" to ornamentDays,
+        "targetFallback" to targetFallback,
         "reserve" to reserve,
         "fuel" to fuel,
         "teamEnable" to teamEnable,
@@ -218,6 +276,9 @@ fun TaskConfig.encode(): String = Json.encode(
         "assist" to assist,
         "quest" to quest,
         "srpass" to srpass,
+        "redemption" to redemption,
+        "redemptionCodes" to redemptionCodes,
+        "usedCodes" to usedCodes,
         "message" to message,
         "dailyEnable" to dailyEnable,
         "synthesis" to synthesis,
@@ -268,6 +329,11 @@ fun decodeTaskConfig(text: String?): TaskConfig {
         planContinue = flag("planContinue", default.planContinue),
         instanceType = type(root["instanceType"])?.takeIf { it != InstanceType.ECHO } ?: default.instanceType,
         instanceNames = default.instanceNames + names,
+        buildTarget = flag("buildTarget", default.buildTarget),
+        buildTargetScheme = BuildTargetScheme.entries.firstOrNull { it.name == root["buildTargetScheme"] }
+            ?: default.buildTargetScheme,
+        ornamentDays = number("ornamentDays", 0..TaskConfig.MAX_ORNAMENT_DAYS, default.ornamentDays),
+        targetFallback = flag("targetFallback", default.targetFallback),
         reserve = flag("reserve", default.reserve),
         fuel = flag("fuel", default.fuel),
         teamEnable = flag("teamEnable", default.teamEnable),
@@ -289,6 +355,9 @@ fun decodeTaskConfig(text: String?): TaskConfig {
         assist = flag("assist", default.assist),
         quest = flag("quest", default.quest),
         srpass = flag("srpass", default.srpass),
+        redemption = flag("redemption", default.redemption),
+        redemptionCodes = parseRedemptionCodes((root["redemptionCodes"] as? List<*>).orEmpty().filterIsInstance<String>().joinToString("\n")),
+        usedCodes = parseUsedCodes(root["usedCodes"]).orEmpty(),
         message = flag("message", default.message),
         dailyEnable = flag("dailyEnable", default.dailyEnable),
         synthesis = flag("synthesis", default.synthesis),

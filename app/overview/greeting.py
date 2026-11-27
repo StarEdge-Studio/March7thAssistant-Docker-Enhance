@@ -16,7 +16,7 @@ from module.overview.snapshot import PHASE_NAMES
 
 from .star_track import COLORS, paint_background, paint_star_track, rgba
 from .style import GREETING_TONES, accent, animations_enabled, primary_button_qss, tinted_button_qss, with_alpha
-from .widgets import PHASES, ElidedTitleLabel, LinkButton, PhaseProgress, Pill
+from .widgets import PHASES, ChipButton, ElidedTitleLabel, LinkButton, PhaseProgress, Pill
 
 MASCOT_HEIGHT = 172
 MASCOT_MAX_WIDTH = 236
@@ -48,11 +48,13 @@ def squash_amount(elapsed, start=0.0):
 
 class MascotWidget(QWidget):
     """Q 版小人。点一下会压扁再弹回，连点时从当前的形变继续。"""
+    clicked = Signal()  # 左键完整地点了一下；总览用它数长夜彩蛋的连点
 
-    def __init__(self, parent=None, *, max_width=MASCOT_MAX_WIDTH):
+    def __init__(self, parent=None, *, max_width=MASCOT_MAX_WIDTH, overview=False):
         super().__init__(parent)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self._max_width = max_width
+        self._overview = overview
         self._pose = Mascot.FULL
         self._override = None
         self._evernight = False
@@ -82,10 +84,10 @@ class MascotWidget(QWidget):
         pose = self.pose()
         ratio = self.devicePixelRatioF() or 1.0
         self._ratio = ratio
-        pixmap = load_mascot(pose, MASCOT_HEIGHT, ratio, evernight=self._evernight)
+        pixmap = load_mascot(pose, MASCOT_HEIGHT, ratio, evernight=self._evernight, overview=self._overview)
         if not pixmap.isNull() and pixmap.width() / ratio > self._max_width:
             height = int(MASCOT_HEIGHT * self._max_width / (pixmap.width() / ratio))
-            pixmap = load_mascot(pose, height, ratio, evernight=self._evernight)
+            pixmap = load_mascot(pose, height, ratio, evernight=self._evernight, overview=self._overview)
         self._pixmap = pixmap
         # 压扁时变宽，弹起时变高，两侧和上方留出余量。
         self.setFixedSize(self.imageSize().width() + 2 * self._sideRoom(),
@@ -128,6 +130,7 @@ class MascotWidget(QWidget):
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.rect().contains(event.position().toPoint()):
             self.bounce()
+            self.clicked.emit()
         super().mouseReleaseEvent(event)
 
     def paintEvent(self, event):
@@ -143,11 +146,12 @@ class MascotWidget(QWidget):
 
 
 class LogoHint(QLabel):
-    """连点 LOGO 时的提示，从小人左侧往上飘（沿用旧主页横幅上的写法）。"""
+    """连点 LOGO 或总览小人时的提示，从小人左侧往上飘（沿用旧主页横幅上的写法）。"""
 
     def __init__(self, parent, anchor):
         super().__init__(parent)
         self._anchor = anchor
+        self._source = "logo"
         self.setTextFormat(Qt.TextFormat.PlainText)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setStyleSheet('color: #ff91c1; font-family: "Sans Serif Collection", "Microsoft YaHei UI", '
@@ -169,7 +173,10 @@ class LogoHint(QLabel):
         self.hide()
 
     def retranslateUi(self):
-        text = tr('别晃啦！本姑娘头好晕( ꩜ ᯅ ꩜;)')
+        if self._source == "mascot":
+            text = tr('别戳啦！本姑娘头好晕( ꩜ ᯅ ꩜;)')
+        else:
+            text = tr('别晃啦！本姑娘头好晕( ꩜ ᯅ ꩜;)')
         if text != self.text():
             self.setText(text)
             if self.animation.state() != QAbstractAnimation.State.Stopped:
@@ -189,8 +196,9 @@ class LogoHint(QLabel):
         stroke.setWidth(4.0)
         self._shadow_path = stroke.createStroke(self._text_path).united(self._text_path).translated(0, 2.0)
 
-    def play(self):
+    def play(self, source="logo"):
         self.animation.stop()
+        self._source = source
         self.retranslateUi()
         self._prepareText()
         self.setGeometry(self.parentWidget().rect())
@@ -235,6 +243,8 @@ class LogoHint(QLabel):
 class GreetingCard(QWidget):
     actionTriggered = Signal(object, object)  # Button、被点的控件
     menuRequested = Signal(QPoint)
+    mascotClicked = Signal()
+    themeRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -246,8 +256,14 @@ class GreetingCard(QWidget):
         self._buttons_key = None
         self._buttons = []
         self._state = "ready"
+        self._themeWanted = True  # 快照里记的：还没点过「界面主题」按钮
+        self._themeUsed = False  # 本次运行点过；保存失败时也不再出现
 
         self.pill = Pill(self, dot=True, strong=True, height=24)
+        # 只在长夜主题下显示、点过一次就不再出现：不知道去哪切回原主题的人，点这里直接到设置里的「界面主题」。
+        self.themeButton = ChipButton(FIF.BRUSH, self, height=24)
+        self.themeButton.clicked.connect(self._onThemeClicked)
+        self.themeButton.hide()
         self.titleLabel = ElidedTitleLabel(self)
         self.descriptionLabel = BodyLabel(self)
         self.descriptionLabel.setWordWrap(True)
@@ -263,7 +279,8 @@ class GreetingCard(QWidget):
         self.buttonLayout = QHBoxLayout(self.buttonBox)
         self.buttonLayout.setContentsMargins(0, 0, 0, 0)
         self.buttonLayout.setSpacing(8)
-        self.mascot = MascotWidget(self)
+        self.mascot = MascotWidget(self, overview=True)
+        self.mascot.clicked.connect(self.mascotClicked)
         self.crossfade = ImageCrossFade(self)
         self.logoHint = LogoHint(self, self._hintRight)
         self.logoHint.animation.finished.connect(lambda: self.mascot.setOverride(None))
@@ -271,7 +288,13 @@ class GreetingCard(QWidget):
         self.vBox = QVBoxLayout(self)
         self.vBox.setContentsMargins(28, 20, 28, 20)
         self.vBox.setSpacing(0)
-        self.vBox.addWidget(self.pill, 0, Qt.AlignmentFlag.AlignLeft)
+        self.topRow = QHBoxLayout()
+        self.topRow.setContentsMargins(0, 0, 0, 0)
+        self.topRow.setSpacing(12)
+        self.topRow.addWidget(self.pill, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.topRow.addStretch(1)
+        self.topRow.addWidget(self.themeButton, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.vBox.addLayout(self.topRow)
         self.vBox.addSpacing(8)
         self.vBox.addWidget(self.titleLabel)
         self.vBox.addSpacing(2)
@@ -285,8 +308,10 @@ class GreetingCard(QWidget):
         self.customContextMenuRequested.connect(lambda pos: self.menuRequested.emit(self.mapToGlobal(pos)))
 
     # ---------- 数据 ----------
-    def render(self, greeting, *, show_mascot=True, background="", evernight=False):
+    def render(self, greeting, *, show_mascot=True, background="", evernight=False, theme_button=True):
         self._evernight = evernight
+        self._themeWanted = theme_button
+        self._syncThemeButton()
         if greeting is None:
             state, badge, title, description, pose, buttons, phase = (
                 "ready", tr("总览"), tr("暂时读不到运行状态"), tr("稍后会自动重试。"), "chibi_full", (), None)
@@ -391,12 +416,23 @@ class GreetingCard(QWidget):
         else:
             self.crossfade.finish()
             self._evernight = active
+        self._syncThemeButton()
         self.update()
 
-    def playLogoHint(self):
+    def _syncThemeButton(self):
+        self.themeButton.setText(tr("界面主题"))
+        self.themeButton.setEvernight(self._evernight)
+        self.themeButton.setVisible(self._evernight and self._themeWanted and not self._themeUsed)
+
+    def _onThemeClicked(self):
+        self._themeUsed = True
+        self._syncThemeButton()
+        self.themeRequested.emit()
+
+    def playLogoHint(self, source="logo"):
         if not self.mascot.isHidden():
             self.mascot.setOverride(Mascot.DIZZY)
-        self.logoHint.play()
+        self.logoHint.play(source)
 
     def dismissLogoHint(self):
         self.logoHint.dismiss()

@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, Qt, QTimer
 from PySide6.QtGui import QIcon, QPalette, QPixmap, QShortcut
 from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QWidget
 from qfluentwidgets import Theme, isDarkTheme, qconfig, setTheme, themeColor
@@ -45,12 +45,60 @@ def test_two_five_click_windows_and_expired_sequence(times, warnings, unlocked):
     assert EvernightEasterEgg().unlocked is False
 
 
+@pytest.mark.parametrize('times,warnings,unlocked', [
+    (list(range(9)), 0, False),
+    (list(range(10)), 1, False),
+    ([0, 1, 2, 3, 4, 5, 6, 7, 8, 10], 1, False),
+    ([0, 1, 2, 3, 4, 5, 6, 7, 8, 10.001], 0, False),
+    ([0, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], 1, False),
+    (list(range(10)) + [10, 11, 12, 13, 14], 1, True),
+    (list(range(10)) + [10, 11, 12, 13, 14.001], 1, False),
+])
+def test_mascot_needs_ten_clicks_in_ten_seconds_then_five_more(times, warnings, unlocked):
+    clock = iter(times)
+    state = EvernightEasterEgg(clock=lambda: next(clock))
+    results = [state.record_click('mascot') for _ in times]
+    assert state.unlocked is unlocked
+    assert results.count('warning') == warnings
+    assert results.count('unlocked') == int(unlocked)
+
+
+def test_logo_and_mascot_count_separately_and_share_the_unlock():
+    state = EvernightEasterEgg(clock=lambda: 0.0)
+    assert [state.record_click(source) for source in ['logo'] * 4 + ['mascot'] * 6] == [None] * 10
+    assert state.record_click('logo') == 'warning'
+    assert [state.record_click('mascot') for _ in range(4)] == [None, None, None, 'warning']
+    assert not state.unlocked
+    assert [state.record_click('logo') for _ in range(5)] == [None] * 4 + ['unlocked']
+    assert state.record_click('mascot') is None and state.record_click('logo') is None
+
+
 
 def click_logo(window, qtbot, count=1):
     button = window.titleBar.iconLabel
     for _ in range(count):
         qtbot.mouseClick(button, Qt.MouseButton.LeftButton)
         qtbot.wait(10)
+
+
+def click_mascot(window, qtbot, count=1):
+    page = window.homeInterface
+    if window.stackedWidget.currentWidget() is not page:
+        window.stackedWidget.setAnimationEnabled(False)
+        window.switchTo(page)
+    mascot = page.greeting.mascot
+    assert mascot.isVisible()
+    for _ in range(count):
+        qtbot.mouseClick(mascot, Qt.MouseButton.LeftButton)
+        qtbot.wait(10)
+
+
+UNLOCK_CLICKS = {'logo': 10, 'mascot': 15}
+
+
+def click_source(window, qtbot, source, count=None):
+    click = click_logo if source == 'logo' else click_mascot
+    click(window, qtbot, UNLOCK_CLICKS[source] if count is None else count)
 
 
 
@@ -288,6 +336,7 @@ def test_tenth_logo_click_saves_unlock_and_theme(
 @pytest.mark.parametrize('last_theme,system_dark', [
     ('evernight', False), ('auto', False), ('auto', True), ('light', True), ('dark', False),
 ])
+@pytest.mark.parametrize('window', [{'test_tray': True}], indirect=True)
 def test_unlocked_theme_survives_settings_reload_and_restart(window, qtbot, monkeypatch, last_theme, system_dark):
     from app.common.evernight_artwork import evernight_artwork
     from app.main_window import MainWindow
@@ -329,6 +378,10 @@ def test_unlocked_theme_survives_settings_reload_and_restart(window, qtbot, monk
     cfg._load_config(None, save=False)
     restarted = MainWindow(start_minimized_to_tray=True)
     qtbot.addWidget(restarted)
+    expected_icon = QIcon(application_icon_path(last_theme == 'evernight')).pixmap(32, 32).toImage()
+    for icon in (restarted.splashScreen.icon(), restarted.windowIcon(), QApplication.windowIcon(), restarted.tray_icon.icon()):
+        assert icon.pixmap(32, 32).toImage() == expected_icon
+    assert restarted.tray_icon.toolTip() == restarted.windowTitle()
     combo = restarted.settingInterface.themeCard.comboBox
     assert [combo.itemData(i) for i in range(combo.count())] == ['auto', 'light', 'dark', 'evernight']
     assert combo.currentData() == last_theme
@@ -346,8 +399,9 @@ def test_unlocked_theme_survives_settings_reload_and_restart(window, qtbot, monk
     assert restarted._evey_animation is None
 
 
+@pytest.mark.parametrize('source', ['logo', 'mascot'])
 @pytest.mark.parametrize('writes_suspended', [False, True])
-def test_unlock_can_be_retried_when_config_is_unwritable(window, qtbot, monkeypatch, writes_suspended):
+def test_unlock_can_be_retried_when_config_is_unwritable(window, qtbot, monkeypatch, writes_suspended, source):
     monkeypatch.setattr(cfg, 'set_values', type(cfg).set_values.__get__(cfg))
     cfg.save_config()
     combo = window.settingInterface.themeCard.comboBox
@@ -357,13 +411,13 @@ def test_unlock_can_be_retried_when_config_is_unwritable(window, qtbot, monkeypa
             blocked.setattr(cfg, 'writes_suspended', True)
         else:
             blocked.setattr(cfg, 'save_config', Mock(side_effect=PermissionError('配置文件不可写')))
-        click_logo(window, qtbot, 10)
+        click_source(window, qtbot, source)
     assert not window._evernight.unlocked
     assert combo.findData('evernight') < 0 and combo.currentData() == previous
     assert cfg.get_value('evernight_unlocked') is False
     assert cfg.get_value('ui_theme') == previous
 
-    click_logo(window, qtbot, 10)
+    click_source(window, qtbot, source)
     assert combo.currentData() == 'evernight'
     assert cfg._read_file_config()['evernight_unlocked'] is True
 
@@ -655,7 +709,19 @@ def test_logo_hit_target_covers_padding_without_maximizing(window, qtbot):
     assert not window._evernight.unlocked  # Eight completed clicks, not ten.
 
 
-def test_logo_warning_expires_and_requires_two_fresh_groups(window, qtbot):
+@pytest.mark.parametrize('animation_delay_ms', [0, 100])
+def test_logo_warning_expires_and_requires_two_fresh_groups(
+        window, qtbot, monkeypatch, animation_delay_ms):
+    play_animation = window._play_evey_animation
+
+    def play_paused_animation():
+        play_animation()
+        if window._evey_animation is not None:
+            window._evey_animation.timeline.pause()
+
+    # 模拟事件延迟，并暂停动画，避免它在断言前自然结束。
+    monkeypatch.setattr(window, '_play_evey_animation', lambda: QTimer.singleShot(
+        animation_delay_ms, window, play_paused_animation))
     now = [0.0]
     window._evernight = EvernightEasterEgg(clock=lambda: now[0])
     setTheme(Theme.DARK)
@@ -675,7 +741,109 @@ def test_logo_warning_expires_and_requires_two_fresh_groups(window, qtbot):
     assert window._evey_animation is None
     click_logo(window, qtbot, 5)
     assert window._evernight.unlocked and hint.isHidden()
-    assert window._evey_animation is not None
+    qtbot.waitUntil(lambda: window._evey_animation is not None, timeout=5000)
+    assert window._evey_animation.isVisible()
+
+
+def test_mascot_unlocks_after_ten_and_five_more_then_stays_quiet(window, qtbot, monkeypatch):
+    monkeypatch.setattr(cfg, 'set_value', Mock(side_effect=lambda key, value: cfg.config.__setitem__(key, value)))
+    monkeypatch.setattr(cfg, 'set_values', Mock(side_effect=cfg.config.update))
+    window.stackedWidget.setAnimationEnabled(False)
+    window.switchTo(window.homeInterface)
+    greeting = window.homeInterface.greeting
+    mascot, hint = greeting.mascot, greeting.logoHint
+    original_pose = mascot.pose()
+    assert greeting.themeButton.isHidden()
+    click_mascot(window, qtbot, 9)
+    assert hint.isHidden() and mascot.pose() == original_pose
+    click_mascot(window, qtbot)
+    assert hint.isVisible() and mascot.pose() == Mascot.DIZZY
+    assert hint.text() == '别戳啦！本姑娘头好晕( ꩜ ᯅ ꩜;)'
+    assert greeting.rect().contains(hint.geometry())
+    click_mascot(window, qtbot, 4)
+    assert not window._evernight.unlocked and window._evey_animation is None
+    cfg.set_values.assert_not_called()
+    click_mascot(window, qtbot)
+    assert window._evernight.unlocked and hint.isHidden()
+    cfg.set_values.assert_called_once_with({'ui_theme': 'evernight', 'evernight_unlocked': True})
+    combo = window.settingInterface.themeCard.comboBox
+    assert combo.currentData() == 'evernight'
+    animation = window._evey_animation
+    assert animation is not None
+    animation.timeline.setCurrentTime(animation.DURATION_MS // 2)
+    assert greeting._mode() == 'evernight' and greeting.themeButton.isVisible()
+
+    # 解锁以后再连点：小人照样弹，但不出提示、不换眼花，也不改用户选的主题。
+    combo.setCurrentIndex(combo.findData('light'))
+    assert window._evey_animation is None and greeting.themeButton.isHidden()
+    writes = cfg.set_value.call_count
+    click_mascot(window, qtbot, 15)
+    click_logo(window, qtbot, 10)
+    assert hint.isHidden() and mascot.pose() == original_pose
+    assert combo.currentData() == 'light' and not isDarkTheme()
+    assert cfg.set_value.call_count == writes
+
+
+def test_mascot_click_signal_counts_completed_left_clicks_even_without_motion(qtbot, monkeypatch):
+    from app.overview import greeting as greeting_module
+    monkeypatch.setattr(greeting_module, 'animations_enabled', lambda: False)
+    mascot = greeting_module.MascotWidget(overview=True)
+    qtbot.addWidget(mascot)
+    mascot.setPose(Mascot.FULL)
+    mascot.show()
+    clicks = []
+    mascot.clicked.connect(lambda: clicks.append(True))
+    qtbot.mouseClick(mascot, Qt.MouseButton.RightButton)
+    qtbot.mousePress(mascot, Qt.MouseButton.LeftButton)
+    outside = QPoint(-10, mascot.height() // 2)
+    qtbot.mouseMove(mascot, outside)
+    qtbot.mouseRelease(mascot, Qt.MouseButton.LeftButton, pos=outside)
+    assert clicks == []
+    qtbot.mouseClick(mascot, Qt.MouseButton.LeftButton)
+    qtbot.mouseClick(mascot, Qt.MouseButton.LeftButton)
+    assert len(clicks) == 2
+    assert mascot.animation.state() == mascot.animation.State.Stopped  # 关闭动画时不弹，但照样计数
+
+
+@pytest.mark.parametrize('window', [{'ui_theme': 'evernight', 'evernight_unlocked': True}], indirect=True)
+def test_evernight_greeting_button_opens_the_theme_setting(window, qtbot):
+    from app.navigation import _CardHighlight
+    window.stackedWidget.setAnimationEnabled(False)
+    window.switchTo(window.homeInterface)
+    greeting = window.homeInterface.greeting
+    button = greeting.themeButton
+    assert greeting._mode() == 'evernight'
+    qtbot.waitUntil(button.isVisible)
+    assert button.text() == '界面主题'
+    art = greeting.mascot.imageRect().translated(greeting.mascot.pos())
+    assert button.geometry().right() < art.left()
+    assert abs(button.geometry().center().y() - greeting.pill.geometry().center().y()) <= 1
+    assert not button.geometry().intersects(greeting.titleLabel.geometry())
+    cfg.set_value.reset_mock()
+    qtbot.mouseClick(button, Qt.MouseButton.LeftButton)
+    settings = window.settingInterface
+    assert window.stackedWidget.currentWidget() is settings
+    card = settings.themeCard
+    target = getattr(card, 'card', card)
+    qtbot.waitUntil(lambda: target.findChild(_CardHighlight) is not None)
+    cfg.set_value.assert_called_once_with('evernight_theme_button_used', True)
+    window.switchTo(window.homeInterface)
+    assert greeting._mode() == 'evernight' and button.isHidden()  # 点过一次就不再出现
+    combo = card.comboBox
+    combo.setCurrentIndex(combo.findData('dark'))
+    assert greeting._mode() == 'dark' and button.isHidden()
+    combo.setCurrentIndex(combo.findData('evernight'))
+    assert greeting._mode() == 'evernight' and button.isHidden()
+
+
+@pytest.mark.parametrize('window', [{'ui_theme': 'evernight', 'evernight_unlocked': True,
+                                     'evernight_theme_button_used': True}], indirect=True)
+def test_used_theme_button_is_not_shown_after_restart(window, qtbot):
+    window.stackedWidget.setAnimationEnabled(False)
+    window.switchTo(window.homeInterface)
+    greeting = window.homeInterface.greeting
+    qtbot.waitUntil(lambda: greeting._mode() == 'evernight')
+    assert greeting.isVisible() and greeting.themeButton.isHidden()
 
 
 def test_logo_hint_rises_fades_and_restarts(qtbot):
@@ -866,18 +1034,31 @@ def test_missing_intro_still_completes_a_valid_theme(qtbot, monkeypatch, window,
     assert window.windowTitle() == 'Evernight Assistant'
 
 
-def test_logo_hint_all_languages_keep_motion_and_update_cached_glyphs(qtbot):
-    from PySide6.QtGui import QPainterPath
-    from app.overview.greeting import LogoHint
-    from module.localization import get_current_language, load_language
-
-    translations = {
+HINT_TRANSLATIONS = {
+    'logo': {
         'zh_CN': '别晃啦！本姑娘头好晕( ꩜ ᯅ ꩜;)',
         'zh_TW': '別晃啦！本姑娘頭好暈( ꩜ ᯅ ꩜;)',
         'en_US': "Stop shaking me! I'm getting dizzy! ( ꩜ ᯅ ꩜;)",
         'ja_JP': 'もう揺らさないでよ！目が回っちゃう～ ( ꩜ ᯅ ꩜;)',
         'ko_KR': '그만 흔들어! 나 어지럽단 말이야! ( ꩜ ᯅ ꩜;)',
-    }
+    },
+    'mascot': {
+        'zh_CN': '别戳啦！本姑娘头好晕( ꩜ ᯅ ꩜;)',
+        'zh_TW': '別戳啦！本姑娘頭好暈( ꩜ ᯅ ꩜;)',
+        'en_US': "Stop poking me! I'm getting dizzy! ( ꩜ ᯅ ꩜;)",
+        'ja_JP': 'もうつつかないでよ！目が回っちゃう～ ( ꩜ ᯅ ꩜;)',
+        'ko_KR': '그만 찔러! 나 어지럽단 말이야! ( ꩜ ᯅ ꩜;)',
+    },
+}
+
+
+@pytest.mark.parametrize('source', ['logo', 'mascot'])
+def test_logo_hint_all_languages_keep_motion_and_update_cached_glyphs(qtbot, source):
+    from PySide6.QtGui import QPainterPath
+    from app.overview.greeting import LogoHint
+    from module.localization import get_current_language, load_language
+
+    translations = HINT_TRANSLATIONS[source]
     original = get_current_language()
     parent = QWidget()
     parent.resize(900, 320)
@@ -885,7 +1066,7 @@ def test_logo_hint_all_languages_keep_motion_and_update_cached_glyphs(qtbot):
     parent.show()
     hint = LogoHint(parent, lambda: None)
     try:
-        hint.play()
+        hint.play(source)
         hint.animation.pause()
         hint.animation.setCurrentTime(1150)
         for language, expected in translations.items():
@@ -908,11 +1089,11 @@ def test_mid_warning_application_language_switch_retains_click_deadline(window, 
     hint = window.homeInterface.greeting.logoHint
     hint.animation.pause()
     hint.animation.setCurrentTime(1000)
-    deadline = window._evernight._warning_until
+    deadline = window._evernight._sequences['logo'].warning_until
     switch_language(qtbot, window, 'en_US')
     assert hint.text().startswith('Stop shaking me!')
     assert hint.isVisible() and hint.animation.currentTime() == 1000
-    assert window._evernight._warning_until == deadline
+    assert window._evernight._sequences['logo'].warning_until == deadline
 
 
 @pytest.mark.parametrize('background', ['light', 'dark', 'evernight'])
