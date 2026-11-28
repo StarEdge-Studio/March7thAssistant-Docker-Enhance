@@ -150,7 +150,7 @@ internal fun HomeScreen(
     val started = state.steps.any { it.status in setOf(StepStatus.DONE, StepStatus.FAILED, StepStatus.STOPPED) }
     // 有步骤失败时结果卡已经说清了情况，不再显示通用的错误卡。
     val stepFailure = state.errorCode == TASK_FAILED && state.steps.isNotEmpty()
-    val error = errorInfo(state.errorCode).takeUnless { state.busy || stepFailure }
+    val error = errorInfo(state.errorCode, shizukuAndroid17Warning = state.shizukuAndroid17Warning).takeUnless { state.busy || stepFailure }
     val showResult = finished && state.steps.isNotEmpty() && (state.phase == TaskPhase.SUCCEEDED || stepFailure || started)
     val idle = plannedSteps(state.task, state.config, LocalDate.now().dayOfWeek.value).idle
     Column(Modifier.fillMaxSize()) {

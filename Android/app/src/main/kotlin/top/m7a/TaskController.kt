@@ -34,6 +34,7 @@ enum class TaskPhase { IDLE, PREPARING, WAITING_FOR_GAME, RUNNING, STOPPING, CLE
 data class TaskState(
     val privilege: Privilege = Privilege.SHIZUKU,
     val permission: PermissionState = PermissionState.NOT_RUNNING,
+    val shizukuAndroid17Warning: Boolean = false,
     val service: ServiceState = ServiceState.IDLE,
     val displayId: Int? = null,
     val gameDisplayId: Int? = null,
@@ -145,7 +146,18 @@ class TaskController private constructor(private val context: Context) {
     }
 
     fun refreshPermission() {
-        stateData.update { it.copy(permission = permissionFor(it.privilege)) }
+        stateData.update { checkedPermission(it) }
+    }
+
+    private fun checkedPermission(state: TaskState, privilege: Privilege = state.privilege): TaskState {
+        val permission = permissionFor(privilege)
+        val manager = if (privilege == Privilege.SHIZUKU && Build.VERSION.SDK_INT >= 37 && permission != PermissionState.READY) {
+            context.readShizukuManager(SHIZUKU_MANAGER_PACKAGE)
+        } else null
+        return state.copy(
+            privilege = privilege, permission = permission,
+            shizukuAndroid17Warning = needsAndroid17ShizukuWarning(Build.VERSION.SDK_INT, manager, permission),
+        )
     }
 
     private fun permissionFor(privilege: Privilege) =
@@ -156,7 +168,7 @@ class TaskController private constructor(private val context: Context) {
         val edit = prefs.edit().putBoolean("root", privilege == Privilege.ROOT)
         if (privilege == Privilege.ROOT && !prefs.contains(KEY_ROOT_VERIFIED)) edit.putBoolean(KEY_ROOT_VERIFIED, false)
         edit.apply()
-        stateData.update { it.copy(privilege = privilege, permission = permissionFor(privilege)) }
+        stateData.update { checkedPermission(it, privilege) }
         recover()
         return true
     }
@@ -255,8 +267,7 @@ class TaskController private constructor(private val context: Context) {
                 main.removeCallbacks(run.stopTimeout)
                 active = null
                 stateData.update {
-                    it.copy(
-                        permission = access.state(it.privilege),
+                    checkedPermission(it).copy(
                         service = ServiceState.IDLE,
                         displayId = null,
                         gameDisplayId = null,

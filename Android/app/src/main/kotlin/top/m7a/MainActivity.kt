@@ -89,8 +89,8 @@ class MainActivity : ComponentActivity() {
             val logs by controller.logs.collectAsStateWithLifecycle()
             val device = remember(notificationsAllowed) {
                 DeviceInfo(
-                    sdk = Build.VERSION.SDK_INT,
-                    release = Build.VERSION.RELEASE,
+                    sdk = demo?.sdk ?: Build.VERSION.SDK_INT,
+                    release = demo?.release ?: Build.VERSION.RELEASE,
                     miui = listOf(Build.MANUFACTURER, Build.BRAND).any { it.lowercase() in XIAOMI_BRANDS },
                     notificationsAllowed = notificationsAllowed,
                     version = demo?.installedVersion ?: BuildConfig.VERSION_NAME,
@@ -136,6 +136,9 @@ class MainActivity : ComponentActivity() {
         },
         installShizuku = ::installShizuku,
         downloadShizuku = { open(view(bundledShizukuForSdk(Build.VERSION.SDK_INT).releaseUrl)) },
+        openShizukuSettings = {
+            open(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", SHIZUKU_MANAGER_PACKAGE, null)))
+        },
         openShizukuManual = { open(view(tr(R.string.url_shizuku_manual))) },
         openProjectPage = { open(view(PROJECT_PAGE)) },
         openUpdateUrl = { open(view(it)) },

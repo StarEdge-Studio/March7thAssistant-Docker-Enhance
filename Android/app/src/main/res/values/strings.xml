@@ -48,6 +48,10 @@
     <string name="install_shizuku_offline">离线安装</string>
     <string name="shizuku_releases">官方发布页</string>
     <string name="shizuku_compat_releases">兼容版发布页</string>
+    <string name="shizuku_android17_warning">这台手机是 Android 17 或更新版本，官方 Shizuku 13.6.0 及更早版本在 Android 17 上可能出现授权列表为空、无线调试启动后闪退等问题。授权列表为空不代表没有授权，以这里显示的状态为准。</string>
+    <string name="shizuku_android17_migration">仍然连不上时，可换装内置兼容版：先卸载原版 Shizuku，再回来点「离线安装」。两者签名不同，不卸载会提示安装冲突；换装后需重新配对、启动和授权。</string>
+    <string name="shizuku_android17_advice">Android 17 上的官方旧版 Shizuku 可能不兼容；授权列表为空不代表没有授权，以小助手「权限引导」显示的状态为准。仍连不上时，先卸载原版，再回到「权限引导」离线安装兼容版，并重新配对、启动和授权。</string>
+    <string name="shizuku_uninstall_original">卸载原版</string>
     <string name="shizuku_install_failed">无法准备 Shizuku 安装包，请重试。</string>
     <string name="open_shizuku">打开授权管理</string>
     <string name="authorize">授权</string>

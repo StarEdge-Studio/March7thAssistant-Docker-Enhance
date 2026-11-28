@@ -73,7 +73,7 @@ internal fun GuideScreen(state: TaskState, device: DeviceInfo, actions: AppActio
                     Modifier.padding(top = 4.dp, bottom = 16.dp),
                 )
                 if (state.privilege == Privilege.SHIZUKU) {
-                    ShizukuSteps(state.permission, device, !state.busy, actions)
+                    ShizukuSteps(state.permission, device, !state.busy, actions, state.shizukuAndroid17Warning)
                 } else {
                     RootSteps(state.permission, !state.busy, actions)
                 }
@@ -122,7 +122,7 @@ internal fun GuideScreen(state: TaskState, device: DeviceInfo, actions: AppActio
 }
 
 @Composable
-private fun ShizukuSteps(permission: PermissionState, device: DeviceInfo, enabled: Boolean, actions: AppActions) {
+private fun ShizukuSteps(permission: PermissionState, device: DeviceInfo, enabled: Boolean, actions: AppActions, android17Warning: Boolean) {
     val compat = bundledShizukuForSdk(device.sdk) == BundledShizuku.ANDROID17
     val position = when (permission) {
         PermissionState.NOT_INSTALLED -> 0
@@ -136,6 +136,13 @@ private fun ShizukuSteps(permission: PermissionState, device: DeviceInfo, enable
         else -> StepState.PENDING
     }
 
+    if (android17Warning) {
+        Notice(tr(R.string.shizuku_android17_warning), tone = Tone.WARNING)
+        BodyText(tr(R.string.shizuku_android17_migration), Modifier.padding(top = 8.dp))
+        TextButton(actions.openShizukuSettings, enabled = enabled) {
+            Text(tr(R.string.shizuku_uninstall_original))
+        }
+    }
     StepItem(1, tr(R.string.guide_install_title), stateOf(0)) {
         if (position == 0) {
             BodyText(tr(if (compat) R.string.guide_install_compat_detail else R.string.guide_install_detail), Modifier.padding(top = 4.dp))
