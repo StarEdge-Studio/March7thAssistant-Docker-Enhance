@@ -82,7 +82,14 @@ internal class DeviceAccess(private val context: Context, trace: (String) -> Uni
     }
 
     companion object {
-        val SHIZUKU_MANAGER_PACKAGES = listOf("moe.shizuku.privileged.api", "roro.stellar.manager")
+        val SHIZUKU_MANAGER_PACKAGES = listOf(
+            "moe.shizuku.privileged.api", // 原版、Shizuku Next 和兼容占位包共用此包名。
+            "roro.stellar.manager",
+            "kerneldroid.nightzuku",
+            "com.hamondev.shevery",
+            "com.churan.shizako",
+            "eu.darken.porter",
+        )
         const val GAME_PACKAGE = "com.miHoYo.hkrpg"
         const val PERMISSION_REQUEST = 1802
     }

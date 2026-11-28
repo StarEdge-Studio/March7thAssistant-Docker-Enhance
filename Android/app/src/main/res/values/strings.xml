@@ -348,7 +348,7 @@
     <string name="guide_intro">小助手需要更高的权限才能创建后台虚拟屏并替你点按游戏。选一种方式，按步骤完成一次即可。</string>
     <string name="guide_locked">任务运行期间不能切换权限方式。</string>
     <string name="guide_shizuku_heading">通过 Shizuku 授权</string>
-    <string name="guide_shizuku_about">Shizuku 无需 Root。也支持 Sui 和已开启 Shizuku 兼容层的 Stellar。</string>
+    <string name="guide_shizuku_about">Shizuku 无需 Root。也支持 Sui、Stellar 等兼容服务；Stellar 需开启 Shizuku 兼容层，Porter 需安装官方兼容组件。</string>
     <string name="guide_root_heading">通过 Root 授权</string>
     <string name="guide_root_about">设备已经 Root 时可以用，不需要 Shizuku。</string>
     <string name="guide_install_title">准备授权服务</string>
@@ -476,8 +476,8 @@
     <string name="error_busy_advice">1. 等十几秒再点开始。\n2. 还是不行，就在 Shizuku 里停止服务后重新启动，或者重启手机。</string>
     <string name="error_cleanup_pending_title">本轮清理尚未确认</string>
     <string name="error_service_title">设备端服务没有启动成功</string>
-    <string name="error_shizuku_api_title">当前 Shizuku 服务不支持设备进程接口</string>
-    <string name="error_shizuku_api_advice">请到「日志」页点「导出」，反馈时附上本轮日志文件，里面有 Shizuku 版本和 UID。\n请使用提供 API 13 的 Shizuku 服务，或在已 Root 的设备上选择 Root 授权。</string>
+    <string name="error_shizuku_api_title">当前授权服务不支持设备进程接口</string>
+    <string name="error_shizuku_api_advice">请到「日志」页点「导出」，反馈时附上本轮日志文件，里面有授权服务版本和 UID。\n请使用兼容 Shizuku 进程接口的服务，或在已 Root 的设备上选择 Root 授权。</string>
     <string name="error_service_advice">重试前，请到「日志」页点「导出」，反馈时附上本轮日志文件。\n使用 Shizuku 时，确认它正在运行。手机重启后需要重新启动 Shizuku，再回到「权限引导」确认已就绪。</string>
     <string name="error_root_title">没有拿到 Root 权限</string>
     <string name="error_root_advice">1. 在 Root 管理应用（如 Magisk）里允许三月七小助手使用超级用户权限。\n2. 到权限引导点「检查 Root」。\n3. 没有 Root 的设备请改用 Shizuku。</string>
