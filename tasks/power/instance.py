@@ -302,7 +302,7 @@ class Instance:
             return auto.find_element("./assets/images/purefiction/prepare_fight.png", "image", 200000,
                                      crop=(0, 0, 300 / 1920, 300 / 1080))
 
-        if not wait_until(ready, 45, 0.5):
+        if not wait_until(ready, 120, 0.5):
             raise PowerError("未进入饰品提取首领场地")
         auto.press_key("w", 3)
         for _ in range(3):
