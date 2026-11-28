@@ -84,11 +84,10 @@ internal class ShizukuAccess(
 
 /** 使用 Shizuku API 13/14 共用的进程协议。命令只包含安装目录中的 launcher 和 APK。 */
 internal fun startShizukuProcess(context: Context, recoverAudio: Boolean, trace: (String) -> Unit): Process {
-    val manager = if (Sui.isSui()) "Sui" else DeviceAccess.SHIZUKU_MANAGER_PACKAGES.mapNotNull { packageName ->
-        runCatching {
-            context.packageManager.getPackageInfo(packageName, 0).let { "$packageName ${it.versionName} (${it.longVersionCode})" }
-        }.getOrNull()
-    }.joinToString().ifEmpty { "未知" }
+    val managers = DeviceAccess.SHIZUKU_MANAGER_PACKAGES.mapNotNull { packageName ->
+        runCatching { context.readShizukuManager(packageName)?.logDescription() }.getOrNull()
+    }
+    val manager = (listOfNotNull("Sui".takeIf { Sui.isSui() }) + managers).joinToString().ifEmpty { "未知" }
     val soc = if (Build.VERSION.SDK_INT >= 31) Build.SOC_MODEL else Build.HARDWARE
     trace("${Build.MANUFACTURER} ${Build.MODEL} (${Build.DEVICE}, $soc), Android ${Build.VERSION.RELEASE}/API ${Build.VERSION.SDK_INT}, " +
         "ROM=${Build.DISPLAY}, fingerprint=${Build.FINGERPRINT}")
@@ -102,7 +101,8 @@ internal fun startShizukuProcess(context: Context, recoverAudio: Boolean, trace:
         }
         val api = Shizuku.getVersion()
         val uid = Shizuku.getUid()
-        trace("Shizuku API=$api, UID=$uid, " + if (recoverAudio) "恢复音频" else "启动设备服务")
+        val patch = runCatching { Shizuku.getServerPatchVersion().toString() }.getOrDefault("未知")
+        trace("Shizuku API=$api, patch=$patch, UID=$uid, " + if (recoverAudio) "恢复音频" else "启动设备服务")
         val info = context.applicationInfo
         val argv = shizukuLaunchArgs(api, uid, context.deviceServiceLauncher, info.sourceDir, recoverAudio)
         val remote = IShizukuService.Stub.asInterface(binder).newProcess(argv, null, null)
