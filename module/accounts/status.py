@@ -30,15 +30,74 @@ LABELS = {
 
 def cli_status(config, store=None):
     try:
-        index = (store or AccountStore()).index()
+        store = store or AccountStore()
+        index = store.index()
+        global_path = config.shared_value("game_path", "")
+        rows = []
+        for row in index["accounts"]:
+            details = _account_details(store, index, row)
+            rows.append({
+                **{k: row[k] for k in ("uid", "name", "rotate", "server")},
+                "switch_method": details["switch_method"],
+                "issue": _account_issue(row, details, global_path),
+            })
         return {
             "effective": supported(config, index),
             "enabled": index["enabled"],
             "current": index["current"],
-            "list": [{k: row[k] for k in ("uid", "name", "rotate")} for row in index["accounts"]],
+            "switch_methods": {"cn": switch_method(index, "cn")},
+            "list": rows,
         }
     except (OSError, ValueError):
-        return {"effective": False, "enabled": False, "current": None, "list": [], "unavailable": True}
+        return {"effective": False, "enabled": False, "current": None,
+                "switch_methods": {}, "list": [], "unavailable": True}
+
+
+def _account_details(store, index, row):
+    """只读取切号资料，不读取运行记录、当前登录或密码。"""
+    uid = row["uid"]
+    method = switch_method(index, row["server"])
+    state = store.read(uid, "state.yaml")
+    own_path = own_game_path(row, state)
+    snap = store.path(uid, "login.reg")
+    if not snap.exists():
+        snap = store.root / (uid + ".reg")
+    has_snapshot = snap.is_file()
+    saved = state.get("snapshot_saved_at")
+    if not saved and has_snapshot:
+        try:
+            saved = snap.stat().st_mtime
+        except OSError:
+            saved = None
+    # 切回登录快照之前保存的快照，要重新保存才会写回。
+    since = index.get("snapshot_since")
+    stale = bool(row["server"] == "cn" and has_snapshot and isinstance(since, (int, float)) and (saved or 0) < since)
+    login = state.get("login_status", "unknown")
+    return {
+        "game_path": own_path,
+        "login_status": login,
+        "snapshot_saved_at": saved,
+        "has_snapshot": has_snapshot,
+        "stale_snapshot": stale,
+        "switch_method": method,
+    }
+
+
+def _account_issue(row, details, global_path):
+    """账号页和 CLI 共用的切号问题优先级，不含运行结果或轮流开关。"""
+    if details["login_status"] == "expired":
+        return "expired"
+    if details["switch_method"] == "game" and not row["login_hint"]:
+        return "no_hint"
+    if details["switch_method"] == "snapshot":
+        if not details["has_snapshot"]:
+            return "missing"
+        if details["stale_snapshot"]:
+            return "stale"
+    path = details["game_path"] or global_path or ""
+    if not Path(path).is_file() or server_for_path(path) != row["server"]:
+        return "path"
+    return None
 
 
 def _history(index, hours, records=None):
@@ -86,25 +145,10 @@ def list_accounts(config, store=None, *, now=None, logged_uid=None, records=None
         for row in index["accounts"]
     }
     active, days = _history(index, hours, records)
-    since = index.get("snapshot_since")
     rows = []
     for row in index["accounts"]:
         uid = row["uid"]
-        method = switch_method(index, row["server"])
-        state = store.read(uid, "state.yaml")
-        own_path = own_game_path(row, state)
-        snap = store.path(uid, "login.reg")
-        if not snap.exists():
-            snap = store.root / (uid + ".reg")
-        has_snapshot = snap.is_file()
-        saved = state.get("snapshot_saved_at")
-        if not saved and has_snapshot:
-            try:
-                saved = snap.stat().st_mtime
-            except OSError:
-                saved = None
-        # 切回登录快照之前保存的快照，要重新保存才会写回。
-        stale = bool(row["server"] == "cn" and has_snapshot and isinstance(since, (int, float)) and (saved or 0) < since)
+        details = _account_details(store, index, row)
         today = game_day(now, hours[uid])
         week = []
         for distance in range(6, -1, -1):
@@ -117,29 +161,12 @@ def list_accounts(config, store=None, *, now=None, logged_uid=None, records=None
                     "run_id": result[2] if result else None,
                 }
             )
-        login = state.get("login_status", "unknown")
         status = active.get(uid)
         error = None
         if not status and (latest := days.get((uid, today))):
             _, status, _, error = latest
         if not status:
-            if login == "expired":
-                status = "expired"
-            elif method == "game" and not row["login_hint"]:
-                status = "no_hint"
-            elif method == "snapshot" and not has_snapshot:
-                status = "missing"
-            elif method == "snapshot" and stale:
-                status = "stale"
-            elif (
-                not Path(own_path or global_path or "").is_file()
-                or server_for_path(own_path or global_path) != row["server"]
-            ):
-                status = "path"
-            elif not row["rotate"]:
-                status = "excluded"
-            else:
-                status = "idle"
+            status = _account_issue(row, details, global_path) or ("excluded" if not row["rotate"] else "idle")
         label = tr(LABELS[status])
         if status == "failed" and error:
             label = tr("今日失败（{reason}）").format(reason=error)
@@ -147,14 +174,9 @@ def list_accounts(config, store=None, *, now=None, logged_uid=None, records=None
             {
                 **row,
                 "configured_game_path": row["game_path"],
-                "game_path": own_path,
+                **details,
                 "masked_uid": masked_uid(uid),
                 "is_logged_in": uid == str(logged_uid),
-                "login_status": login,
-                "snapshot_saved_at": saved,
-                "has_snapshot": has_snapshot,
-                "stale_snapshot": stale,
-                "switch_method": method,
                 "password_status": store.password_status(uid),
                 "status": status,
                 "status_text": label,

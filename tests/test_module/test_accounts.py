@@ -798,6 +798,83 @@ def test_snapshot_is_kept_when_it_should_not_be_renewed(config, store, client, m
 HINT = "155******08"
 
 
+@pytest.mark.parametrize(("method", "server", "case", "expected"), [
+    ("game", "cn", "no_hint", "no_hint"),
+    ("snapshot", "cn", "missing", "missing"),
+    ("snapshot", "cn", "stale", "stale"),
+    ("snapshot", "cn", "stale_mtime", "stale"),
+    ("game", "cn", "expired", "expired"),
+    ("snapshot", "cn", "expired", "expired"),
+    ("game", "cn", "invalid_path", "path"),
+    ("snapshot", "cn", "wrong_server", "path"),
+    ("game", "cn", "ready", None),
+    ("snapshot", "cn", "ready", None),
+    ("game", "cn", "excluded", None),
+    ("game", "global", "ready", None),
+])
+def test_cli_status_account_issues(config, store, tmp_path, monkeypatch, method, server, case, expected):
+    client = tmp_path / "StarRail.exe"
+    client.touch()
+    store.set_switch_method(method)
+    store.update(A, name="开拓者 · 主号", server=server, game_path=str(client),
+                 login_hint="" if case in ("no_hint", "expired") else HINT, rotate=case != "excluded")
+    # 同时留下较低优先级的路径问题，核对 expired/no_hint/missing/stale 不被覆盖。
+    if case not in ("ready", "excluded", "wrong_server"):
+        client.unlink()
+    if case == "missing" or (method == "game" and server == "cn" and case in ("expired", "ready")):
+        store.path(A, "login.reg").unlink()
+    if case == "expired":
+        store.modify(A, "state.yaml", lambda state: state.update(login_status="expired"))
+    if case in ("stale", "stale_mtime"):
+        since = store.path(A, "login.reg").stat().st_mtime + 10
+        store.edit_index(lambda index: index.update(snapshot_since=since))
+        if case == "stale":
+            store.modify(A, "state.yaml", lambda state: state.update(snapshot_saved_at=since - 1))
+    monkeypatch.setattr(status, "server_for_path", lambda path: "global" if case == "wrong_server" else server)
+    # CLI 不允许扫描记录、取当前登录或读取密码状态。
+    blocked = Mock(side_effect=AssertionError("账号状态查询不应访问运行记录、当前登录或密码"))
+    monkeypatch.setattr(status, "_history", blocked)
+    monkeypatch.setattr(status.runs, "list_run_ids", blocked)
+    monkeypatch.setattr(status, "current_login", blocked)
+    monkeypatch.setattr(store, "password_status", blocked)
+    result = status.cli_status(config, store)
+    assert result["switch_methods"] == {"cn": method}
+    row = next(row for row in result["list"] if row["uid"] == A)
+    assert row == {
+        "uid": A, "name": "开拓者 · 主号", "rotate": case != "excluded", "server": server,
+        "switch_method": "snapshot" if server == "global" else method, "issue": expected,
+    }
+    # 账号页仍把不参与轮流显示为 excluded，其他问题保持同一优先级。
+    monkeypatch.setattr(status, "_history", lambda *args: ({}, {}))
+    monkeypatch.setattr(store, "password_status", lambda uid: "none")
+    listed = next(row for row in status.list_accounts(config, store, logged_uid=A, records=[]) if row["uid"] == A)
+    assert listed["status"] == (expected or ("excluded" if case == "excluded" else "idle"))
+    assert "issue" not in listed
+
+
+@pytest.mark.parametrize("result", ["running", "success", "failed"])
+def test_cli_status_ignores_daily_results(config, store, monkeypatch, result):
+    store.set_switch_method("game")
+    now = status.datetime(2026, 11, 24, 8)
+    history = ({A: result}, {}) if result == "running" else (
+        {}, {(A, status.game_day(now, config.shared_value("refresh_hour", 4))): (None, result, "sample", None)})
+    monkeypatch.setattr(status, "_history", lambda *args: history)
+    listed = next(row for row in status.list_accounts(config, store, now=now, logged_uid=A, records=[]) if row["uid"] == A)
+    assert listed["status"] == result
+    row = next(row for row in status.cli_status(config, store)["list"] if row["uid"] == A)
+    assert row["issue"] == "no_hint"
+
+
+@pytest.mark.parametrize("failure", [OSError("unreadable"), ValueError("invalid")])
+@pytest.mark.parametrize("operation", ["index", "read"])
+def test_cli_status_unavailable(config, store, monkeypatch, failure, operation):
+    monkeypatch.setattr(store, operation, Mock(side_effect=failure))
+    assert status.cli_status(config, store) == {
+        "effective": False, "enabled": False, "current": None, "switch_methods": {},
+        "list": [], "unavailable": True,
+    }
+
+
 def test_switch_method_defaults_and_login_hints(tmp_path, config, store):
     fresh = AccountStore(tmp_path / "fresh", role="ui")
     assert fresh.index()["switch_methods"] == {"cn": "game"}  # 新安装默认在游戏登录框里切换
