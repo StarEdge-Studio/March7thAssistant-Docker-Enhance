@@ -47,6 +47,7 @@
     <string name="permission_checking_root">正在检查 Root 权限</string>
     <string name="install_shizuku_offline">离线安装</string>
     <string name="shizuku_releases">官方发布页</string>
+    <string name="shizuku_compat_releases">兼容版发布页</string>
     <string name="shizuku_install_failed">无法准备 Shizuku 安装包，请重试。</string>
     <string name="open_shizuku">打开授权管理</string>
     <string name="authorize">授权</string>
@@ -353,6 +354,7 @@
     <string name="guide_root_about">设备已经 Root 时可以用，不需要 Shizuku。</string>
     <string name="guide_install_title">准备授权服务</string>
     <string name="guide_install_detail">使用内置 Shizuku 安装包。若系统要求授权，允许小助手安装未知应用，返回后再点安装。已有 Sui 或 Stellar 时，启动对应服务即可。</string>
+    <string name="guide_install_compat_detail">内置的是兼容 Android 17 的 Shizuku 13.7.0（thedjchi 分支，第三方维护）。若系统要求授权，允许小助手安装未知应用，返回后再点安装。已有 Sui 或 Stellar 时，启动对应服务即可。</string>
     <string name="guide_install_done">已安装</string>
     <string name="guide_start_title">启动授权服务</string>
     <string name="guide_start_pending">安装后再启动服务</string>

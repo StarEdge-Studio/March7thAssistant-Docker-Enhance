@@ -1,0 +1,16 @@
+Shizuku v13.7.0-thedjchi by Alex Chi (thedjchi), a fork of RikkaApps/Shizuku
+Apache License 2.0 (see LICENSE.txt from the release tag).
+
+Bundled as the original, unmodified APK from the v13.7.0-thedjchi release.
+https://github.com/thedjchi/Shizuku/releases/tag/v13.7.0-thedjchi
+https://github.com/thedjchi/Shizuku/tree/v13.7.0-thedjchi
+https://github.com/thedjchi/Shizuku/blob/v13.7.0-thedjchi/LICENSE
+
+Used only on Android 17 (API 37) and above.
+Android 16 and below continue to use the official APK in assets/shizuku/.
+
+APK SHA-256
+6ea6dee65d5ddc626b6b75b2c2f67f8cc547fa47d7b437e6892639c37eaffe43
+
+APK signing certificate SHA-256
+947e81ed49d6cde4006bd64b94ab69e63f50074ce01451d1bf30acb14e591f37

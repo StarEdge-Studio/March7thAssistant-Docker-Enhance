@@ -33,10 +33,12 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import top.m7a.BundledShizuku
 import top.m7a.PermissionState
 import top.m7a.Privilege
 import top.m7a.R
 import top.m7a.TaskState
+import top.m7a.bundledShizukuForSdk
 
 @Composable
 internal fun GuideScreen(state: TaskState, device: DeviceInfo, actions: AppActions, navigator: Navigator) {
@@ -121,6 +123,7 @@ internal fun GuideScreen(state: TaskState, device: DeviceInfo, actions: AppActio
 
 @Composable
 private fun ShizukuSteps(permission: PermissionState, device: DeviceInfo, enabled: Boolean, actions: AppActions) {
+    val compat = bundledShizukuForSdk(device.sdk) == BundledShizuku.ANDROID17
     val position = when (permission) {
         PermissionState.NOT_INSTALLED -> 0
         PermissionState.NOT_RUNNING -> 1
@@ -135,10 +138,10 @@ private fun ShizukuSteps(permission: PermissionState, device: DeviceInfo, enable
 
     StepItem(1, tr(R.string.guide_install_title), stateOf(0)) {
         if (position == 0) {
-            BodyText(tr(R.string.guide_install_detail), Modifier.padding(top = 4.dp))
+            BodyText(tr(if (compat) R.string.guide_install_compat_detail else R.string.guide_install_detail), Modifier.padding(top = 4.dp))
             StepButton(tr(R.string.install_shizuku_offline), actions.installShizuku, enabled = enabled)
             TextButton(actions.downloadShizuku, enabled = enabled) {
-                Text(tr(R.string.shizuku_releases))
+                Text(tr(if (compat) R.string.shizuku_compat_releases else R.string.shizuku_releases))
             }
         } else {
             BodyText(tr(R.string.guide_install_done))

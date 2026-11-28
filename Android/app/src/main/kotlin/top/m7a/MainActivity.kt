@@ -132,10 +132,10 @@ class MainActivity : ComponentActivity() {
         openShizuku = {
             open(DeviceAccess.SHIZUKU_MANAGER_PACKAGES.firstNotNullOfOrNull {
                 packageManager.getLaunchIntentForPackage(it)
-            } ?: view(SHIZUKU_RELEASES))
+            } ?: view(bundledShizukuForSdk(Build.VERSION.SDK_INT).releaseUrl))
         },
         installShizuku = ::installShizuku,
-        downloadShizuku = { open(view(SHIZUKU_RELEASES)) },
+        downloadShizuku = { open(view(bundledShizukuForSdk(Build.VERSION.SDK_INT).releaseUrl)) },
         openShizukuManual = { open(view(tr(R.string.url_shizuku_manual))) },
         openProjectPage = { open(view(PROJECT_PAGE)) },
         openUpdateUrl = { open(view(it)) },
@@ -228,7 +228,6 @@ class MainActivity : ComponentActivity() {
     companion object {
         // 系统文件选择器会给 text/plain 补 .txt，直接用 .txt 结尾免得出现双扩展名。
         private const val LOG_NAME = "march7th-android-log.txt"
-        private const val SHIZUKU_RELEASES = "https://github.com/RikkaApps/Shizuku/releases/latest"
         private const val PROJECT_PAGE = "https://github.com/moesnow/March7thAssistant"
         private val XIAOMI_BRANDS = setOf("xiaomi", "redmi", "poco")
         private var askedForNotifications = false
