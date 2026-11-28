@@ -8,7 +8,9 @@ from PIL import Image
 
 from module.automation import auto
 from module.automation.automation import screenshot_retry_timeout
-from module.automation.input_base import input_deadline, input_deadline_reached, limit_input_deadline
+from module.automation.input_base import (
+    input_deadline, input_deadline_reached, limit_input_deadline, observe_input_dispatch,
+)
 from module.config import cfg
 from module.connection_values import build_target_supported
 from module.overview.plan import echo_day_due
@@ -16,6 +18,7 @@ from module.overview.readings import save_reading
 from module.game.adb_transport import AdbError
 from module.localization import get_raw_instance_names, tr
 from module.logger import log
+from module.ocr import ocr
 from module.screen import screen
 from tasks.base.list_drag import changed_ratio, drag_list
 from tasks.base.task_steps import FATAL_GAME_ERRORS, GameRecoveryError
@@ -59,6 +62,7 @@ CHALLENGE = (1392 / 1920, 950 / 1080, 461 / 1920, 76 / 1080)
 START_CHALLENGE = (1410 / 1920, 946 / 1080, 420 / 1920, 80 / 1080)
 MENU_TEAM = (1120 / 1920, 389 / 1080, 645 / 1920, 633 / 1080)
 BATTLE_CONTROLS = (1665 / 1920, 30 / 1080, 210 / 1920, 63 / 1080)
+ACTION_TYPES = frozenset(("单攻", "群攻", "扩散", "弹射", "强化", "妨害", "回复", "治疗", "防御", "支援", "召唤"))
 RESULT_TITLE = (754 / 1920, 109 / 1080, 411 / 1920, 253 / 1080)
 REPEAT = (1180 / 1920, 911 / 1080, 290 / 1920, 74 / 1080)
 EXIT = (414 / 1920, 906 / 1080, 1075 / 1920, 87 / 1080)
@@ -481,7 +485,47 @@ def classify_auto_button(pixels, glyph):
     return None
 
 
-def _observe_battle(glyph, *, allow_team, check_popups, awaiting_repeat_transition=False):
+def _manual_turn_snapshot():
+    """同一帧内确认手动指令，并保留行动条和敌方血条用于核对进度。"""
+    frame, _, _ = auto.take_screenshot()
+    commands = frame.crop((1000, 485, 1250, 660))
+    lines = ocr.recognize_multi_lines(np.asarray(commands)) or []
+    basic = skill = False
+    for box, (text, score) in lines:
+        if text.strip() not in ACTION_TYPES or score < 0.85:
+            continue
+        x, y = np.mean(box, axis=0)
+        basic |= 10 <= x <= 125 and 125 <= y <= 175
+        skill |= 130 <= x <= 250 and 25 <= y <= 115
+    if basic and skill:
+        return _battle_progress(frame)
+    return None
+
+
+def _battle_progress(frame):
+    # 头像和血条底色会闪光，只比较白色行动值及血条实心部分。
+    queue = np.asarray(frame.crop((98, 130, 120, 440)), dtype=np.int16)
+    white = (queue.min(axis=-1) > 220) & (np.ptp(queue, axis=-1) < 20)
+    values = np.concatenate([white[y:y + 16].ravel() for y in range(0, 295, 49)])
+    health = np.asarray(frame.crop((430, 62, 843, 69)), dtype=np.int16)
+    red, green, blue = np.moveaxis(health, -1, 0)
+    filled = ((red >= 150) & (red - green >= 50) & (red - blue >= 50)).mean(axis=0) >= 0.5
+    # 百分比数字覆盖了血条中段，不能当成血量变化。
+    filled[150:245] = False
+    return values, filled
+
+
+def _same_turn(before, after):
+    return (np.mean(before[0] != after[0]) <= 0.004
+            and np.count_nonzero(before[1] != after[1]) <= 3)
+
+
+def _turn_progress_snapshot():
+    frame, _, _ = auto.take_screenshot(crop=(0, 0, 850 / 1280, 500 / 720))
+    return _battle_progress(frame)
+
+
+def _observe_battle(glyph, *, allow_team, check_popups):
     if auto.find_element(f"{IMAGES}/victory.png", "image", 0.88, crop=RESULT_TITLE):
         return "victory", None
     if check_popups:
@@ -494,8 +538,18 @@ def _observe_battle(glyph, *, allow_team, check_popups, awaiting_repeat_transiti
         return "battle", classify_auto_button(pixels, glyph)
     if allow_team and auto.find_element("开始挑战", "text", crop=START_CHALLENGE):
         return "team", None
-    if awaiting_repeat_transition and battle_speed_visible(auto):
-        return "battle", None
+    try:
+        speed_visible = battle_speed_visible(auto)
+    except FATAL_GAME_ERRORS:
+        raise
+    except Exception as error:
+        log.debug(f"暂时无法识别战斗倍速控件：{error}")
+        speed_visible = False
+    if speed_visible:
+        # 暂停图标也会被背景影响；倍速控件可以独立确认战斗 HUD。
+        auto.take_screenshot(crop=BATTLE_CONTROLS)
+        pixels = np.asarray(auto.screenshot.convert("RGB"))[7:32, 18:59]
+        return "battle", classify_auto_button(pixels, glyph)
     return None, None
 
 
@@ -511,16 +565,61 @@ def _wait_battle(*, repeated=False, instance_screen="calyx", verify_team=False):
     confirmed_auto = False
     auto_clicks = 0
     off_frames = 0
+    manual_frames = 0
+    manual_reference = None
+    manual_since = 0.0
     team_retries = 0
     next_team_click = time.monotonic() + 3
     next_auto_click = 0.0
+    next_manual_check = time.monotonic() + 3
     next_popup_check = 0.0
     frame_error_since = None
+
+    def auto_sent(sent_at):
+        nonlocal auto_clicks, next_auto_click, next_manual_check
+        auto_clicks += 1
+        # 投递成功并不等于按钮已切换。给动画和迟到的回执留出时间。
+        next_auto_click = sent_at + 5
+        next_manual_check = next_auto_click
+
     while time.monotonic() < deadline:
+        pause_ctl.checkpoint()
         check_popups = time.monotonic() >= next_popup_check
+        manual_off = False
         try:
-            state, status = _observe_battle(glyph, allow_team=not saw_battle and instance_screen != "ornament",
-                                            check_popups=check_popups, awaiting_repeat_transition=not left_result)
+            with limit_input_deadline(deadline), screenshot_retry_timeout(min(3, max(0, deadline - time.monotonic()))):
+                state, status = _observe_battle(glyph, allow_team=not saw_battle and instance_screen != "ornament",
+                                                check_popups=check_popups)
+                if manual_reference is not None and state in (None, "battle") and status is not True:
+                    # 两次 OCR 之间也核对进度，避免连续行动恰好在采样时回到相似画面。
+                    if not _same_turn(manual_reference, _turn_progress_snapshot()):
+                        manual_reference = None
+                        manual_frames = 0
+                if (detect_auto and state in (None, "battle") and status is not True
+                        and (status is None or confirmed_auto or auto_clicks) and time.monotonic() >= next_manual_check):
+                    try:
+                        manual = _manual_turn_snapshot()
+                    except FATAL_GAME_ERRORS:
+                        raise
+                    except Exception as error:
+                        log.debug(f"暂时无法核对手动战斗指令：{error}")
+                        manual = None
+                    now = time.monotonic()
+                    if manual is not None:
+                        if manual_reference is None or not _same_turn(manual_reference, manual):
+                            manual_reference = manual
+                            manual_since = now
+                            manual_frames = 0
+                        manual_frames += 1
+                        state = "battle"
+                        manual_off = manual_frames >= 3 and now - manual_since >= 6
+                    else:
+                        manual_reference = None
+                        manual_frames = 0
+                    next_manual_check = now + 3
+                elif status is True or state not in (None, "battle"):
+                    manual_reference = None
+                    manual_frames = 0
         except AdbError as error:
             if error.code not in TRANSIENT_FRAME_ERRORS:
                 raise
@@ -531,9 +630,14 @@ def _wait_battle(*, repeated=False, instance_screen="calyx", verify_team=False):
             if now - frame_error_since >= 15:
                 raise
             off_frames = 0
+            manual_frames = 0
+            manual_reference = None
             time.sleep(0.45)
             continue
         frame_error_since = None
+        pause_ctl.check_stop()
+        if time.monotonic() >= deadline:
+            break
         if check_popups:
             next_popup_check = time.monotonic() + 3
 
@@ -552,25 +656,43 @@ def _wait_battle(*, repeated=False, instance_screen="calyx", verify_team=False):
                 deadline = time.monotonic() + BATTLE_TIMEOUT
             if detect_auto and not speed_confirmed and time.monotonic() >= next_speed_check:
                 try:
-                    speed_confirmed = ensure_double_speed(auto)
+                    with limit_input_deadline(deadline), screenshot_retry_timeout(min(3, max(0, deadline - time.monotonic()))):
+                        speed_confirmed = ensure_double_speed(auto)
                 except AdbError as error:
                     if error.code not in TRANSIENT_FRAME_ERRORS:
                         raise
                     log.warning("暂时无法检测战斗倍速，继续等待本场结算")
+                except FATAL_GAME_ERRORS:
+                    raise
+                except Exception as error:
+                    log.warning(f"暂时无法检测战斗倍速，继续等待本场结算：{error}")
                 next_speed_check = time.monotonic() + 3
-            if detect_auto and not confirmed_auto:
+            if detect_auto:
                 off_frames = off_frames + 1 if status is False else 0
                 if status is True:
+                    if not confirmed_auto:
+                        log.info("已确认触屏自动战斗开启")
                     confirmed_auto = True
-                    log.info("已确认触屏自动战斗开启")
-                elif off_frames >= 2 and time.monotonic() >= next_auto_click:
+                elif ((off_frames >= 2 and not confirmed_auto and not auto_clicks) or manual_off) and time.monotonic() >= next_auto_click:
                     if auto_clicks >= 3:
-                        raise PowerError("点击触屏自动战斗按钮后未确认开启")
-                    _tap(1721, 60)
-                    auto_clicks += 1
+                        raise PowerError("多次点按后仍确认自动战斗未开启，已中断本场挑战")
+                    confirmed_auto = False
                     off_frames = 0
-                    next_auto_click = time.monotonic() + 2
-                    log.info("已点按触屏自动战斗按钮")
+                    manual_frames = 0
+                    manual_reference = None
+                    try:
+                        with (observe_input_dispatch(auto_sent, deadline=deadline),
+                              screenshot_retry_timeout(min(3, max(0, deadline - time.monotonic())))):
+                            _tap(1721, 60)
+                        log.info("已点按触屏自动战斗按钮" if not manual_off else "检测到等待手动操作，尝试补开自动战斗")
+                    except AdbError as error:
+                        if error.code not in TRANSIENT_FRAME_ERRORS:
+                            raise
+                        log.warning(f"自动战斗点按回执待核对：{error}")
+                    except PowerError as error:
+                        log.warning(f"自动战斗点按待重试：{error}")
+                    next_auto_click = max(next_auto_click, time.monotonic() + 3)
+                    next_manual_check = max(next_manual_check, next_auto_click)
         else:
             off_frames = 0
             if state == "team" and time.monotonic() >= next_team_click:

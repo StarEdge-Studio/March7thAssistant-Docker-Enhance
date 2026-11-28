@@ -575,7 +575,7 @@ def test_touch_repeat_requires_battle_evidence_without_observing_pause(monkeypat
             return frame == "victory"
         return False
 
-    auto = Mock(find_element=Mock(side_effect=find))
+    auto = Mock(find_element=Mock(side_effect=find), screenshot=Image.new("RGB", (140, 42)))
     monkeypatch.setattr(power, "auto", auto)
     monkeypatch.setattr(power, "_check_popup", Mock())
     monkeypatch.setattr(power, "battle_speed_visible", lambda _: frame == "battle")
