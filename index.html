@@ -609,7 +609,7 @@ html:not(.js) .dl-panel+.dl-panel{margin-top:64px}
       <article class="card">
         <span class="ic"><svg class="i"><use href="#i-clock"/></svg></span>
         <h3>定时开工，做完收工</h3>
-        <p>任务刷新或体力回满时自动启动，也能开机自启；完成后可以声音提醒、关闭游戏或者关机。</p>
+        <p>任务刷新或体力回满时自动启动，也能开机自启，本地客户端的多个账号还能按顺序轮流。完成后可以声音提醒、关闭游戏或者关机。</p>
       </article>
       <article class="card">
         <span class="ic"><svg class="i"><use href="#i-bell"/></svg></span>
@@ -629,7 +629,7 @@ html:not(.js) .dl-panel+.dl-panel{margin-top:64px}
       <article class="card">
         <span class="ic"><svg class="i"><use href="#i-tool"/></svg></span>
         <h3>实用工具箱</h3>
-        <p>抽卡记录导出（UIGF / SRGF）、自动对话、解锁帧率、触屏模式，以及多账号切换。</p>
+        <p>抽卡记录导出（UIGF / SRGF）、自动对话、解锁帧率和触屏模式。</p>
       </article>
     </div>
   </div>
@@ -740,13 +740,14 @@ html:not(.js) .dl-panel+.dl-panel{margin-top:64px}
 <pre><code>.\m7a.exe --status                    <i># 安装、配置与运行状态（JSON）</i>
 .\m7a.exe --list --json               <i># 全部任务</i>
 .\m7a.exe daily --after-finish None   <i># 运行每日实训</i>
+.\m7a.exe main --account all          <i># 多个账号轮流完整运行</i>
 .\m7a.exe --follow latest             <i># 查看最近一次运行</i></code></pre>
         </div>
       </div>
 
       <ul class="caps">
         <li><svg class="i"><use href="#i-box"/></svg><div><strong>安装与更新</strong>下载官方版本并校验 SHA-256，已有安装会直接复用</div></li>
-        <li><svg class="i"><use href="#i-term"/></svg><div><strong>运行任务</strong>完整运行、每日实训、清体力、差分宇宙……实时回传输出</div></li>
+        <li><svg class="i"><use href="#i-term"/></svg><div><strong>运行任务</strong>完整运行、每日实训、清体力……可以指定账号或多账号轮流，实时回传输出</div></li>
         <li><svg class="i"><use href="#i-gear"/></svg><div><strong>修改设置</strong>按配置说明改体力计划、定时任务与消息推送</div></li>
         <li><svg class="i"><use href="#i-info"/></svg><div><strong>排查问题</strong>读取运行记录、日志与失败截图，对照常见问题处理</div></li>
       </ul>
