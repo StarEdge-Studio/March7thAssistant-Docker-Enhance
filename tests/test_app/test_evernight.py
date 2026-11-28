@@ -275,6 +275,15 @@ def test_tenth_logo_click_saves_unlock_and_theme(
         window, qtbot, monkeypatch, preference, system_dark, cancel_after_midpoint, cancel_theme):
     from PySide6.QtCore import QSignalBlocker
     from app.tools import check_theme_change
+    play_animation = window._play_evey_animation
+
+    def play_paused_animation():
+        play_animation()
+        if window._evey_animation is not None:
+            window._evey_animation.timeline.pause()
+
+    # 按实际启动回执等待，暂停时间线后再核对动画前半段和中点的状态。
+    monkeypatch.setattr(window, '_play_evey_animation', play_paused_animation)
     monkeypatch.setattr(check_theme_change.darkdetect, 'isDark', lambda: system_dark)
     monkeypatch.setattr(cfg, 'set_value', Mock(side_effect=lambda key, value: cfg.config.__setitem__(key, value)))
     monkeypatch.setattr(cfg, 'set_values', Mock(side_effect=cfg.config.update))
@@ -305,8 +314,8 @@ def test_tenth_logo_click_saves_unlock_and_theme(
     assert combo.currentText() == '长夜'
     cfg.set_value.assert_not_called()
     cfg.set_values.assert_called_once_with({'ui_theme': 'evernight', 'evernight_unlocked': True})
+    qtbot.waitUntil(lambda: window._evey_animation is not None, timeout=5000)
     assert window._evernight.animation_played
-    assert window._evey_animation is not None
     check_theme_change.applyTheme(window, Theme.LIGHT)  # System events cannot override Evernight.
     assert isDarkTheme()
     assert window.homeInterface.greeting._mode() == "dark"
@@ -806,8 +815,12 @@ def test_mascot_click_signal_counts_completed_left_clicks_even_without_motion(qt
 
 
 @pytest.mark.parametrize('window', [{'ui_theme': 'evernight', 'evernight_unlocked': True}], indirect=True)
-def test_evernight_greeting_button_opens_the_theme_setting(window, qtbot):
+@pytest.mark.parametrize('system_dark', [False, True])
+def test_evernight_greeting_button_opens_the_theme_setting(window, qtbot, monkeypatch, system_dark):
     from app.navigation import _CardHighlight
+    from app.tools import check_theme_change
+    monkeypatch.setattr(check_theme_change.darkdetect, 'isDark', lambda: system_dark)
+    monkeypatch.setattr(cfg, 'set_value', Mock(side_effect=lambda key, value: cfg.config.__setitem__(key, value)))
     window.stackedWidget.setAnimationEnabled(False)
     window.switchTo(window.homeInterface)
     greeting = window.homeInterface.greeting
@@ -969,6 +982,7 @@ def test_locked_session_does_not_decode_evernight_artwork(qtbot, monkeypatch, re
         assert reads == []
         assert artwork.evernight_artwork.cache_info().currsize == 0
         click_logo(window, qtbot)
+        qtbot.waitUntil(lambda: window._evey_animation is not None, timeout=5000)
         expected = sorted(('icon.ico', 'evey-floating.png',
                            'evey-decoration-folded.png', 'evey-decoration-upright.png', 'evey-decoration-wide.png'))
         assert sorted(reads) == expected

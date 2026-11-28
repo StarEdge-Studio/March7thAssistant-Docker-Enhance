@@ -103,7 +103,9 @@ AI 助手使用的是安装目录里的 `m7a.exe`。它和 `March7th Assistant.e
 
 ### 指定账号与轮流
 
-查询 `--status` 的 `accounts`。`enabled` 是已保存的开关，`effective` 表示本次环境可按账号运行。`current` 是界面当前查看的 UID，`list` 按顺序列出 `uid`、`name` 和是否参与轮流的 `rotate`。Windows 主桌面的本地客户端启用多账号后，可以使用以下命令。
+`m7a.exe` 和图形界面一样支持多账号。前提是先在图形界面添加账号并打开「多账号轮流运行」（见 [使用教程](/assets/docs/Tutorial.md) 的「多账号轮流运行」），并且在 Windows 主桌面使用「本地客户端」运行方式。命令行和 AI 助手不能添加账号或打开开关。
+
+查询 `--status` 的 `accounts`。`enabled` 是已保存的开关，`effective` 表示本次环境可按账号运行，`switch_methods.cn` 是国服账号的切换方式（`game` 为游戏登录记录，`snapshot` 为登录快照）。`current` 是界面当前查看的 UID，`list` 按顺序列出 `uid`、`name`、是否参与轮流的 `rotate`、`server`、本账号使用的 `switch_method` 和 `issue`。`issue` 为 `null` 表示账号页没发现问题，快照内容和游戏里的登录记录要到实际切换时才核对；`no_hint`、`missing`、`stale`、`expired`、`path` 分别表示没填「登录记录中的账号」、没有登录快照、快照需要重新保存、登录已过期、游戏路径无效或与服务器不符。设置好之后，可以使用以下命令。
 
 ```powershell
 .\m7a.exe daily --account "开拓者 · 主号" --after-finish None
@@ -113,7 +115,7 @@ AI 助手使用的是安装目录里的 `m7a.exe`。它和 `March7th Assistant.e
 
 将尖括号中的编号换成启动时返回的编号。名称重复时用 UID；省略 `--account` 会沿用当前登录。轮流按参与顺序逐个启动子运行，`skip` 跳过当前账号，`stop` 停止整轮。在 `runs_dir` 里打开父编号的 JSON，读取 `rotation.accounts` 每项的 `status`、`reason` 和子 `run_id`。子记录的 `parent_run_id` 指回父记录，`steps`、`detail` 和同编号日志说明这个账号执行到哪一步。
 
-遇到 `account_login_expired`，请账号持有人重新登录并保存快照。`account_mismatch` 表示 UID 核对失败，`account_server_mismatch` 表示客户端选错服务器。`account_no_login`、`account_switch_failed` 分别表示缺少可用登录或切换失败。`account_unsupported` 或 `account_not_found` 要先核对运行方式、开关和账号标识。`account_timeout` 表示该账号超时。`child_crashed`、`child_error`、`child_failed`、`child_record_missing` 指向子运行，`rotation_parent_lost`、`rotation_finish_failed` 指向整轮。先看对应记录的 `error` 和日志，再决定是否重试。
+遇到 `account_login_expired` 时，使用游戏登录记录的，请账号持有人在游戏里重新登录，登出时选「退出并保留登录记录」；使用登录快照的，请持有人登录后重新保存快照。游戏登录记录还有四种原因：`account_no_login_record` 是没填「登录记录中的账号」，`account_record_missing` 是游戏登录框里没有这个账号的记录，`account_record_ambiguous` 是有几条记录都像填写的号码，`account_verification` 是游戏要求安全验证，需要本人完成。`account_mismatch` 表示 UID 核对失败，`account_server_mismatch` 表示客户端选错服务器。`account_no_login`、`stale_snapshot`、`account_switch_failed` 分别表示缺少可用登录、登录快照需要重新保存和切换失败。`account_unsupported` 或 `account_not_found` 要先核对运行方式、开关和账号标识，B 服和触屏模式要改用登录快照。`account_timeout` 表示该账号超时。`child_crashed`、`child_error`、`child_failed`、`child_record_missing` 指向子运行，`rotation_parent_lost`、`rotation_finish_failed` 指向整轮。先看对应记录的 `error` 和日志，再决定是否重试。
 
 AI 助手可只对本次命令设置环境变量 `M7A_RUN_TRIGGER=ai`，让运行记录标出 AI 来源。计划和启动任务会记录各自的触发方式。
 

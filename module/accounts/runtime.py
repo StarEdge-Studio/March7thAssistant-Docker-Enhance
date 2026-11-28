@@ -62,7 +62,7 @@ ROTATABLE = frozenset(
 def require_supported(config, index):
     if not supported(config, index):
         raise AccountError(
-            "account_unsupported", "按账号运行需要在 Windows 主桌面使用本地客户端并启用多账号", 2
+            "account_unsupported", "按账号运行需要在 Windows 主桌面使用「本地客户端」运行方式，并在图形界面的账号页添加账号、打开「多账号轮流运行」", 2
         )
 
 

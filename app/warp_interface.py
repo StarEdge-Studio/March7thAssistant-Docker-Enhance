@@ -79,6 +79,7 @@ class WarpInterface(QWidget):
         self.emptyState.importRequested.connect(self.importRecords)
         self.dashboard = Dashboard(self)
         self.dashboard.openDetails.connect(lambda: self.setMode("details"))
+        self.dashboard.refetchRequested.connect(lambda: self.startUpdate("full"))
         self.detail = DetailView(self)
         self.detail.back.connect(lambda: self.setMode("stats"))
         self.stack = QStackedWidget(self)
@@ -190,7 +191,7 @@ class WarpInterface(QWidget):
             self.detail.setData(summary.pools, key)
             self.stack.setCurrentWidget(self.detail)
         else:
-            self.dashboard.setStats(summary.pools[key])
+            self.dashboard.setStats(summary.pools[key], refetch=self.updater.available and not self.updater.running)
             self.stack.setCurrentWidget(self.dashboard)
 
     def _renderIssues(self, issues):

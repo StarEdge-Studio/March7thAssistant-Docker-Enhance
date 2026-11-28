@@ -23,11 +23,13 @@ class ShizukuAccessTest {
     fun onlyTheInstalledLauncherAndApkAreArgumentsForEitherUid() {
         val launcher = File(java)
         val apk = "/data/app/a 'quoted' path & more/base.apk"
-        for (uid in listOf(2000, 0)) {
-            assertArrayEquals(arrayOf(launcher.absolutePath, apk), shizukuLaunchArgs(13, uid, launcher, apk, false))
-            assertArrayEquals(arrayOf(launcher.absolutePath, apk, "--recover-audio"), shizukuLaunchArgs(13, uid, launcher, apk, true))
+        for (api in listOf(13, 14)) {
+            for (uid in listOf(2000, 0)) {
+                assertArrayEquals(arrayOf(launcher.absolutePath, apk), shizukuLaunchArgs(api, uid, launcher, apk, false))
+                assertArrayEquals(arrayOf(launcher.absolutePath, apk, "--recover-audio"), shizukuLaunchArgs(api, uid, launcher, apk, true))
+            }
         }
-        for ((api, uid) in listOf(14 to 2000, 13 to 10001)) {
+        for ((api, uid) in listOf(12 to 2000, 15 to 2000, 13 to 10001, 14 to 1000)) {
             assertEquals("shizuku_unsupported", assertThrows(DeviceFailure::class.java) {
                 shizukuLaunchArgs(api, uid, launcher, apk, false)
             }.code)

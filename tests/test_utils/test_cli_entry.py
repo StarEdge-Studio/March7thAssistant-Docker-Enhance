@@ -472,9 +472,12 @@ class TestReadOnlyCommands:
         before = index.read_bytes()
         query = _run_main("--status")
         assert query.returncode == 0, query.stderr.decode("utf-8", "replace")
+        assert query.stdout.isascii()
         assert json.loads(query.stdout)["accounts"] == {
             "enabled": True, "effective": sys.platform == "win32" and backend == "local",
-            "current": uid, "list": [{"uid": uid, "name": "示例主号", "rotate": True}]}
+            "current": uid, "switch_methods": {"cn": "snapshot"},
+            "list": [{"uid": uid, "name": "示例主号", "rotate": True, "server": "cn",
+                      "switch_method": "snapshot", "issue": "missing"}]}
         listing = _run_main("--list", "--json")
         assert listing.returncode == 0 and any(row["id"] == "daily" for row in json.loads(listing.stdout))
         assert list(index.parent.iterdir()) == [index] and index.read_bytes() == before
@@ -491,7 +494,8 @@ class TestReadOnlyCommands:
         for key in ("version", "install_dir", "first_run_completed", "game_path_exists", "active_run",
                     "recent_runs", "runs_dir", "install_registry", "agent_skill", "elevation", "uac_free"):
             assert key in status
-        assert status["accounts"] == {"enabled": False, "effective": False, "current": None, "list": []}
+        assert status["accounts"] == {"enabled": False, "effective": False, "current": None,
+                                      "switch_methods": {"cn": "game"}, "list": []}
         assert status["install_dir"] == str(REPO)
         assert status["data_dir"] == str(root)
         assert status["data_layout"] == "custom"

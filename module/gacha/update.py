@@ -57,6 +57,8 @@ def update_records(store, mode="normal", progress=None):
         if uid is None:
             return UpdateResult(False, None, {}, tr("游戏未返回含 UID 的抽卡记录。"))
         data = normalize(client.export_data())
+        # Saved rows may lack optional fields; every row fetched just now must be complete.
+        normalize(dict(data, list=[row for row in data["list"] if row["id"] not in old_ids]), complete=True)
         plan = plan_account(data, store.path(uid), original, "replace")
         added = dict.fromkeys(POOLS, 0)
         for row in plan.data["list"]:

@@ -57,6 +57,7 @@ internal class AppActions(
     val exportLog: () -> Unit,
     val setThemeMode: (ThemeMode) -> Unit,
     val setTelemetryEnabled: (Boolean) -> Unit,
+    val openShizukuSettings: () -> Unit,
 )
 
 /** 不来自任务契约的界面状态。 */
@@ -85,6 +86,8 @@ internal class Demo(
     val page: SubPage?,
     val theme: ThemeMode?,
     val installedVersion: String?,
+    val sdk: Int? = null,
+    val release: String? = null,
 )
 
 internal class Navigator(val openTab: (Tab) -> Unit, val open: (SubPage) -> Unit, val back: () -> Unit)

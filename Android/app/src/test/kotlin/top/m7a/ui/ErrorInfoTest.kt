@@ -7,6 +7,15 @@ import top.m7a.R
 
 class ErrorInfoTest {
     @Test
+    fun android17AdviceIsLimitedToShizukuConnectionFailures() {
+        for (code in listOf("service_start", "permission_unavailable", "shizuku_unsupported")) {
+            assertEquals(R.string.shizuku_android17_advice, errorInfo(code, shizukuAndroid17Warning = true)!!.additionalAdvice)
+            assertNull(errorInfo(code, shizukuAndroid17Warning = false)!!.additionalAdvice)
+        }
+        assertNull(errorInfo("root_unavailable", shizukuAndroid17Warning = true)!!.additionalAdvice)
+    }
+
+    @Test
     fun displayFailuresExplainWhichStageFailedAndOpenTheLog() {
         for ((code, title, advice) in listOf(
             Triple("display_failed", R.string.error_display_failed_title, R.string.error_display_failed_advice),

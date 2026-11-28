@@ -77,8 +77,8 @@ class EmptyAccounts(QWidget):
     @staticmethod
     def introduction(method="snapshot"):
         if method == "game":
-            return tr("记下要轮流的账号，换号时在游戏登录框里选保留的登录记录；添加两个以上就可以按顺序轮流运行。只支持本地客户端。")
-        return tr("把登录保存下来，换号时不用重新登录；保存两个以上就可以按顺序轮流运行。只支持本地客户端。")
+            return tr("记下要轮流的账号，换号时在游戏登录框里选保留的登录记录；添加两个以上就可以按顺序轮流运行。只支持「本地客户端」运行方式。")
+        return tr("把登录保存下来，换号时不用重新登录；保存两个以上就可以按顺序轮流运行。只支持「本地客户端」运行方式。")
 
     def setMethod(self, method):
         """按国服账号的切换方式说明添加步骤。"""

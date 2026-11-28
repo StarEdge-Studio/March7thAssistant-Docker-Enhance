@@ -204,13 +204,19 @@ internal fun errorInfo(
     code: String?,
     brand: String? = Build.BRAND,
     manufacturer: String? = Build.MANUFACTURER,
+    shizukuAndroid17Warning: Boolean = false,
 ): ErrorInfo? = when (code) {
     null -> null
     "service_busy" -> ErrorInfo(R.string.error_busy_title, R.string.error_busy_advice, ErrorFix.NONE)
     "cleanup_pending" -> ErrorInfo(R.string.error_cleanup_pending_title, R.string.error_busy_advice, ErrorFix.NONE)
-    "service_start" -> ErrorInfo(R.string.error_service_title, R.string.error_service_advice, ErrorFix.GUIDE)
-    "permission_unavailable" -> ErrorInfo(R.string.error_service_title, R.string.error_service_advice, ErrorFix.GUIDE)
-    "shizuku_unsupported" -> ErrorInfo(R.string.error_shizuku_api_title, R.string.error_shizuku_api_advice, ErrorFix.GUIDE)
+    "service_start", "permission_unavailable" -> ErrorInfo(
+        R.string.error_service_title, R.string.error_service_advice, ErrorFix.GUIDE,
+        additionalAdvice = R.string.shizuku_android17_advice.takeIf { shizukuAndroid17Warning },
+    )
+    "shizuku_unsupported" -> ErrorInfo(
+        R.string.error_shizuku_api_title, R.string.error_shizuku_api_advice, ErrorFix.GUIDE,
+        additionalAdvice = R.string.shizuku_android17_advice.takeIf { shizukuAndroid17Warning },
+    )
     "root_unavailable" -> ErrorInfo(R.string.error_root_title, R.string.error_root_advice, ErrorFix.GUIDE)
     "game_not_installed" -> ErrorInfo(R.string.error_game_title, R.string.error_game_advice, ErrorFix.NONE)
     "game_exited" -> ErrorInfo(R.string.error_game_exited_title, R.string.error_game_exited_advice, ErrorFix.LOGS)

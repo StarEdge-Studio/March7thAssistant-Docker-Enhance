@@ -36,6 +36,7 @@ internal fun demoFrom(intent: Intent): Demo? {
         "install" -> ready.copy(permission = PermissionState.NOT_INSTALLED)
         "start" -> ready.copy(permission = PermissionState.NOT_RUNNING)
         "grant" -> ready.copy(permission = PermissionState.NOT_AUTHORIZED)
+        "android17-shizuku" -> ready.copy(permission = PermissionState.NOT_RUNNING, shizukuAndroid17Warning = true)
         "root" -> ready.copy(privilege = Privilege.ROOT, permission = PermissionState.NOT_AUTHORIZED)
         "root-unchecked" -> ready.copy(privilege = Privilege.ROOT, permission = PermissionState.NOT_CHECKED)
         "idle" -> ready.copy(config = TaskConfig(powerEnable = false, rewardEnable = false, dailyEnable = false))
@@ -56,7 +57,7 @@ internal fun demoFrom(intent: Intent): Demo? {
         else -> ready.copy(phase = TaskPhase.FAILED, errorCode = name, steps = planned)
     }
     val logs = when {
-        name in setOf("ready", "install", "start", "grant", "root", "root-unchecked", "idle") -> emptyList()
+        name in setOf("ready", "install", "start", "grant", "android17-shizuku", "root", "root-unchecked", "idle") -> emptyList()
         state.phase == TaskPhase.FAILED ->
             SAMPLE + FAILURE + sample("21:47:10", "本轮结束：${state.errorCode}", LogLevel.ERROR, LogCategory.APP)
         state.phase == TaskPhase.SUCCEEDED ->
@@ -66,9 +67,12 @@ internal fun demoFrom(intent: Intent): Demo? {
     return Demo(
         state, logs,
         Tab.entries.firstOrNull { it.name == intent.getStringExtra("tab") } ?: Tab.HOME,
-        SubPage.entries.firstOrNull { it.name == intent.getStringExtra("page") },
+        SubPage.entries.firstOrNull { it.name == intent.getStringExtra("page") }
+            ?: SubPage.GUIDE.takeIf { name == "android17-shizuku" },
         ThemeMode.entries.firstOrNull { it.name == intent.getStringExtra("theme") },
         demoInstalledVersion(intent.getStringExtra("update") ?: "idle"),
+        sdk = 37.takeIf { name == "android17-shizuku" },
+        release = "17".takeIf { name == "android17-shizuku" },
     )
 }
 

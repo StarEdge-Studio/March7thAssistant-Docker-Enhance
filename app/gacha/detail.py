@@ -28,7 +28,7 @@ class RecordDelegate(TableItemDelegate):
         stars = index.data(Role.STARS)
         column = index.column()
         if column == Column.STARS and isinstance(stars, int):
-            option.text = "★" * stars
+            option.text = "★" * stars if stars else "—"  # 0：文件里没写星级
         color = style.rarity(stars)
         if color is not None and column in (Column.NAME, Column.STARS):
             option.palette.setColor(QPalette.ColorRole.Text, color)

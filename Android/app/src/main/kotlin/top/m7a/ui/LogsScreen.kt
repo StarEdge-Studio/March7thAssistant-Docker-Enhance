@@ -94,7 +94,7 @@ internal fun LogsScreen(state: TaskState, logs: List<LogEntry>, actions: AppActi
                 helpTarget = state.errorCode
                 section = LogsSection.HELP
             }
-            LogsSection.HELP -> HelpList(state.errorCode, helpTarget)
+            LogsSection.HELP -> HelpList(state.errorCode, helpTarget, state.shizukuAndroid17Warning)
         }
     }
 }
@@ -314,7 +314,7 @@ private fun SearchField(value: String, onChange: (String) -> Unit, modifier: Mod
 }
 
 @Composable
-private fun HelpList(current: String?, target: String?) {
+private fun HelpList(current: String?, target: String?, shizukuAndroid17Warning: Boolean) {
     val currentTitle = errorInfo(current)?.title
     val targetTitle = errorInfo(target)?.title
     // 共用同一条说明的错误码只列一次，也按说明匹配跳转目标。
@@ -337,7 +337,7 @@ private fun HelpList(current: String?, target: String?) {
             BodyText(tr(R.string.help_intro), Modifier.padding(horizontal = 4.dp))
         }
         items(codes, key = { it }) { code ->
-            val info = errorInfo(code) ?: return@items
+            val info = errorInfo(code, shizukuAndroid17Warning = shizukuAndroid17Warning) ?: return@items
             val active = currentTitle == info.title
             var open by rememberSaveable { mutableStateOf(active || targetTitle == info.title) }
             PanelCard(onClick = { open = !open }, padding = PaddingValues(16.dp)) {

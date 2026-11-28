@@ -112,7 +112,7 @@ class AccountPanel(SimpleCardWidget):
         active = enabled and not reason
         self.list.setMovable(active)
         self.footLabel.setText(
-            tr("拖动调整顺序。一个账号失败后会记录原因并继续下一个账号，全部结束后合并发送一条通知。多账号只支持本地客户端。")
+            tr("拖动调整顺序。一个账号失败后会记录原因并继续下一个账号，全部结束后合并发送一条通知。多账号只支持「本地客户端」运行方式。")
             if active else
             tr("这里记下本地客户端的账号，换号时在游戏登录框里选保留的登录记录。打开上面的开关后，可以按顺序轮流运行。")
             if self._method == "game" else

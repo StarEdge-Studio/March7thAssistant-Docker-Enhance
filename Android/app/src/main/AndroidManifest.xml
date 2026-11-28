@@ -9,6 +9,11 @@
 
     <queries>
         <package android:name="moe.shizuku.privileged.api" />
+        <package android:name="roro.stellar.manager" />
+        <package android:name="kerneldroid.nightzuku" />
+        <package android:name="com.hamondev.shevery" />
+        <package android:name="com.churan.shizako" />
+        <package android:name="eu.darken.porter" />
         <package android:name="com.miHoYo.hkrpg" />
     </queries>
 

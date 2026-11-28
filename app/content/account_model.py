@@ -250,7 +250,7 @@ class AccountModel(QObject):
             return tr("桌面分身中账号页只读，请在主桌面管理账号")
         backend = configured_backend(self.config)
         if sys.platform != "win32" or backend != "local":
-            return tr("多账号轮流仅支持 Windows 本地客户端，当前按单账号运行")
+            return tr("多账号轮流仅支持 Windows 上的「本地客户端」运行方式，当前按单账号运行")
         return ""
 
     def default_hour(self):

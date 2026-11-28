@@ -8,7 +8,7 @@ from qfluentwidgets import CaptionLabel, ScrollArea, SimpleCardWidget, StrongBod
 
 from app.common.design_tokens import CARD_SPACING, PAGE_MARGIN
 from app.overview.widgets import ElidedLabel, LinkButton, Pill
-from app.pages.common import secondary
+from app.pages.common import NoticeStrip, secondary
 from module.localization import tr
 
 from . import style
@@ -244,6 +244,7 @@ class FiveCard(Card):
 class Dashboard(ScrollArea):
     """一个卡池的统计。切换卡池只换数据，不重建控件。"""
     openDetails = Signal()
+    refetchRequested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -273,11 +274,18 @@ class Dashboard(ScrollArea):
         self.fiveCard.openDetails.connect(self.openDetails)
         lower.addLayout(left, 5)
         lower.addWidget(self.fiveCard, 7)
+        # 文件里没写星级的记录：照常算抽数，但不算四星、五星，所以出金和保底可能不准。
+        self.gapNotice = NoticeStrip(self.view, kind="info")
+        self.gapNotice.actionClicked.connect(self.refetchRequested)
+        self.gapNotice.hide()
+        layout.addWidget(self.gapNotice)
         layout.addLayout(figures)
         layout.addLayout(lower)
         layout.addStretch(1)
 
-    def setStats(self, stats, now=None):
+    def setStats(self, stats, now=None, *, refetch=False):
+        """refetch：能从游戏重新获取全部记录时，提示里给出入口。"""
+        self._renderGaps(stats.unknown_count, refetch)
         total = stats.total
         none = tr("还没有记录")
         span = (tr("{start} 至 {end}").format(start=style.date_text(stats.first_time), end=style.date_text(stats.last_time))
@@ -304,7 +312,18 @@ class Dashboard(ScrollArea):
         self.distributionCard.setStats(stats)
         self.fiveCard.setStats(stats, now)
 
+    def _renderGaps(self, count, refetch):
+        self.gapNotice.setVisible(bool(count))
+        if not count:
+            return
+        text = (tr("这个卡池有 {count} 条记录缺少星级，没有算进四星和五星，出金和保底统计可能不准。"
+                   "游戏里还能查到的记录可以重新获取补全。") if refetch
+                else tr("这个卡池有 {count} 条记录缺少星级，没有算进四星和五星，出金和保底统计可能不准。"))
+        self.gapNotice.setText(text.format(count=style.number(count)))
+        self.gapNotice.setAction(tr("重新获取全部记录") if refetch else "")
+
     def refresh(self):
+        self.gapNotice.setKind("info", style.evernight())
         self.pityCard.refresh()
         self.fiveCard.refresh()
         self.view.update()

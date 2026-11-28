@@ -249,8 +249,8 @@ def error_guide(code, state=None):
     if code == "adb_not_found" and sys.platform == "win32":
         return tr("在“Android 设备”中下载 adb，或在“高级设置”里选择已有的 adb。")
     guides = {
-        "adb_not_found": tr("安装 Android Platform-Tools 并把它加入 PATH，或在“高级设置”里指定 adb 的位置。"
-                            "装有 MuMu 等模拟器时会自动使用模拟器自带的 adb。"),
+        "adb_not_found": tr("安装 Android Platform-Tools 并把它加入 PATH，或在“高级设置”里指定 adb 的位置，"
+                            "也可以选模拟器自带的 adb。"),
         "adb_download_failed": tr("请检查网络连接是否正常"),
         "adb_install_failed": tr("请检查日志后重试"),
         "adb_server_restarted": tr("电脑上还有另一个版本的 adb（常见于模拟器和手机助手）在抢占服务端。"

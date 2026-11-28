@@ -15,8 +15,22 @@ class WarpImportError(ValueError):
     pass
 
 
-def normalize(data, *, allow_unknown_pools=False):
-    """Validate before touching disk; never silently select the first UIGF account."""
+# SRGF and UIGF both make these optional, and versions before v2026.11.15 saved imported files
+# without checking them. A missing one becomes an empty string: the record stays usable, and a
+# later merge or full update can fill it in. Only rows fresh from the game must have them all.
+OPTIONAL_FIELDS = ('name', 'item_type', 'rank_type')
+
+
+def _missing(record, key):
+    # Name the field so that a screenshot of the message is enough to find the record.
+    return WarpImportError(tr('抽卡记录缺少有效 ID 或必要字段。') + f" ({key}, id={record.get('id')})")
+
+
+def normalize(data, *, allow_unknown_pools=False, complete=False):
+    """Validate before touching disk; never silently select the first UIGF account.
+
+    complete=True also requires every optional field, for rows just fetched from the game.
+    """
     if not isinstance(data, dict) or not isinstance(data.get('info'), dict):
         raise WarpImportError(tr('抽卡记录格式无效。'))
     data = deepcopy(data)
@@ -45,19 +59,26 @@ def normalize(data, *, allow_unknown_pools=False):
     for record in records:
         if not isinstance(record, dict):
             raise WarpImportError(tr('抽卡记录格式无效。'))
+        if not complete:
+            record.update({key: '' for key in OPTIONAL_FIELDS if record.get(key) is None})
         for key in ('id', 'gacha_type', 'rank_type'):
             value = record.get(key)
             if key == "gacha_type" and allow_unknown_pools and isinstance(value, str) and value:
                 continue
+            if not complete and key in OPTIONAL_FIELDS and value == '':
+                continue
             if isinstance(value, bool) or not str(value or '').isascii() or not str(value or '').isdigit():
-                raise WarpImportError(tr('抽卡记录缺少有效 ID 或必要字段。'))
+                raise _missing(record, key)
             record[key] = str(value)
-        if (record['gacha_type'] not in POOLS and not allow_unknown_pools) or record['rank_type'] not in ('3', '4', '5'):
+        ranks = ('3', '4', '5') if complete else ('', '3', '4', '5')
+        if (record['gacha_type'] not in POOLS and not allow_unknown_pools) or record['rank_type'] not in ranks:
             raise WarpImportError(tr('抽卡记录包含不支持的卡池或星级。'))
         if record.get('uid') is not None and str(record['uid']) != info['uid']:
             raise WarpImportError(tr('记录中的账号与文件账号不一致，已停止导入。'))
-        if not all(isinstance(record.get(k), str) and record[k] for k in ('name', 'item_type', 'time')):
-            raise WarpImportError(tr('抽卡记录缺少有效 ID 或必要字段。'))
+        for key in ('name', 'item_type', 'time'):
+            value = record.get(key)
+            if not isinstance(value, str) or (not value and (complete or key not in OPTIONAL_FIELDS)):
+                raise _missing(record, key)
         try:
             timestamp = datetime.strptime(record['time'], '%Y-%m-%d %H:%M:%S')
             if len(record['time']) != 19:

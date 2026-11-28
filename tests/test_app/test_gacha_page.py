@@ -269,6 +269,39 @@ def test_update_actions_follow_signals_and_returned_uid(make_page, monkeypatch):
     assert ("抽卡记录已更新", f"UID {samples.UID_B} 没有新记录") in messages(page)
 
 
+def test_records_without_rank_explain_stats_and_offer_full_update(make_page, monkeypatch):
+    updater = FakeUpdater()
+    monkeypatch.setattr(warp_interface, "GachaUpdater", lambda *args, **kwargs: updater)
+    page = make_page()
+    notice = page.dashboard.gapNotice
+    assert not notice.isVisible()
+    account = samples.sample_account(samples.UID_A)
+    gaps = [r for r in account["list"] if r["gacha_type"] == "11"][:3]
+    for record in gaps:
+        record.update(rank_type="", name="")
+    page.store.write(samples.UID_A, account)
+    page.reload()
+    assert page.currentPool() == "11" and notice.isVisible()
+    assert notice.textLabel.text() == ("这个卡池有 3 条记录缺少星级，没有算进四星和五星，出金和保底统计可能不准。"
+                                       "游戏里还能查到的记录可以重新获取补全。")
+    assert notice.actionButton.text() == "重新获取全部记录"
+    notice.actionButton.click()
+    assert updater.mode == "full"
+    updater.finish(UpdateResult(False, None, {}, "本次连接超时"))
+    updater.available = False
+    page.reload()
+    assert notice.textLabel.text() == "这个卡池有 3 条记录缺少星级，没有算进四星和五星，出金和保底统计可能不准。"
+    assert notice.actionButton.isHidden()
+    page.setMode("details")
+    model = page.detail.model
+    row = next(i for i, r in enumerate(model.rows) if r.id == gaps[0]["id"])
+    assert model.data(model.index(row, Column.NAME)) == "—"
+    assert model.data(model.index(row, Column.STARS), Role.STARS) == 0
+    page.selectPool("12")
+    page.setMode("stats")
+    assert not notice.isVisible()
+
+
 @pytest.mark.parametrize("operation", ["import", "export", "clear"])
 @pytest.mark.parametrize("status", ["success", "failed", "cancelled"])
 def test_transfer_menu_outcomes(make_page, monkeypatch, operation, status):

@@ -89,6 +89,11 @@ def rarity(stars):
     return QColor(pair[1] if isDarkTheme() else pair[0])
 
 
+def shown(text):
+    """导入的文件可以不写名称、类型：显示时用破折号占位。"""
+    return text or "—"
+
+
 def number(value):
     return f"{value:,}"
 

@@ -10,6 +10,7 @@ import android.os.RemoteException
 import moe.shizuku.server.IRemoteProcess
 import moe.shizuku.server.IShizukuService
 import rikka.shizuku.Shizuku
+import rikka.sui.Sui
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -81,11 +82,12 @@ internal class ShizukuAccess(
     fun recoverAudio() = create(null, startDeadline(startTimeoutMs)) { false }.recoverAudio()
 }
 
-/** 唯一依赖 Shizuku API 13 旧进程接口的位置。命令只包含安装目录中的 launcher 和 APK。 */
+/** 使用 Shizuku API 13/14 共用的进程协议。命令只包含安装目录中的 launcher 和 APK。 */
 internal fun startShizukuProcess(context: Context, recoverAudio: Boolean, trace: (String) -> Unit): Process {
-    val manager = runCatching {
-        context.packageManager.getPackageInfo(DeviceAccess.SHIZUKU_PACKAGE, 0).let { "${it.versionName} (${it.longVersionCode})" }
-    }.getOrDefault("未知")
+    val managers = DeviceAccess.SHIZUKU_MANAGER_PACKAGES.mapNotNull { packageName ->
+        runCatching { context.readShizukuManager(packageName)?.logDescription() }.getOrNull()
+    }
+    val manager = (listOfNotNull("Sui".takeIf { Sui.isSui() }) + managers).joinToString().ifEmpty { "未知" }
     val soc = if (Build.VERSION.SDK_INT >= 31) Build.SOC_MODEL else Build.HARDWARE
     trace("${Build.MANUFACTURER} ${Build.MODEL} (${Build.DEVICE}, $soc), Android ${Build.VERSION.RELEASE}/API ${Build.VERSION.SDK_INT}, " +
         "ROM=${Build.DISPLAY}, fingerprint=${Build.FINGERPRINT}")
@@ -99,7 +101,8 @@ internal fun startShizukuProcess(context: Context, recoverAudio: Boolean, trace:
         }
         val api = Shizuku.getVersion()
         val uid = Shizuku.getUid()
-        trace("Shizuku API=$api, UID=$uid, " + if (recoverAudio) "恢复音频" else "启动设备服务")
+        val patch = runCatching { Shizuku.getServerPatchVersion().toString() }.getOrDefault("未知")
+        trace("Shizuku API=$api, patch=$patch, UID=$uid, " + if (recoverAudio) "恢复音频" else "启动设备服务")
         val info = context.applicationInfo
         val argv = shizukuLaunchArgs(api, uid, context.deviceServiceLauncher, info.sourceDir, recoverAudio)
         val remote = IShizukuService.Stub.asInterface(binder).newProcess(argv, null, null)
@@ -116,7 +119,7 @@ internal fun startShizukuProcess(context: Context, recoverAudio: Boolean, trace:
 }
 
 internal fun shizukuLaunchArgs(api: Int, uid: Int, launcher: File, apk: String, recoverAudio: Boolean): Array<String> {
-    if (api != 13) throw DeviceFailure("shizuku_unsupported", "进程接口需要 API 13，当前为 $api")
+    if (api !in 13..14) throw DeviceFailure("shizuku_unsupported", "进程接口需要兼容 API 13 或 14，当前为 $api")
     if (uid != SHELL_UID && uid != 0) throw DeviceFailure("shizuku_unsupported", "不支持的 Shizuku UID $uid")
     if (!launcher.canExecute()) throw DeviceFailure("service_start", "Shizuku launcher 缺失或不可执行")
     return if (recoverAudio) arrayOf(launcher.absolutePath, apk, "--recover-audio") else arrayOf(launcher.absolutePath, apk)

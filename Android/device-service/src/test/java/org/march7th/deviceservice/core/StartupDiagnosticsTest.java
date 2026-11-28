@@ -56,6 +56,27 @@ public class StartupDiagnosticsTest {
     }
 
     @Test
+    public void android17AppendedFrontendStateKeepsTheExistingOutputLayerFields() throws Exception {
+        String layer = "- Output Layer 0x123(game.pkg/.Main)";
+        String original = "  " + layer + "\n      buffer: slot=2\n";
+        // Android 17 的 OutputLayer.dump 在原有字段后追加前端合成状态。
+        String frontend = "      isSecure=false geomUsesSourceCrop=true\n"
+                + "      composition type=DEVICE (2)\n      buffer: buffer=0x1234\n";
+        for (boolean android17 : new boolean[]{false, true}) {
+            JSONObject layers = StartupDiagnostics.gameLayers(original + (android17 ? frontend : "")
+                    + "  - Output Layer 0x456(other.pkg/.Main)\n      buffer: buffer=0x9999\n", "game.pkg");
+            assertEquals(1, layers.length());
+            JSONArray fields = layers.getJSONArray(layer);
+            assertEquals("slot=2", fields.getString(0));
+            assertEquals(android17 ? 3 : 1, fields.length());
+            if (android17) {
+                assertEquals("composition type=DEVICE", fields.getString(1));
+                assertEquals("buffer=0x1234", fields.getString(2));
+            }
+        }
+    }
+
+    @Test
     public void reportsAvailableBufferFieldsWithoutAssigningOtherLayersToTheGame() throws Exception {
         String old = "- Output Layer 0x123(game.pkg/.Main)";
         String blast = "Layer [100] SurfaceView[game.pkg/.Main](BLAST)#100";

@@ -206,6 +206,7 @@ docker compose up -d
 - **周常**：历战余响、模拟宇宙、差分宇宙、货币战争、混沌回忆、虚构叙事、末日幻影
 - **云·星穹铁道**：支持后台运行、无窗口运行和 [Docker](https://m7a.top/docs/#/assets/docs/Docker) 运行
 - **安卓版**：直接安装在手机上，游戏在后台虚拟屏中运行，支持日常、每日实训和清体力，详见 [安卓版使用教程](https://m7a.top/docs/#/assets/docs/Android)
+- **多账号轮流**：Windows 本地客户端可以添加多个账号，按顺序轮流完成任务；国服官服直接在游戏登录框里换号，定时计划和 `m7a.exe --account` 也能按账号运行，详见 [使用教程](https://m7a.top/docs/#/assets/docs/Tutorial)
 - **抽卡记录导出**：支持 [UIGF](https://uigf.org/zh/standards/uigf.html)/[SRGF](https://uigf.org/zh/standards/srgf.html) 标准
 - **工具箱**：自动对话、解锁帧率、兑换码、触屏模式
 - 每日实训等任务的完成情况支持**消息推送**

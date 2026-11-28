@@ -89,8 +89,8 @@ class MainActivity : ComponentActivity() {
             val logs by controller.logs.collectAsStateWithLifecycle()
             val device = remember(notificationsAllowed) {
                 DeviceInfo(
-                    sdk = Build.VERSION.SDK_INT,
-                    release = Build.VERSION.RELEASE,
+                    sdk = demo?.sdk ?: Build.VERSION.SDK_INT,
+                    release = demo?.release ?: Build.VERSION.RELEASE,
                     miui = listOf(Build.MANUFACTURER, Build.BRAND).any { it.lowercase() in XIAOMI_BRANDS },
                     notificationsAllowed = notificationsAllowed,
                     version = demo?.installedVersion ?: BuildConfig.VERSION_NAME,
@@ -130,10 +130,15 @@ class MainActivity : ComponentActivity() {
         selectPrivilege = { controller.selectPrivilege(it) },
         requestPermission = controller::requestPermission,
         openShizuku = {
-            open(packageManager.getLaunchIntentForPackage(DeviceAccess.SHIZUKU_PACKAGE) ?: view(SHIZUKU_RELEASES))
+            open(DeviceAccess.SHIZUKU_MANAGER_PACKAGES.firstNotNullOfOrNull {
+                packageManager.getLaunchIntentForPackage(it)
+            } ?: view(bundledShizukuForSdk(Build.VERSION.SDK_INT).releaseUrl))
         },
         installShizuku = ::installShizuku,
-        downloadShizuku = { open(view(SHIZUKU_RELEASES)) },
+        downloadShizuku = { open(view(bundledShizukuForSdk(Build.VERSION.SDK_INT).releaseUrl)) },
+        openShizukuSettings = {
+            open(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", SHIZUKU_MANAGER_PACKAGE, null)))
+        },
         openShizukuManual = { open(view(tr(R.string.url_shizuku_manual))) },
         openProjectPage = { open(view(PROJECT_PAGE)) },
         openUpdateUrl = { open(view(it)) },
@@ -173,7 +178,7 @@ class MainActivity : ComponentActivity() {
 
     private fun installShizuku() {
         if (controller.state.value.busy || preparingShizukuInstall) return
-        if (hasPackage(DeviceAccess.SHIZUKU_PACKAGE)) {
+        if (shizukuPermission() != PermissionState.NOT_INSTALLED) {
             controller.refreshPermission()
             return
         }
@@ -191,7 +196,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 val apk = withContext(Dispatchers.IO) { prepareBundledShizuku(this@MainActivity) }
-                if (hasPackage(DeviceAccess.SHIZUKU_PACKAGE)) {
+                if (shizukuPermission() != PermissionState.NOT_INSTALLED) {
                     controller.refreshPermission()
                 } else if (!controller.state.value.busy) {
                     startActivity(apkInstallIntent(this@MainActivity, apk))
@@ -226,7 +231,6 @@ class MainActivity : ComponentActivity() {
     companion object {
         // 系统文件选择器会给 text/plain 补 .txt，直接用 .txt 结尾免得出现双扩展名。
         private const val LOG_NAME = "march7th-android-log.txt"
-        private const val SHIZUKU_RELEASES = "https://github.com/RikkaApps/Shizuku/releases/latest"
         private const val PROJECT_PAGE = "https://github.com/moesnow/March7thAssistant"
         private val XIAOMI_BRANDS = setOf("xiaomi", "redmi", "poco")
         private var askedForNotifications = false

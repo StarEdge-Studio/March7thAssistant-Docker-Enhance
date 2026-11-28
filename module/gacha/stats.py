@@ -41,6 +41,7 @@ class Stats:
     four_rate: float
     four_average: float | None
     three_count: int
+    unknown_count: int  # Records without a rank: counted as pulls, never as four- or five-star.
     five_pity: int
     remaining: int | None
     remaining_jade: int | None
@@ -55,7 +56,7 @@ def pool_stats(pool_id, records):
     pool = POOLS[pool_id]
     details, fives = [], []
     bins = [0] * ((pool.five_limit + 9) // 10)
-    five_pity = four_pity = fours = outside = 0
+    five_pity = four_pity = fours = outside = gaps = 0
     unknown = set()
     for record in records:
         kind = str(record["gacha_type"])
@@ -64,7 +65,8 @@ def pool_stats(pool_id, records):
                 unknown.add(kind)
             continue
         five_pity += 1
-        stars = int(record["rank_type"])
+        stars = int(record["rank_type"] or 0)  # 0: the file left the rank out
+        gaps += not stars
         row = Detail(str(record["id"]), record["time"], record["name"], record["item_type"],
                      stars, kind, len(details) + 1, five_pity)
         details.append(row)
@@ -98,7 +100,8 @@ def pool_stats(pool_id, records):
         five_average=sum(costs) / len(costs) if costs else None,
         five_min=min(costs, default=None), five_max=max(costs, default=None),
         four_count=fours, four_rate=fours / total if total else 0.0,
-        four_average=total / fours if fours else None, three_count=total - len(fives) - fours,
+        four_average=total / fours if fours else None, three_count=total - len(fives) - fours - gaps,
+        unknown_count=gaps,
         five_pity=five_pity, remaining=remaining,
         remaining_jade=None if remaining is None else remaining * JADE_PER_PULL,
         four_pity=min(four_pity, pool.four_limit), distribution=distribution,
