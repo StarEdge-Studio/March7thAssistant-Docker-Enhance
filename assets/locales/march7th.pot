@@ -12658,3 +12658,11 @@ msgstr ""
 #: app/overview/greeting.py:178
 msgid "别戳啦！本姑娘头好晕( ꩜ ᯅ ꩜;)"
 msgstr ""
+
+#: app/gacha/cards.py:319
+msgid "这个卡池有 {count} 条记录缺少星级，没有算进四星和五星，出金和保底统计可能不准。游戏里还能查到的记录可以重新获取补全。"
+msgstr ""
+
+#: app/gacha/cards.py:321
+msgid "这个卡池有 {count} 条记录缺少星级，没有算进四星和五星，出金和保底统计可能不准。"
+msgstr ""

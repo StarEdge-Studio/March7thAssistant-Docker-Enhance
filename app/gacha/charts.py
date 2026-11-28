@@ -290,7 +290,8 @@ class FiveList(QWidget):
         date = QFontMetricsF(self._date)
         head = QFontMetricsF(self._head)
         rows = self._rows[:max(1, self.shown())]
-        name_width = max([name.horizontalAdvance(row.name) for row in rows] + [head.horizontalAdvance(tr("名称"))])
+        name_width = max([name.horizontalAdvance(style.shown(row.name)) for row in rows]
+                         + [head.horizontalAdvance(tr("名称"))])
         name_width = min(160.0, max(72.0, name_width + 18))
         date_width = max([date.horizontalAdvance(style.short_date(row.time, self._now)) for row in rows]
                          + [head.horizontalAdvance(tr("日期"))])
@@ -339,7 +340,7 @@ class FiveList(QWidget):
             painter.setFont(self._name)
             painter.setPen(style.primary())
             painter.drawText(QPointF(0, middle + (name.ascent() - name.descent()) / 2),
-                             name.elidedText(row.name, Qt.TextElideMode.ElideRight, name_width - 12))
+                             name.elidedText(style.shown(row.name), Qt.TextElideMode.ElideRight, name_width - 12))
             length = max(self.BAR, bar_width * min(1.0, row.pity / self._limit))
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(style.series())
@@ -376,8 +377,8 @@ class FiveList(QWidget):
             QToolTip.hideText()
             return
         row = self._rows[index]
-        QToolTip.showText(event.globalPosition().toPoint(),
-                          tr("{name}：用了 {pulls} 抽，{time}").format(name=row.name, pulls=row.pity, time=row.time), self)
+        QToolTip.showText(event.globalPosition().toPoint(), tr("{name}：用了 {pulls} 抽，{time}").format(
+            name=style.shown(row.name), pulls=row.pity, time=row.time), self)
 
     def leaveEvent(self, event):
         self._hover = -1

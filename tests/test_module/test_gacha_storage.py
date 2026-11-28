@@ -83,7 +83,7 @@ def test_split_and_show_old_file_missing_optional_fields(tmp_path):
     page = load_summary(store=store)
     assert not page.issues and not store.legacy_file.exists() and page.selected.count == 3
     stats = page.pools["11"]
-    assert (stats.total, stats.five_count, stats.five_pity, stats.fives[0].pity) == (3, 1, 1, 2)
+    assert (stats.total, stats.five_count, stats.unknown_count, stats.five_pity, stats.fives[0].pity) == (3, 1, 1, 1, 2)
     assert [(r.id, r.name, r.stars) for r in stats.details] == [("1", "", 0), ("2", "希儿", 5), ("3", "三月七", 4)]
     backup, = store.directory.glob("*.bak")
     assert backup.read_bytes() == raw

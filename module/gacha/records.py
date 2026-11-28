@@ -15,8 +15,9 @@ class WarpImportError(ValueError):
     pass
 
 
-# SRGF and UIGF both make these optional. Versions before v2026.11.15 saved imported files
-# without checking them, so records already on disk may lack them.
+# SRGF and UIGF both make these optional, and versions before v2026.11.15 saved imported files
+# without checking them. A missing one becomes an empty string: the record stays usable, and a
+# later merge or full update can fill it in. Only rows fresh from the game must have them all.
 OPTIONAL_FIELDS = ('name', 'item_type', 'rank_type')
 
 
@@ -25,11 +26,10 @@ def _missing(record, key):
     return WarpImportError(tr('抽卡记录缺少有效 ID 或必要字段。') + f" ({key}, id={record.get('id')})")
 
 
-def normalize(data, *, allow_unknown_pools=False, saved=False):
+def normalize(data, *, allow_unknown_pools=False, complete=False):
     """Validate before touching disk; never silently select the first UIGF account.
 
-    saved=True reads records this program already stored: missing optional fields become
-    empty strings instead of making the whole file unreadable. Imports and game data stay strict.
+    complete=True also requires every optional field, for rows just fetched from the game.
     """
     if not isinstance(data, dict) or not isinstance(data.get('info'), dict):
         raise WarpImportError(tr('抽卡记录格式无效。'))
@@ -59,25 +59,25 @@ def normalize(data, *, allow_unknown_pools=False, saved=False):
     for record in records:
         if not isinstance(record, dict):
             raise WarpImportError(tr('抽卡记录格式无效。'))
-        if saved:
+        if not complete:
             record.update({key: '' for key in OPTIONAL_FIELDS if record.get(key) is None})
         for key in ('id', 'gacha_type', 'rank_type'):
             value = record.get(key)
             if key == "gacha_type" and allow_unknown_pools and isinstance(value, str) and value:
                 continue
-            if saved and key in OPTIONAL_FIELDS and value == '':
+            if not complete and key in OPTIONAL_FIELDS and value == '':
                 continue
             if isinstance(value, bool) or not str(value or '').isascii() or not str(value or '').isdigit():
                 raise _missing(record, key)
             record[key] = str(value)
-        ranks = ('', '3', '4', '5') if saved else ('3', '4', '5')
+        ranks = ('3', '4', '5') if complete else ('', '3', '4', '5')
         if (record['gacha_type'] not in POOLS and not allow_unknown_pools) or record['rank_type'] not in ranks:
             raise WarpImportError(tr('抽卡记录包含不支持的卡池或星级。'))
         if record.get('uid') is not None and str(record['uid']) != info['uid']:
             raise WarpImportError(tr('记录中的账号与文件账号不一致，已停止导入。'))
         for key in ('name', 'item_type', 'time'):
             value = record.get(key)
-            if not isinstance(value, str) or (not value and not (saved and key in OPTIONAL_FIELDS)):
+            if not isinstance(value, str) or (not value and (complete or key not in OPTIONAL_FIELDS)):
                 raise _missing(record, key)
         try:
             timestamp = datetime.strptime(record['time'], '%Y-%m-%d %H:%M:%S')
@@ -123,7 +123,7 @@ def plan_account(incoming, target, original, mode="merge"):
         raise ValueError("Unknown import mode")
     existing_unreadable = False
     try:
-        existing = normalize(json.loads(original), saved=True) if original is not None else None
+        existing = normalize(json.loads(original)) if original is not None else None
     except (ValueError, TypeError, KeyError, RecursionError) as exc:
         if mode == 'merge':
             raise WarpImportError(tr('现有记录无法读取，不能合并。请重新导入并选择替换现有记录。')) from exc
@@ -173,7 +173,7 @@ def staged(plan):
             stream.flush()
             os.fsync(stream.fileno())
         restored = json.loads(temporary.read_bytes())
-        if restored != plan.data or normalize(restored, saved=True) != restored:
+        if restored != plan.data or normalize(restored) != restored:
             raise WarpImportError(tr("临时文件校验失败，原记录未修改。"))
         yield temporary
     finally:

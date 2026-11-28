@@ -84,7 +84,7 @@ def test_multiple_or_empty_accounts(accounts):
     lambda d: d['list'][0].update(uid='200000002'),
     lambda d: d['list'][0].update(gacha_type='999'),
     lambda d: d['list'][0].update(time='invalid'),
-    lambda d: d['list'][0].pop('name'),
+    lambda d: d['list'][0].pop('time'),
 ])
 def test_invalid_records(mutation):
     sample = data(); mutation(sample)
@@ -92,29 +92,32 @@ def test_invalid_records(mutation):
         normalize(sample)
 
 
-def test_saved_records_may_lack_optional_fields(tmp_path):
-    # Before v2026.11.15, an imported SRGF / UIGF file without these fields was saved as null.
+def test_records_may_lack_optional_fields(tmp_path):
+    # SRGF and UIGF make these optional; before v2026.11.15 such imports were saved as null.
     old = data((1, 2, 3))
     old['list'][0].update(name=None, item_type=None, rank_type=None)
     for key in ('name', 'item_type', 'rank_type'):
         old['list'][1].pop(key)
     with pytest.raises(WarpImportError, match=r'\(rank_type, id=1\)'):
-        normalize(old)
-    rows = normalize(old, saved=True)['list']
+        normalize(old, complete=True)
+    rows = normalize(old)['list']
     assert [(r['name'], r['item_type'], r['rank_type']) for r in rows[:2]] == [('', '', '')] * 2
     assert rows[2] == data((3,))['list'][0]
     target = put(tmp_path / 'warp.json', old)
     publish(prepare_import(put(tmp_path / 'import.json', data((1, 4))), target))
     merged = {r['id']: r for r in json.loads(target.read_bytes())['list']}
     assert merged['1'] == data((1,))['list'][0] and merged['2']['rank_type'] == '' and '4' in merged
+    # Importing the incomplete file again keeps the values already filled in.
+    publish(prepare_import(put(tmp_path / 'import.json', old), target))
+    assert json.loads(target.read_bytes())['list'][0] == data((1,))['list'][0]
 
 
 @pytest.mark.parametrize('key', ['id', 'gacha_type', 'time'])
-def test_saved_records_still_need_id_pool_and_time(key):
+def test_records_still_need_id_pool_and_time(key):
     old = data()
     old['list'][0][key] = None
     with pytest.raises(WarpImportError, match=rf'\({key}, '):
-        normalize(old, saved=True)
+        normalize(old)
 
 
 def test_conflicting_id(files):

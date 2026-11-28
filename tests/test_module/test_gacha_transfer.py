@@ -8,6 +8,7 @@ from openpyxl import load_workbook
 from module.gacha import transfer
 from module.gacha.formats import srgf_to_uigf_hkrpg
 from module.gacha.store import GachaStore
+from module.gacha.summary import load_summary
 from tests.test_app.test_warp_import import data, put
 from utils import paths
 from utils.gacha_transaction import PENDING
@@ -50,6 +51,20 @@ def test_import_and_json_roundtrip(store, tmp_path, format):
         assert srgf_to_uigf_hkrpg(imported)["hkrpg"] == srgf_to_uigf_hkrpg(original)["hkrpg"]
 
 
+def test_import_file_without_optional_fields(store, tmp_path):
+    # UIGF v4 and SRGF only require the IDs, the pool and the time of each record.
+    account = data((1, 2), "111")
+    for record in account["list"]:
+        for key in ("name", "item_type", "rank_type"):
+            del record[key]
+    source = put(tmp_path / "bare.json", {"info": {"version": "v4.1"}, "hkrpg": [
+        {"uid": "111", "timezone": 8, "lang": "zh-cn", "list": account["list"]}]})
+    assert transfer.save_import(transfer.prepare_import(source, store=store), store=store) == ("111",)
+    stats = load_summary("111", store=store).pools["11"]
+    assert (stats.total, stats.unknown_count, stats.three_count, stats.five_pity) == (2, 2, 0, 2)
+    assert [(r.name, r.stars) for r in stats.details] == [("", 0), ("", 0)]
+
+
 @pytest.mark.parametrize("mode", ["merge", "replace"])
 @pytest.mark.parametrize("problem", ["input_conflict", "invalid_zone", "missing_field", "invalid_pool", "duplicate_uid", "file_changed"])
 def test_second_account_failure_writes_nothing(store, tmp_path, mode, problem):
@@ -61,7 +76,7 @@ def test_second_account_failure_writes_nothing(store, tmp_path, mode, problem):
     elif problem == "invalid_zone":
         second["info"]["region_time_zone"] = 99
     elif problem == "missing_field":
-        del second["list"][0]["name"]
+        del second["list"][0]["time"]
     elif problem == "invalid_pool":
         second["list"][0]["gacha_type"] = "15"
     elif problem == "duplicate_uid":

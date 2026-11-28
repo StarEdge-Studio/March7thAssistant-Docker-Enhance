@@ -68,7 +68,8 @@ class GachaTableModel(QAbstractTableModel):
             col = index.column()
             if col == Column.POOL:
                 return POOLS[row.pool_id].label
-            return (row.time, row.name, row.item_type, row.stars, None, row.pity)[col]
+            # 导入的文件可以不写名称、类型，用破折号占位。
+            return (row.time, row.name or "—", row.item_type or "—", row.stars, None, row.pity)[col]
         return None
 
 
