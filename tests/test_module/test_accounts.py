@@ -411,8 +411,9 @@ def test_identity_mismatch_blocks_writes(config, store, monkeypatch, task):
 @pytest.mark.skipif(sys.platform != "win32", reason="需要 Windows 本地账号开关生效")
 def test_unsupported_and_implicit_binding(config, store, monkeypatch):
     session = Mock()
-    with pytest.raises(runtime.AccountError, match="启用多账号"):
+    with pytest.raises(runtime.AccountError) as error:
         runtime.prepare(config, A, "daily", session, store=store)
+    assert error.value.reason == "account_unsupported"
     layers.set_enabled(store, config, True, logged_uid=A)
     monkeypatch.setattr(runtime, "gamereg_uid", lambda _: int(B))
     monkeypatch.setenv("MARCH7TH_DESKTOP_TWIN", "1")
