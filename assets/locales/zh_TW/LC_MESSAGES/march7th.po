@@ -7166,11 +7166,9 @@ msgstr ""
 
 #: app/tools/adb_service.py:145
 msgid ""
-"安装 Android Platform-Tools 并把它加入 PATH，或在“高级设置”里指定 adb 的位置。装有 MuMu "
-"等模拟器时会自动使用模拟器自带的 adb。"
+"安装 Android Platform-Tools 并把它加入 PATH，或在“高级设置”里指定 adb 的位置，也可以选模拟器自带的 adb。"
 msgstr ""
-"安裝 Android Platform-Tools 並把它加入 PATH，或在“高階設定”裡指定 adb 的位置。裝有 MuMu "
-"等模擬器時會自動使用模擬器自帶的 adb。"
+"安裝 Android Platform-Tools 並把它加入 PATH，或在“高階設定”裡指定 adb 的位置，也可以選模擬器自帶的 adb。"
 
 #: app/tools/adb_service.py:147
 msgid ""
