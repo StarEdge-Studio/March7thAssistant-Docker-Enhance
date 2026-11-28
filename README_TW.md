@@ -41,6 +41,7 @@
 - **周常**：歷戰餘響、模擬宇宙、差分宇宙、貨幣戰爭、混沌回憶、虛構敘事、末日幻影
 - **雲·星穹鐵道**：支援背景執行、無視窗執行與 [Docker](https://m7a.top/docs/#/assets/docs/Docker) 執行
 - **安卓版**：直接安裝在手機上，遊戲在背景虛擬螢幕中執行，支援日常、每日實訓與清體力（目前僅支援國服官服，國際服暫不支援），詳見 [安卓版使用教程](https://m7a.top/docs/#/assets/docs/Android_zh_TW)
+- **多帳號輪流**：Windows 本地客戶端可以新增多個帳號，依序輪流完成任務；國服官服直接在遊戲登入框裡換號，定時計劃和 `m7a.exe --account` 也能依帳號執行，詳見 [使用教程](https://m7a.top/docs/#/assets/docs/Tutorial_zh_TW)
 - **抽卡記錄導出**：支援 [UIGF](https://uigf.org/zh/standards/uigf.html) / [SRGF](https://uigf.org/zh/standards/srgf.html) 標準
 - **工具箱**：自動對話、解鎖幀率、兌換碼、觸控模式
 - 每日實訓等任務的完成情況支援 **訊息推送**

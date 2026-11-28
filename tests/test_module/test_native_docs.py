@@ -217,7 +217,7 @@ def test_registry_doc_links_and_canonical_button_labels(lang):
     doc = load_document("Tutorial", lang)
     paths = [s for b in walk_blocks(doc.blocks) for s in block_spans(b) if isinstance(s, SettingPath)]
     if lang in ("zh_CN", "zh_TW"):
-        assert len(paths) == 30
+        assert len(paths) == 31
         assert {"category:run_mode", "setting:game_path", "setting:refresh_hour",
                 "run:schedule", "setting:setup_wizard"} <= {s.target for s in paths}
     for s in paths:
@@ -325,6 +325,16 @@ def test_restore_view_across_two_translations_with_different_revisions():
     assert traditional and english and traditional != english
     assert resolve_anchor(source_for("Tutorial", "en_US"), traditional, written_language="zh_TW") == english
     assert resolve_anchor(source_for("Tutorial", "zh_TW"), english, written_language="en_US") == traditional
+
+
+@pytest.mark.parametrize("language", ["en_US", "ja_JP", "ko_KR"])
+def test_faq_language_switch_skips_untranslated_multi_account_question(language):
+    original = next(h for h in outline(source_for("FAQ", "zh_CN")) if h.title == "Q：完整运行的作用是什么")
+    translated = [h for h in outline(source_for("FAQ", language)) if h.level == 3][6]
+    assert localized_anchor("FAQ", original.anchor, language) == translated.anchor
+    assert resolve_anchor(source_for("FAQ", "zh_CN"), translated.anchor,
+                          written_language=language) == original.anchor
+    assert localized_anchor("FAQ", "Q：命令行 m7a.exe 和 AI 助手能多账号吗？", language) == ""
 
 
 def test_bare_breadcrumb_keeps_surrounding_prose_and_unknown_submenu(tmp_path):

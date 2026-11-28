@@ -16,3 +16,4 @@
 - 从 `--status` 的 `config_file` 读取实际配置路径，每个配置项的说明在 `assets/config/config.example.yaml`；直接编辑即可，图形界面会自动重新加载。
 - 首次使用必须由用户本人打开 `March7th Launcher.exe` 并确认免责声明，不要代为确认或绕过。
 - `--status` 的 `data_dir` 是数据目录，`runs_dir` 和 `logs_dir` 分别给出运行记录和日志的实际位置。
+- 多账号：`--status` 的 `accounts` 列出已添加的账号，`--account <UID或名称>` 只运行一个账号，`--account all` 轮流运行；`effective` 为假时怎样设置，见 SKILL.md 的「按账号运行」。
