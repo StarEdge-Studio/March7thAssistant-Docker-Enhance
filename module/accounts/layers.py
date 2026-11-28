@@ -100,7 +100,7 @@ def set_enabled(store, config, enabled, *, logged_uid=None):
             or configured_backend(config) != "local"
             or os.getenv("MARCH7TH_DESKTOP_TWIN")
         ):
-            raise ValueError("多账号需要 Windows 本地客户端和至少一个账号")
+            raise ValueError("多账号需要在 Windows 主桌面使用「本地客户端」运行方式，并至少添加一个账号")
         uid = str(logged_uid) if str(logged_uid) in ids else (ids[0] if enabled else index["current"])
         if uid:
             path = store.path(uid, "state.yaml")

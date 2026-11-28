@@ -10859,10 +10859,6 @@ msgstr ""
 msgid "多账号轮流"
 msgstr ""
 
-#: app/content/account_model.py:234
-msgid "多账号轮流仅支持 Windows 本地客户端，当前按单账号运行"
-msgstr ""
-
 #: app/accounts/panel.py:56
 msgid "多账号轮流运行"
 msgstr ""
@@ -10999,16 +10995,8 @@ msgstr ""
 msgid "找不到指定账号"
 msgstr ""
 
-#: app/accounts/empty.py:79
-msgid "把登录保存下来，换号时不用重新登录；保存两个以上就可以按顺序轮流运行。只支持本地客户端。"
-msgstr ""
-
 #: app/accounts/detail.py:165
 msgid "把这个账号的登录信息写回游戏，需要先退出游戏"
-msgstr ""
-
-#: app/accounts/panel.py:73
-msgid "拖动调整顺序。一个账号失败后会记录原因并继续下一个账号，全部结束后合并发送一条通知。多账号只支持本地客户端。"
 msgstr ""
 
 #: module/accounts/differences.py:86
@@ -12539,10 +12527,6 @@ msgstr ""
 msgid "这会清除该游戏的登录信息、保留的登录记录和画质、分辨率等设置，之后要在游戏里重新登录每个账号。确定继续吗？"
 msgstr ""
 
-#: app/accounts/empty.py:80
-msgid "记下要轮流的账号，换号时在游戏登录框里选保留的登录记录；添加两个以上就可以按顺序轮流运行。只支持本地客户端。"
-msgstr ""
-
 #: app/accounts/empty.py:88
 msgid "回到这里点「添加账号」，填写登录框里显示的账号"
 msgstr ""
@@ -12665,4 +12649,20 @@ msgstr ""
 
 #: app/gacha/cards.py:321
 msgid "这个卡池有 {count} 条记录缺少星级，没有算进四星和五星，出金和保底统计可能不准。"
+msgstr ""
+
+#: app/accounts/empty.py:80
+msgid "记下要轮流的账号，换号时在游戏登录框里选保留的登录记录；添加两个以上就可以按顺序轮流运行。只支持「本地客户端」运行方式。"
+msgstr ""
+
+#: app/accounts/empty.py:81
+msgid "把登录保存下来，换号时不用重新登录；保存两个以上就可以按顺序轮流运行。只支持「本地客户端」运行方式。"
+msgstr ""
+
+#: app/accounts/panel.py:115
+msgid "拖动调整顺序。一个账号失败后会记录原因并继续下一个账号，全部结束后合并发送一条通知。多账号只支持「本地客户端」运行方式。"
+msgstr ""
+
+#: app/content/account_model.py:253
+msgid "多账号轮流仅支持 Windows 上的「本地客户端」运行方式，当前按单账号运行"
 msgstr ""

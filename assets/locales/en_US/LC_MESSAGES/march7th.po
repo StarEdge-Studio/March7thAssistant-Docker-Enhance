@@ -11568,11 +11568,6 @@ msgstr "External program: {name}"
 msgid "多账号轮流"
 msgstr "Account rotation"
 
-#: app/content/account_model.py:234
-msgid "多账号轮流仅支持 Windows 本地客户端，当前按单账号运行"
-msgstr ""
-"Rotation requires the Windows local client. Runs use a single account here."
-
 #: app/accounts/panel.py:56
 msgid "多账号轮流运行"
 msgstr "Account rotation"
@@ -11709,21 +11704,9 @@ msgstr "Open account folder"
 msgid "找不到指定账号"
 msgstr "Account not found"
 
-#: app/accounts/empty.py:79
-msgid "把登录保存下来，换号时不用重新登录；保存两个以上就可以按顺序轮流运行。只支持本地客户端。"
-msgstr ""
-"Save logins to switch without signing in again. Save two or more for "
-"rotation. Local client only."
-
 #: app/accounts/detail.py:165
 msgid "把这个账号的登录信息写回游戏，需要先退出游戏"
 msgstr "Close the game before restoring this account’s login"
-
-#: app/accounts/panel.py:73
-msgid "拖动调整顺序。一个账号失败后会记录原因并继续下一个账号，全部结束后合并发送一条通知。多账号只支持本地客户端。"
-msgstr ""
-"Drag to reorder. If an account fails, rotation records the reason and "
-"continues. One summary is sent at the end. Local client only."
 
 #: module/accounts/differences.py:86
 msgid "拟造花萼（金）偏好地区"
@@ -13342,13 +13325,6 @@ msgstr ""
 " as graphics quality and resolution. You’ll need to sign in to each account "
 "again. Continue?"
 
-#: app/accounts/empty.py:80
-msgid "记下要轮流的账号，换号时在游戏登录框里选保留的登录记录；添加两个以上就可以按顺序轮流运行。只支持本地客户端。"
-msgstr ""
-"Add the accounts you want to run. The assistant selects their saved logins "
-"in the game. Add at least two accounts to run them in order. Local game "
-"clients only."
-
 #: app/accounts/empty.py:88
 msgid "回到这里点「添加账号」，填写登录框里显示的账号"
 msgstr ""
@@ -13502,3 +13478,29 @@ msgid "这个卡池有 {count} 条记录缺少星级，没有算进四星和五�
 msgstr ""
 "{count} records in this banner have no rarity and are not counted as 4★ or "
 "5★, so 5★ and pity statistics may be inaccurate."
+
+#: app/accounts/empty.py:80
+msgid "记下要轮流的账号，换号时在游戏登录框里选保留的登录记录；添加两个以上就可以按顺序轮流运行。只支持「本地客户端」运行方式。"
+msgstr ""
+"Add the accounts you want to run. The assistant selects their saved logins "
+"in the game. Add at least two accounts to run them in order. Only the "
+"\"Local client\" run mode is supported."
+
+#: app/accounts/empty.py:81
+msgid "把登录保存下来，换号时不用重新登录；保存两个以上就可以按顺序轮流运行。只支持「本地客户端」运行方式。"
+msgstr ""
+"Save logins to switch without signing in again. Save two or more for "
+"rotation. Only the \"Local client\" run mode is supported."
+
+#: app/accounts/panel.py:115
+msgid "拖动调整顺序。一个账号失败后会记录原因并继续下一个账号，全部结束后合并发送一条通知。多账号只支持「本地客户端」运行方式。"
+msgstr ""
+"Drag to reorder. If an account fails, rotation records the reason and "
+"continues. One summary is sent at the end. Only the \"Local client\" run "
+"mode is supported."
+
+#: app/content/account_model.py:253
+msgid "多账号轮流仅支持 Windows 上的「本地客户端」运行方式，当前按单账号运行"
+msgstr ""
+"Rotation requires the \"Local client\" run mode on Windows. Runs use a "
+"single account here."
