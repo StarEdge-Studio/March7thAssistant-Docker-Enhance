@@ -375,6 +375,7 @@ class TaskController private constructor(private val context: Context) {
                     diagnostics.clear()
                     logData.value = emptyList()
                 }
+                appLog(LogLevel.DEBUG, context.lastProcessExitDescription())
                 val markerStream = marker.startWrite()
                 try {
                     markerStream.write(snapshot.privilege.name.toByteArray())
